@@ -9,7 +9,7 @@ def calculate_diversity(data: List[List[Any]] | Iterable[Iterable[Any]]) -> floa
         data: 2D data, e.g. [[1, 0], [1, 1], ...]
 
     Returns:
-        A float in [0, 1]. Returns 0.0 for empty input.
+        A float in [0, 1]. Returns 0.0 for empty on one element inputs.
     """
     # materialize once and allow general iterables
     rows = [tuple(row) for row in data]
