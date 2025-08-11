@@ -1,0 +1,7 @@
+# MacOS system files
+.DS_Store
+
+# Distribution / packaging files
+dist/
+build/
+*.egg-info/

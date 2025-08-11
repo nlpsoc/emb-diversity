@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"] # Ensure setuptools is at least version 61.0, which supports pyproject.toml
+build-backend = "setuptools.build_meta" # Use setuptools as the build backend
+
+[project]
+name = "your-package"
+version = "0.1.0"
+description = "A tiny package with a simple diversity function"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" }]
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
