@@ -16,3 +16,10 @@ Then install the package and its dependencies:
 pip install -r requirements-dev.txt
 pip install -e . # Install in editable mode
 ```
+
+## Usage
+```python
+from measure_diversity import calculate_diversity
+result = calculate_diversity([[0,1], [0,0]])
+print(result)  # Output: 5
+```
