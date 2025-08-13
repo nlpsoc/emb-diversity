@@ -1,5 +1,6 @@
 import math
 from typing import List, Tuple
+import numpy as np
 
 # def create_uniform_normed_datapoints(n: int = 10) -> List[Tuple[float, float]]:
 #     """
@@ -47,71 +48,97 @@ from typing import List, Tuple
 #     return points
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+from typing import List, Tuple
+
+
 def create_normed_datapoints(n: int = 8, quads: list[int] | None = None) -> List[Tuple[float, float]]:
     """
-    Create n equally spaced points on the unit circle in the given quadrants.
+    Distributes n datapoints equidistantly on the unit circle (Einheitskreis)
+    within the specified quadrants.
 
-    Quadrants:
-        1: 0 to π/2
-        2: π/2 to π
-        3: π to 3π/2
-        4: 3π/2 to 2π
-
-    Args:
-        n: Number of points to generate (>= 1)
-        quads: List of quadrants to include, each in {1, 2, 3, 4}.
-               If None or empty, distribute points equally on the full circle.
+    Parameters:
+    n (int): Number of datapoints to create (default: 8)
+    quads (list[int] | None): List of quadrants (1, 2, 3, 4) where points should be distributed.
+                              If None, defaults to all quadrants [1, 2, 3, 4]
 
     Returns:
-        List of (x, y) tuples.
-    """
-    if n < 1:
-        raise ValueError("n must be >= 1")
+    List[Tuple[float, float]]: List of (x, y) coordinate tuples
 
-    # Map quadrants to (start_angle, end_angle)
-    quad_ranges = {
-        1: (0, math.pi / 2),
-        2: (math.pi / 2, math.pi),
-        3: (math.pi, 3 * math.pi / 2),
-        4: (3 * math.pi / 2, 2 * math.pi),
-    }
+    Quadrants:
+    1: [0, π/2]     (0° to 90°)
+    2: [π/2, π]     (90° to 180°)
+    3: [π, 3π/2]    (180° to 270°)
+    4: [3π/2, 2π]   (270° to 360°)
+    """
+
+    # Default to all quadrants if none specified
+    if quads is None:
+        quads = [1, 2, 3, 4]
 
     if not quads:
-        # Default: full circle
-        total_span = 2 * math.pi
-        start_end_pairs = [(0, 2 * math.pi)]
+        raise ValueError("At least one quadrant must be specified")
+
+    # Sort quadrants for consistent behavior
+    quads = sorted(set(quads))
+
+    # Define quadrant angle ranges
+    quad_ranges = {
+        1: (0, np.pi / 2),
+        2: (np.pi / 2, np.pi),
+        3: (np.pi, 3 * np.pi / 2),
+        4: (3 * np.pi / 2, 2 * np.pi)
+    }
+
+    # Special case: if all quadrants are selected, distribute over full circle
+    if len(quads) == 4 and quads == [1, 2, 3, 4]:
+        angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
     else:
-        if not all(q in {1, 2, 3, 4} for q in quads):
-            raise ValueError("quads must only contain values in {1, 2, 3, 4}")
-        start_end_pairs = [quad_ranges[q] for q in quads]
-        total_span = sum(end - start for start, end in start_end_pairs)
+        # Calculate total angular span
+        total_span = 0
+        angle_segments = []
 
-    points = []
-    remaining = n
-    for start, end in start_end_pairs:
-        segment_span = end - start
-        num_points_here = round(n * (segment_span / total_span))
-        if num_points_here > remaining:
-            num_points_here = remaining
-        if num_points_here <= 0:
-            continue
+        for quad in quads:
+            start_angle, end_angle = quad_ranges[quad]
+            span = end_angle - start_angle
+            total_span += span
+            angle_segments.append((start_angle, end_angle, span))
 
-        for i in range(num_points_here):
-            angle = start + (segment_span * i / (num_points_here - 1)) if num_points_here > 1 else start
-            x = math.cos(angle)
-            y = math.sin(angle)
-            points.append((x, y))
+        # Distribute points proportionally across segments
+        angles = []
 
-        remaining -= num_points_here
+        for start_angle, end_angle, span in angle_segments:
+            # Number of points for this segment (proportional to its span)
+            points_in_segment = int(np.round(n * span / total_span))
 
-    # Adjust count if rounding was imperfect
-    if len(points) < n:
-        start, end = start_end_pairs[0]
-        for i in range(n - len(points)):
-            angle = start + (end - start) * (i + 1) / (n + 1)
-            points.append((math.cos(angle), math.sin(angle)))
-    elif len(points) > n:
-        points = points[:n]
+            # Generate equidistant points in this segment
+            if points_in_segment > 0:
+                segment_angles = np.linspace(start_angle, end_angle,
+                                             points_in_segment, endpoint=False)
+                angles.extend(segment_angles)
+
+        # If we have fewer points due to rounding, add the remaining ones
+        while len(angles) < n:
+            # Add points to the largest segment
+            largest_segment_idx = np.argmax([seg[2] for seg in angle_segments])
+            start_angle, end_angle, _ = angle_segments[largest_segment_idx]
+            # Add a point at a reasonable position
+            extra_angle = start_angle + (end_angle - start_angle) * (len(angles) - sum(
+                int(np.round(n * seg[2] / total_span)) for seg in angle_segments[:largest_segment_idx + 1])) / (
+                                      n - sum(int(np.round(n * seg[2] / total_span)) for seg in angle_segments))
+            angles.append(extra_angle)
+
+        # If we have too many points, remove some
+        angles = angles[:n]
+        angles = np.array(angles)
+
+    # Convert to Cartesian coordinates on unit circle
+    x_coords = np.cos(angles)
+    y_coords = np.sin(angles)
+
+    # Return as list of (x, y) tuples
+    points = [(float(x), float(y)) for x, y in zip(x_coords, y_coords)]
 
     return points
 
