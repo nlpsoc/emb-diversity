@@ -1,3 +1,3 @@
-from .measure import calculate_diversity
+from .measure import dummy_diversity, pairwise_diversity
 
-__all__ = ["calculate_diversity"]
+__all__ = ["dummy_diversity", "pairwise_diversity"]
