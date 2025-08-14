@@ -18,9 +18,11 @@ pip install -e . # Install in editable mode
 ```
 
 ## Usage
+
 ```python
-from measure_diversity import calculate_diversity
-result = calculate_diversity([[0,1], [0,0]])
+from measure_diversity import dummy_diversity
+
+result = dummy_diversity([[0, 1], [0, 0]])
 print(result)  # Output: 5
 ```
 
