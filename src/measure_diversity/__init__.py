@@ -1,3 +1,3 @@
-from .measure import dummy_diversity, pairwise_diversity
+from .measure import dummy_diversity, mean_pairwise_distance
 
-__all__ = ["dummy_diversity", "pairwise_diversity"]
+__all__ = ["dummy_diversity", "mean_pairwise_distance"]

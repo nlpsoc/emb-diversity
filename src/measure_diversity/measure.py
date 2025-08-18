@@ -1,17 +1,46 @@
+"""
+    Diversity measures based on vector representations of data.
+"""
 from collections import Counter
 from typing import List, Iterable, Any
 from typing import Sequence, Union, Callable, Any
 import numpy as np
 from scipy.spatial.distance import pdist
+from scipy.spatial import ConvexHull
 
-### Distance Based Diversity Measure
+### Distance-Based Diversity Measure
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 
-def pairwise_diversity(
-    data: Sequence[Sequence[float]],
-    metric: DISTANCE_METRIC = "cosine",
-    **metric_kwargs: Any
+
+def _compute_pairwise_distances(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> np.ndarray:
+    """
+    Helper function to compute all pairwise distances.
+
+    Returns:
+        Array of pairwise distances.
+
+    Raises:
+        ValueError: If data is empty or contains only one datapoint.
+    """
+    X = np.asarray(data, dtype=float)
+    n = X.shape[0]
+    if n == 0:
+        raise ValueError("Cannot compute distances for empty data")
+    if n == 1:
+        raise ValueError("Cannot compute distances for single data point")
+
+    return pdist(X, metric=metric, **metric_kwargs)
+
+
+def mean_pairwise_distance(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
 ) -> float:
     """
     Compute the average pairwise distance between all datapoints using
@@ -26,16 +55,117 @@ def pairwise_diversity(
 
     Returns:
         The average pairwise distance across all unique pairs.
-        Returns 0.0 if there are fewer than 2 datapoints.
+
+    Raises:
+        ValueError: If data is empty or contains only one datapoint.
     """
+    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    return float(np.mean(dists))
+
+
+def distance_dispersion(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Compute the sum of all pairwise distances between datapoints using
+    scipy.spatial.distance.pdist.
+    e.g., used in https://aclanthology.org/2022.coling-1.437.pdf
+
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric: Metric name or callable, as accepted by scipy.spatial.distance.pdist
+                Default is "cosine".
+        **metric_kwargs: Extra keyword arguments passed to pdist. (as in scipy docs)
+
+    Returns:
+        The sum of all pairwise distances across all unique pairs.
+
+    Raises:
+        ValueError: If data is empty or contains only one datapoint.
+    """
+    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    return float(np.sum(dists))
+
+
+def cluster_inertia_diversity(
+        data: Sequence[Sequence[float]],
+        n_clusters: int = 10
+) -> float:
+    """
+    Compute diversity as the inertia (sum of squared distances to cluster centers)
+    from k-means clustering using Euclidean distance.
+
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        n_clusters: Number of clusters for k-means. Automatically reduced if
+                   fewer datapoints than clusters.
+
+    Returns:
+        The k-means inertia (sum of squared Euclidean distances to cluster centers).
+        Higher values indicate higher diversity/spread.
+        Returns 0.0 if there are fewer than 2 datapoints.
+
+    Raises:
+        ValueError: If data is empty.
+    """
+    from sklearn.cluster import KMeans
+
+    if not data:
+        raise ValueError("Cannot compute cluster inertia for empty data")
+
     X = np.asarray(data, dtype=float)
-    n = X.shape[0]
+    n, d = X.shape
+
     if n < 2:
         return 0.0
 
-    dists = pdist(X, metric=metric, **metric_kwargs)
-    return float(np.mean(dists))
+    # Adjust number of clusters if we have fewer points
+    actual_clusters = min(n_clusters, n)
 
+    kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10
+    kmeans.fit(X)
+    return float(kmeans.inertia_)
+
+### Volume-Based Diversity Measure
+
+def convex_hull_volume(
+        data: Sequence[Sequence[float]]
+) -> float:
+    """
+    Compute diversity as the volume (or area in 2D) of the convex hull (smallest convex shape that contains all points)
+    formed by the datapoints.
+    Used in: https://aclanthology.org/2022.coling-1.437/
+
+    Attention: This function is not normed, i.e., it does not return a value in [0, 1].
+
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+
+    Returns:
+        The volume/area of the convex hull.
+        Returns 0.0 if there are fewer than d+1 datapoints or if points are collinear.
+
+    Raises:
+        ValueError: If data is empty.
+    """
+    if not data:
+        raise ValueError("Cannot compute convex hull for empty data")
+
+    X = np.asarray(data, dtype=float)
+    n, d = X.shape
+
+    # Need at least d+1 points to form a non-degenerate convex hull
+    if n < d + 1:
+        return 0.0
+
+    try:
+        hull = ConvexHull(X)
+        return float(hull.volume)
+    except (ValueError, RuntimeError) as e:
+        # Points are collinear/coplanar - hull has zero volume
+        return 0.0
 
 #### Count Based Diversity Measure
 
