@@ -119,12 +119,12 @@ def cluster_inertia_diversity(
     n, d = X.shape
 
     if n < 2:
-        return 0.0
+        raise ValueError("Cannot compute cluster centers and thus inertia for fewer than 2 datapoints")
 
     # Adjust number of clusters if we have fewer points
-    actual_clusters = min(n_clusters, n)
+    actual_clusters = min(n_clusters, n - 1) # @Tao can you check what ppl have done here?
 
-    kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10
+    kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10 is a value to determine how many times the k-means algorithm will be run with different centroid seeds
     kmeans.fit(X)
     return float(kmeans.inertia_)
 
@@ -158,7 +158,7 @@ def convex_hull_volume(
 
     # Need at least d+1 points to form a non-degenerate convex hull
     if n < d + 1:
-        return 0.0
+        raise ValueError(f"Cannot compute convex hull for fewer than dimension+1 {d + 1} points (got {n})")
 
     try:
         hull = ConvexHull(X)
