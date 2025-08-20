@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 def create_normed_datapoints(n: int = 8, quads: list[int] | None = None) -> List[Tuple[float, float]]:
@@ -92,13 +92,19 @@ def create_normed_datapoints(n: int = 8, quads: list[int] | None = None) -> List
     return points
 
 
-def plot_points(points: List[Tuple[float, float]], title: str = "Points on the Unit Circle") -> None:
+def plot_points(points: List[Tuple[float, float]],
+                title: str = "Points on the Unit Circle",
+                xlim: Optional[Tuple[float, float]] = None,
+                ylim: Optional[Tuple[float, float]] = None
+                ) -> None:
     """
     Plot a list of 2D points using matplotlib.
 
     Args:
         points: List of (x, y) tuples.
         title: Plot title.
+        xlim: X-axis limits as (min, max). If None, uses matplotlib's default.
+        ylim: Y-axis limits as (min, max). If None, uses matplotlib's default.
     """
     try:
         import matplotlib.pyplot as plt
@@ -116,4 +122,11 @@ def plot_points(points: List[Tuple[float, float]], title: str = "Points on the U
     ax.set_ylabel("y")
     ax.set_title(title)
     ax.grid(True)
+
+    # Set axis limits if provided
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
     plt.show()
