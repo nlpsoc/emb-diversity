@@ -141,8 +141,11 @@ def evaluate_monotone_order(
     print(f"Total measures: {n_measures}")
     print(f"Valid measures (no errors): {len(valid_measures)}")
     print(f"Monotonic measures: {len(passing_measures)}")
-    print(
-        f"Success rate: {len(passing_measures)}/{len(valid_measures)} = {len(passing_measures) / len(valid_measures) * 100:.1f}%" if valid_measures else "Success rate: N/A")
+    if len(valid_measures) > 0:
+        print(
+            f"Success rate: {len(passing_measures)}/{len(valid_measures)} = {len(passing_measures) / len(valid_measures) * 100:.1f}%" if valid_measures else "Success rate: N/A")
+    else:
+        print("Success rate: N/A (no valid measures)")
 
     if passing_measures:
         print(f"Passing measures: {', '.join([measure_names[i] for i in passing_measures])}")
