@@ -86,7 +86,7 @@ class TestCacheManagement:
 
     def test_cache_clear_functionality(self, mock_sentence_transformer):
         """Test that cache can be cleared."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', mock_sentence_transformer):
+        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
             # Load a model
             encode_sentences(["Test"], "test-model")
 
@@ -103,10 +103,9 @@ class TestCacheManagement:
             assert cache_info.hits == 0
             assert cache_info.misses == 0
 
-    def test_cache_size_limit(self):
+    def test_cache_size_limit(self, mock_sentence_transformer):
         """Test that cache respects maxsize limit."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer') as mock_constructor:
-            mock_constructor.return_value.encode.return_value = np.array([[0.1, 0.2]])
+        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
 
             # Load more than 10 models (maxsize=10)
             for i in range(15):
@@ -114,7 +113,7 @@ class TestCacheManagement:
 
             cache_info = _get_model.cache_info()
             # Should not exceed maxsize of 10
-            assert cache_info.currsize <= 10
+            assert cache_info.currsize == 10
 
     def test_cache_info_functionality(self, mock_sentence_transformer):
         """Test that cache info is accessible."""
