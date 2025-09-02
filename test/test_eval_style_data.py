@@ -38,5 +38,5 @@ class TestOnSTEL:
         evaluate_measures.evaluate_monotone_order(
             [only_formal_style_vectors, half_formal_style_vectors,
              only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
-            dataset_names=["only formal", "half formal half informal"])
+            dataset_names=["only formal", "half formal half informal", "only formal semantic", "half formal half informal semantic"])
 
