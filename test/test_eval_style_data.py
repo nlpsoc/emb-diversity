@@ -1,0 +1,42 @@
+from measure_diversity import evaluate_measures
+from measure_diversity.measure import (mean_pairwise_distance, distance_dispersion, cluster_inertia_diversity,
+                                       convex_hull_volume)
+import numpy as np
+
+
+class TestOnSTEL:
+
+    def test_eval_on_stel(self):
+        """
+            Test the evaluate_measures function on style datasets
+        """
+        # Load more and less diverse formal/informal dataset
+        from measure_diversity.eval.data.style import create_formal_diverse, create_formal_only
+        from measure_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
+        only_formal_text = create_formal_only()
+        half_formal_text = create_formal_diverse(formal_share=0.5)
+
+        measures = [
+            lambda data: mean_pairwise_distance(data, metric="euclidean"),
+            lambda data: mean_pairwise_distance(data, metric="cosine"),
+            lambda data: distance_dispersion(data, metric="cosine"),
+            # convex_hull_volume, --> this takes too long
+            cluster_inertia_diversity
+        ]
+
+        # Add names to lambda functions for better display
+        measures[0].__name__ = "mean_pairwise_euclidean"
+        measures[1].__name__ = "mean_pairwise_cosine"
+        measures[2].__name__ = "distance_dispersion_cosine"
+
+        only_formal_style_vectors = encode_style_sentences(only_formal_text)
+        half_formal_style_vectors = encode_style_sentences(half_formal_text)
+
+        only_formal_semantic_vectors = encode_semantic_sentences(only_formal_text)
+        half_formal_semantic_vectors = encode_semantic_sentences(half_formal_text)
+
+        evaluate_measures.evaluate_monotone_order(
+            [only_formal_style_vectors, half_formal_style_vectors,
+             only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
+            dataset_names=["only formal", "half formal half informal"])
+

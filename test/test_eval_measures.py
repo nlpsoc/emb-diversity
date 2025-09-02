@@ -41,20 +41,17 @@ def test_normed():
     points_equi = two_d.create_normed_datapoints(n=8)
     points_first_quad = two_d.create_normed_datapoints(n=8, quads=[1])
     points_first_and_third_quad = two_d.create_normed_datapoints(n=8, quads=[1, 3])
-    points_second_quad = two_d.create_normed_datapoints(n=8, quads=[2])
 
-    all_points = points_equi + points_first_quad + points_first_and_third_quad + points_second_quad
+    all_points = points_equi + points_first_quad + points_first_and_third_quad # + points_second_quad
     all_points = np.array(all_points)
     x_min, x_max = all_points[:, 0].min(), all_points[:, 0].max()
     y_min, y_max = all_points[:, 1].min(), all_points[:, 1].max()
 
     two_d.plot_points(points_equi, title="8 Uniform Points Around Circle",
                       xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
-    two_d.plot_points(points_first_quad, title="8 Points in First Quadrant of Circle",
-                      xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
     two_d.plot_points(points_first_and_third_quad, title="8 Points in First and Third Quadrants of Circle",
                       xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
-    two_d.plot_points(points_second_quad, title="8 Points in Second Quadrant of Circle",
+    two_d.plot_points(points_first_quad, title="8 Points in First Quadrant of Circle",
                       xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
 
     measures = [

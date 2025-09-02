@@ -1,6 +1,5 @@
-from typing import List, Callable, Sequence
+from typing import List, Callable, Sequence, Union
 import numpy as np
-
 
 def evaluate_monotone_order(
         strict_monotone_dataset_order: List[Sequence[Sequence[float]]],
