@@ -3,7 +3,6 @@ from measure_diversity.measure import (mean_pairwise_distance, distance_dispersi
                                        convex_hull_volume)
 import numpy as np
 
-
 class TestOnSTEL:
 
     def test_eval_on_stel(self):
@@ -36,7 +35,10 @@ class TestOnSTEL:
         half_formal_semantic_vectors = encode_semantic_sentences(half_formal_text)
 
         evaluate_measures.evaluate_monotone_order(
-            [only_formal_style_vectors, half_formal_style_vectors,
-             only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
-            dataset_names=["only formal", "half formal half informal", "only formal semantic", "half formal half informal semantic"])
+            [only_formal_style_vectors, half_formal_style_vectors], measures,
+            dataset_names=["only formal", "half formal half informal"])
+
+        evaluate_measures.evaluate_almost_same(
+            [only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
+            dataset_names=["only formal semantic", "half formal half informal semantic"],)
 

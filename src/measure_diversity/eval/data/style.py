@@ -1,3 +1,6 @@
+"""
+    access STEL formality pairs from pilot datasets
+"""
 import re
 import pandas as pd
 import numpy as np
@@ -51,7 +54,8 @@ def get_formal_informal_STEL_pairs(tsv_file_path = STEL_path):
 
 def create_formal_diverse(formal_share=0.5):
     """
-        for each sentence pair, randomly select one of the two sentences with probability formal_share
+        for each sentence pair from STEL formaility dimension,
+            randomly select one of the two sentences with probability formal_share
     :param formal_share:
     :return:
     """

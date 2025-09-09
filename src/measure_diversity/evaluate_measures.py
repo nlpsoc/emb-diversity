@@ -1,8 +1,77 @@
 from typing import List, Callable, Sequence, Union
 import numpy as np
 
+def evaluate_almost_same(
+        datasets: List[Sequence[Sequence[float]]],
+        measures: List[Callable[[Sequence[float]], float]],
+        dataset_names: List[str] | None = None
+) -> None:
+    check_input(datasets, measures)
+    dataset_names = get_dataset_names(datasets, dataset_names)
+
+    print()
+    print("=" * 80)
+    print("DIVERSITY MEASURE ALMOST-SAME EVALUATION")
+    print("=" * 80)
+    print(f"Datasets: {len(datasets)} (expected ~ equal diversity)")
+    print(f"Measures: {len(measures)}")
+    print()
+
+    measure_names, scores = calculate_diversity_scores(datasets, measures, dataset_names)
+
+    # Evaluate "almost same" for each measure
+    print("ALMOST-SAME EVALUATION (within max(ATOL, RTOL*|mean|)):")
+    print("-" * 60)
+    ATOL = 1e-8
+    RTOL = 0.05  # 5%
+
+    passing = []
+    failing = []
+
+    for name, row in zip(measure_names, scores):
+        if any(s is None for s in row):
+            print(f"{name.ljust(25)} | FAILED (errors in computation)")
+            continue
+
+        vals = [float(s) for s in row if s is not None]
+        mean_val = sum(vals) / len(vals)
+        tol = max(ATOL, RTOL * abs(mean_val))
+
+        violations = []
+        for idx in range(1, len(vals)):
+
+            if abs(vals[idx] - vals[idx-1]) > tol:
+                violations.append((dataset_names[idx], vals[idx]))
+
+        if not violations:
+            passing.append(name)
+            print(f"{name.ljust(25)} | ✓ PASS (mean={mean_val:.6f}, tol={tol:.6g})")
+        else:
+            failing.append(name)
+            viol_str = "; ".join([f"{dn}:{v:.6f}" for dn, v in violations])
+            print(f"{name.ljust(25)} | ✗ FAIL (mean={mean_val:.6f}, tol={tol:.6g}; outliers: {viol_str})")
+
+    print()
+    print("SUMMARY:")
+    print("-" * 60)
+    valid = [mn for mn, row in zip(measure_names, scores) if not any(s is None for s in row)]
+    print(f"Total measures: {len(measures)}")
+    print(f"Valid measures (no errors): {len(valid)}")
+    print(f"Almost-same measures: {len(passing)}")
+    if valid:
+        rate = len(passing) / len(valid) * 100
+        print(f"Success rate: {len(passing)}/{len(valid)} = {rate:.1f}%")
+    else:
+        print("Success rate: N/A (no valid measures)")
+    if passing:
+        print(f"Passing measures: {', '.join(passing)}")
+    if failing:
+        print(f"Failing measures: {', '.join(failing)}")
+    print("=" * 80)
+
+
 def evaluate_monotone_order(
-        strict_monotone_dataset_order: List[Sequence[Sequence[float]]],
+        datasets: List[Sequence[Sequence[float]]],
         measures: List[Callable[[Sequence[Sequence[float]]], float]],
         dataset_names: List[str] | None = None
 ) -> None:
@@ -10,7 +79,7 @@ def evaluate_monotone_order(
     Evaluate whether diversity measures conform to a strict monotone ordering of datasets.
 
     Args:
-        strict_monotone_dataset_order: List of datasets in strict increasing order of diversity.
+        datasets: List of datasets in strict increasing order of diversity.
                                      Each dataset is a sequence of points (vectors).
                                      Dataset i should have strictly lower diversity than dataset i+1.
         measures: List of diversity measure functions to evaluate.
@@ -20,78 +89,22 @@ def evaluate_monotone_order(
     Prints:
         Results showing which measures conform to the expected ordering.
     """
-    if len(strict_monotone_dataset_order) < 2:
-        print("Error: Need at least 2 datasets to evaluate monotone order")
-        return
-
-    if not measures:
-        print("Error: Need at least 1 measure to evaluate")
-        return
-
-    n_datasets = len(strict_monotone_dataset_order)
-    n_measures = len(measures)
-
-    # Set default dataset names if not provided
-    if dataset_names is None:
-        dataset_names = [f"Dataset {i}" for i in range(n_datasets)]
-    elif len(dataset_names) != n_datasets:
-        print(f"Warning: Expected {n_datasets} dataset names, got {len(dataset_names)}. Using defaults.")
-        dataset_names = [f"Dataset {i}" for i in range(n_datasets)]
+    check_input(datasets, measures)
+    dataset_names = get_dataset_names(datasets, dataset_names)
 
     print()
     print("=" * 80)
     print("DIVERSITY MEASURE MONOTONICITY EVALUATION")
     print("=" * 80)
-    print(f"Datasets: {n_datasets} (expected in strict increasing order of diversity)")
-    print(f"Measures: {n_measures}")
+    print(f"Datasets: {len(datasets)} (expected in strict increasing order of diversity)")
+    print(f"Measures: {len(measures)}")
     print()
 
     # Calculate scores for all measures on all datasets
-    scores = []
-    measure_names = []
-
-    for i, measure in enumerate(measures):
-        try:
-            measure_name = getattr(measure, '__name__', f'measure_{i}')
-            measure_names.append(measure_name)
-
-            dataset_scores = []
-            for j, dataset in enumerate(strict_monotone_dataset_order):
-                try:
-                    score = measure(dataset)
-                    dataset_scores.append(score)
-                except Exception as e:
-                    print(f"Error: {measure_name} failed on dataset {j}: {e}")
-                    dataset_scores.append(None)
-
-            scores.append(dataset_scores)
-
-        except Exception as e:
-            print(f"Error: Failed to evaluate measure {i}: {e}")
-            scores.append([None] * n_datasets)
-            measure_names.append(f'measure_{i}_FAILED')
-
-    # Print scores table
-    print("DIVERSITY SCORES:")
-    print("-" * 60)
-    header = "Measure".ljust(25) + " | " + " | ".join([name[:15].rjust(15) for name in dataset_names])
-    print(header)
-    print("-" * len(header))
-
-    for i, (measure_name, measure_scores) in enumerate(zip(measure_names, scores)):
-        score_strs = []
-        for score in measure_scores:
-            if score is None:
-                score_strs.append("ERROR".rjust(15))
-            else:
-                score_strs.append(f"{score:.4f}".rjust(15))
-
-        row = measure_name.ljust(25) + " | " + " | ".join(score_strs)
-        print(row)
-
-    print()
+    measure_names, scores = calculate_diversity_scores(datasets, measures, dataset_names)
 
     # Evaluate monotonicity for each measure
+    print()
     print("MONOTONICITY EVALUATION:")
     print("-" * 60)
 
@@ -137,7 +150,7 @@ def evaluate_monotone_order(
         if is_monotonic:
             passing_measures.append(i)
 
-    print(f"Total measures: {n_measures}")
+    print(f"Total measures: {len(measures)}")
     print(f"Valid measures (no errors): {len(valid_measures)}")
     print(f"Monotonic measures: {len(passing_measures)}")
     if len(valid_measures) > 0:
@@ -154,3 +167,83 @@ def evaluate_monotone_order(
         print(f"Failing measures: {', '.join([measure_names[i] for i in failing_measures])}")
 
     print("=" * 80)
+
+
+def calculate_diversity_scores(
+        datasets: List[Sequence[Sequence[float]]],
+        measures: List[Callable[[Sequence[float]], float]],
+        dataset_names: List[str] | None = None
+) -> (List[str], List[float]):
+    """
+     Calculate diversity scores between datasets for each measure in measures.
+    :param dataset_names:
+    :param datasets:
+    :param measures:
+    :return:
+    """
+    scores = []
+    measure_names = []
+    for i, measure in enumerate(measures):
+        try:
+            measure_name = getattr(measure, '__name__', f'measure_{i}')
+            measure_names.append(measure_name)
+
+            dataset_scores = []
+            for j, dataset in enumerate(datasets):
+                try:
+                    score = measure(dataset)
+                    dataset_scores.append(score)
+                except Exception as e:
+                    print(f"Error: {measure_name} failed on dataset {j}: {e}")
+                    dataset_scores.append(None)
+
+            scores.append(dataset_scores)
+
+        except Exception as e:
+            print(f"Error: Failed to evaluate measure {i}: {e}")
+            scores.append([None] * len(datasets))
+            measure_names.append(f'measure_{i}_FAILED')
+
+    # Print scores table
+    print("DIVERSITY SCORES:")
+    print("-" * 60)
+    header = "Measure".ljust(30) + " | " + " | ".join([name[:25].rjust(25) for name in dataset_names])
+    print(header)
+    print("-" * len(header))
+    for i, (measure_name, measure_scores) in enumerate(zip(measure_names, scores)):
+        score_strs = []
+        for score in measure_scores:
+            if score is None:
+                score_strs.append("ERROR".rjust(25))
+            else:
+                score_strs.append(f"{score:.4f}".rjust(25))
+
+        row = measure_name.ljust(30) + " | " + " | ".join(score_strs)
+        print(row)
+
+    return measure_names, scores
+
+
+def get_dataset_names(
+        datasets: List[Sequence[Sequence[float]]], dataset_names: List[str] | None = None
+) -> (List[str], List[float]):
+    # Set default dataset names if not provided
+    if dataset_names is None:
+        dataset_names = [f"Dataset {i}" for i in range(len(datasets))]
+    elif len(dataset_names) != len(datasets):
+        print(f"Warning: Expected {len(datasets)} dataset names, got {len(dataset_names)}. Using defaults.")
+        dataset_names = [f"Dataset {i}" for i in range(len(datasets))]
+    return dataset_names
+
+
+def check_input(datasets: List[Sequence[Sequence[float]]], measures: List[Callable[[Sequence[float]], float]]):
+    """
+        Tests edge cases (less than 2 datasets or less than 1 measure)
+    :param datasets:
+    :param measures:
+    :return:
+    """
+    if len(datasets) < 2:
+        raise ValueError("Error: Need at least 2 datasets to compare diversity measures.")
+    if not measures:
+        raise ValueError("Error: Need at least 1 measure to evaluate")
