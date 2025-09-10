@@ -184,7 +184,7 @@ def calculate_diversity_scores(
         datasets: List[Sequence[Sequence[float]]],
         measures: List[Callable[[Sequence[float]], float]],
         dataset_names: List[str] | None = None
-) -> (List[str], List[float]):
+) -> tuple[List[str], List[List[float]]]:
     """
      Calculate diversity scores between datasets for each measure in measures.
     :param dataset_names:
