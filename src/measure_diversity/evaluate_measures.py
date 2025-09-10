@@ -6,6 +6,16 @@ def evaluate_almost_same(
         measures: List[Callable[[Sequence[float]], float]],
         dataset_names: List[str] | None = None
 ) -> None:
+    """
+
+    :param datasets: List of datasets that should get similar scores in terms of diversity.
+                                     Each dataset is a sequence of points (vectors).
+                                     Dataset i should have strictly lower diversity than dataset i+1.
+    :param measures: List of diversity measure functions to evaluate.
+                 Each function should take a dataset and return a diversity score.
+    :param dataset_names: Optional list of names for the datasets. If None, uses "Dataset 0", "Dataset 1", etc.
+    :return:
+    """
     check_input(datasets, measures)
     dataset_names = get_dataset_names(datasets, dataset_names)
 
@@ -22,8 +32,9 @@ def evaluate_almost_same(
     # Evaluate "almost same" for each measure
     print("ALMOST-SAME EVALUATION (within max(ATOL, RTOL*|mean|)):")
     print("-" * 60)
-    ATOL = 1e-8
-    RTOL = 0.05  # 5%
+    ATOL = 1e-3  # at least absolute tolerance of 0.001
+    RTOL = 0.05  # otherwise 5% of the mean for that measure,
+    #              TODO: is this the best way to do this? Chose this way since we don't know the ranges for measures ...
 
     passing = []
     failing = []
