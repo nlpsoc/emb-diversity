@@ -3,7 +3,7 @@ import numpy as np
 
 def evaluate_almost_same(
         datasets: List[Sequence[Sequence[float]]],
-        measures: List[Callable[[Sequence[float]], float]],
+        measures: List[Callable[[Sequence[Sequence[float]]], float]],
         dataset_names: List[str] | None = None
 ) -> None:
     """
