@@ -182,7 +182,7 @@ def evaluate_monotone_order(
 
 def calculate_diversity_scores(
         datasets: List[Sequence[Sequence[float]]],
-        measures: List[Callable[[Sequence[float]], float]],
+        measures: List[Callable[[Sequence[Sequence[float]]], float]],
         dataset_names: List[str] | None = None
 ) -> tuple[List[str], List[List[float]]]:
     """
