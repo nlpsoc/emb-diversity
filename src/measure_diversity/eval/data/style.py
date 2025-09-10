@@ -9,7 +9,7 @@ from measure_diversity.utility import project_root
 STEL_path = (project_root.find() / "pilot_datasets" / "style_diversity" / "original_data" /
              "_quad_stel-dimensions_formal-815_complex-815.tsv")
 
-def get_formal_informal_STEL_pairs(tsv_file_path = STEL_path):
+def get_formal_informal_STEL_pairs(tsv_file_path=STEL_path):
     """
     Extract unique formal-informal sentence pairs from STEL file
 
