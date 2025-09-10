@@ -247,7 +247,7 @@ def get_dataset_names(
     return dataset_names
 
 
-def check_input(datasets: List[Sequence[Sequence[float]]], measures: List[Callable[[Sequence[float]], float]]):
+def check_input(datasets: List[Sequence[Sequence[float]]], measures: List[Callable[[Sequence[Sequence[float]]], float]]):
     """
         Tests edge cases (less than 2 datasets or less than 1 measure)
     :param datasets:
