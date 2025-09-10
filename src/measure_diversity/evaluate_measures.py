@@ -237,7 +237,7 @@ def calculate_diversity_scores(
 
 def get_dataset_names(
         datasets: List[Sequence[Sequence[float]]], dataset_names: List[str] | None = None
-) -> (List[str], List[float]):
+) -> List[str]:
     # Set default dataset names if not provided
     if dataset_names is None:
         dataset_names = [f"Dataset {i}" for i in range(len(datasets))]
