@@ -28,7 +28,12 @@ def encode_sentences(sentences: List[str], model_name: str = "all-MiniLM-L6-v2")
     if not sentences:
         return []
     model = _get_model(model_name)
-    embeddings = model.encode(sentences, convert_to_numpy=True)
+    max_seq_length = model.max_seq_length
+    # Cut sentences to prevent tokenizer overflow, using generous upper limit with ~5 characters per token
+    max_chars = max_seq_length * 5
+    truncated_sentences = [s[:max_chars] if len(s) > max_chars else s for s in sentences]
+
+    embeddings = model.encode(truncated_sentences, convert_to_numpy=True, show_progress_bar=True)
     return embeddings.tolist()
 
 def encode_style_sentences(sentences: List[str]) -> List[List[float]]:
