@@ -1,11 +1,14 @@
 """
     get low/high variety, balance and disparity datasets for style
+
 """
 
 from typing import Dict, List
 from datasets import load_dataset
 import datasets
 from functools import lru_cache
+
+NBR_SENT_PER_FEATURE = 90  # Synthstel generated 90-10 sentences (train-test split) for each style feature using GPT-4
 
 """ ----------------- category and feature assignment -------------- """
 
@@ -80,7 +83,7 @@ def get_high_variety():
     :return:
     """
     features = list(all_features.keys())
-    total_sentences = 6 * 90
+    total_sentences = 6 * NBR_SENT_PER_FEATURE
     per_feature_sentences = int(total_sentences / len(features))
     remainder = total_sentences % per_feature_sentences
 
@@ -106,8 +109,8 @@ def get_low_balance():
 def get_high_balance():
     features = [next(iter(orthographic)), next(iter(phonetic)), next(iter(syntactic)), next(iter(lexical)),
                 next(iter(morphological)), next(iter(discourse))]
-    per_feature_count = 90 // len(features)
-    remainder = 90 % len(features)
+    per_feature_count = NBR_SENT_PER_FEATURE // len(features)  # number of sentences per feature
+    remainder = NBR_SENT_PER_FEATURE % len(features)
     sentences = []
     for idx, feature in enumerate(features):
         count = per_feature_count + (1 if idx < remainder else 0)
