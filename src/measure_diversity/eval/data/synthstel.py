@@ -110,7 +110,7 @@ def get_high_balance():
     remainder = 90 % len(features)
     sentences = []
     for idx, feature in enumerate(features):
-        count =  per_feature_count + (1 if idx < remainder else 0)
+        count = per_feature_count + (1 if idx < remainder else 0)
         feature_sentences = get_feature_sentences(feature)[:count]
         sentences.extend(feature_sentences[:count])
     return sentences
