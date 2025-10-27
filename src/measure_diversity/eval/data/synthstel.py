@@ -5,7 +5,7 @@
 from typing import Dict, List
 from datasets import load_dataset
 import datasets
-from torch.fx.experimental.symbolic_shapes import lru_cache
+from functools import lru_cache
 
 """ ----------------- category and feature assignment -------------- """
 
