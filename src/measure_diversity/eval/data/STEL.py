@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from measure_diversity.utility import project_root
 
+
 STEL_path = (project_root.find() / "pilot_datasets" / "style_diversity" / "original_data" /
              "_quad_stel-dimensions_formal-815_complex-815.tsv")
 
@@ -72,3 +73,4 @@ def create_formal_diverse(formal_share=0.5):
 def create_formal_only():
     formal_pairs = get_formal_informal_STEL_pairs()
     return formal_pairs['formal'].tolist()
+
