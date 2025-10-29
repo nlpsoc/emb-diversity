@@ -68,12 +68,12 @@ def plot_umap_plotnine(
             + labs(title=title, x='UMAP 1', y='UMAP 2')
             + theme_minimal()
             + theme(
-                text=element_text(size=14),
-                axis_title=element_text(size=16, weight='bold'),
-                axis_text=element_text(size=14),
-                plot_title=element_text(size=18, weight='bold'),
-                legend_title=element_text(size=14, weight='bold'),
-                legend_text=element_text(size=12)
+                text=element_text(size=18),
+                axis_title=element_text(size=22, weight='bold'),
+                axis_text=element_text(size=18),
+                plot_title=element_text(size=24, weight='bold'),
+                legend_title=element_text(size=20, weight='bold'),
+                legend_text=element_text(size=18)
             )
         )
     else:
@@ -83,10 +83,10 @@ def plot_umap_plotnine(
             + labs(title=title, x='UMAP 1', y='UMAP 2')
             + theme_minimal()
             + theme(
-                text=element_text(size=14),
-                axis_title=element_text(size=16, weight='bold'),
-                axis_text=element_text(size=14),
-                plot_title=element_text(size=18, weight='bold')
+                text=element_text(size=18),
+                axis_title=element_text(size=22, weight='bold'),
+                axis_text=element_text(size=18),
+                plot_title=element_text(size=24, weight='bold')
             )
         )
 
@@ -171,12 +171,12 @@ def plot_umap_comparable(
         + labs(title=f"{title} - All Datasets", x='UMAP 1', y='UMAP 2')
         + theme_minimal()
         + theme(
-            text=element_text(size=14),
-            axis_title=element_text(size=16, weight='bold'),
-            axis_text=element_text(size=14),
-            plot_title=element_text(size=18, weight='bold'),
-            legend_title=element_text(size=14, weight='bold'),
-            legend_text=element_text(size=12)
+            text=element_text(size=18),
+            axis_title=element_text(size=22, weight='bold'),
+            axis_text=element_text(size=18),
+            plot_title=element_text(size=24, weight='bold'),
+            legend_title=element_text(size=20, weight='bold'),
+            legend_text=element_text(size=18)
         )
     )
 
@@ -200,10 +200,10 @@ def plot_umap_comparable(
             + labs(title=f"{title} - {name}", x='UMAP 1', y='UMAP 2')
             + theme_minimal()
             + theme(
-                text=element_text(size=14),
-                axis_title=element_text(size=16, weight='bold'),
-                axis_text=element_text(size=14),
-                plot_title=element_text(size=18, weight='bold')
+                text=element_text(size=18),
+                axis_title=element_text(size=22, weight='bold'),
+                axis_text=element_text(size=18),
+                plot_title=element_text(size=24, weight='bold')
             )
         )
 
