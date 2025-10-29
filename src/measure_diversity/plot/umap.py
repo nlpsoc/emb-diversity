@@ -34,7 +34,7 @@ def plot_umap_plotnine(
         ) from e
 
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -64,16 +64,30 @@ def plot_umap_plotnine(
         df['label'] = labels
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2', color='label'))
-            + geom_point(size=2, alpha=0.7)
+            + geom_point(size=3, alpha=0.7)
             + labs(title=title, x='UMAP 1', y='UMAP 2')
             + theme_minimal()
+            + theme(
+                text=element_text(size=14),
+                axis_title=element_text(size=16, weight='bold'),
+                axis_text=element_text(size=14),
+                plot_title=element_text(size=18, weight='bold'),
+                legend_title=element_text(size=14, weight='bold'),
+                legend_text=element_text(size=12)
+            )
         )
     else:
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2'))
-            + geom_point(size=2, alpha=0.7, color='steelblue')
+            + geom_point(size=3, alpha=0.7, color='steelblue')
             + labs(title=title, x='UMAP 1', y='UMAP 2')
             + theme_minimal()
+            + theme(
+                text=element_text(size=14),
+                axis_title=element_text(size=16, weight='bold'),
+                axis_text=element_text(size=14),
+                plot_title=element_text(size=18, weight='bold')
+            )
         )
 
     return plot
@@ -111,7 +125,7 @@ def plot_umap_comparable(
         ) from e
 
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -136,15 +150,38 @@ def plot_umap_comparable(
 
     # Fit UMAP on all data
     reducer = umap.UMAP(
-        n_neighbors=n_neighbors,
-        min_dist=min_dist,
+        # n_neighbors=n_neighbors,
+        # min_dist=min_dist,
         n_components=2,
-        random_state=random_state
+        random_state=random_state,
+        metric="cosine"
     )
     embedding = reducer.fit_transform(all_vectors)
 
+    # Create combined plot with all datasets
+    df_combined = pd.DataFrame({
+        'UMAP1': embedding[:, 0],
+        'UMAP2': embedding[:, 1],
+        'Dataset': dataset_labels
+    })
+
+    combined_plot = (
+        ggplot(df_combined, aes(x='UMAP1', y='UMAP2', color='Dataset'))
+        + geom_point(size=3, alpha=0.7)
+        + labs(title=f"{title} - All Datasets", x='UMAP 1', y='UMAP 2')
+        + theme_minimal()
+        + theme(
+            text=element_text(size=14),
+            axis_title=element_text(size=16, weight='bold'),
+            axis_text=element_text(size=14),
+            plot_title=element_text(size=18, weight='bold'),
+            legend_title=element_text(size=14, weight='bold'),
+            legend_text=element_text(size=12)
+        )
+    )
+
     # Split embeddings back into separate datasets
-    plots = {}
+    plots = {'combined': combined_plot}
     start_idx = 0
     for name, vectors in converted_datasets.items():
         end_idx = start_idx + len(vectors)
@@ -159,9 +196,15 @@ def plot_umap_comparable(
         # Create plot
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2'))
-            + geom_point(size=2, alpha=0.7, color='steelblue')
+            + geom_point(size=3, alpha=0.7, color='steelblue')
             + labs(title=f"{title} - {name}", x='UMAP 1', y='UMAP 2')
             + theme_minimal()
+            + theme(
+                text=element_text(size=14),
+                axis_title=element_text(size=16, weight='bold'),
+                axis_text=element_text(size=14),
+                plot_title=element_text(size=18, weight='bold')
+            )
         )
 
         plots[name] = plot
