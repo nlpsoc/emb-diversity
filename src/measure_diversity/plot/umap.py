@@ -9,7 +9,9 @@ def plot_umap_plotnine(
     labels: Optional[List[str]] = None,
     n_neighbors: int = 15,
     min_dist: float = 0.1,
-    random_state: int = 42
+    random_state: int = 42,
+    show_axis_labels: bool = False,
+    show_axis_ticks: bool = False
 ):
     """
     Create a UMAP plot from a list of vectors using plotnine.
@@ -21,6 +23,8 @@ def plot_umap_plotnine(
         n_neighbors: UMAP n_neighbors parameter
         min_dist: UMAP min_dist parameter
         random_state: Random state for reproducibility
+        show_axis_labels: Whether to show x and y axis labels (default: False)
+        show_axis_ticks: Whether to show x and y axis ticks (default: False)
 
     Returns:
         plotnine ggplot object
@@ -34,7 +38,7 @@ def plot_umap_plotnine(
         ) from e
 
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -60,35 +64,66 @@ def plot_umap_plotnine(
         'UMAP2': embedding[:, 1]
     })
 
+    # Determine axis labels
+    x_label = 'UMAP 1' if show_axis_labels else ''
+    y_label = 'UMAP 2' if show_axis_labels else ''
+
     if labels is not None:
-        df['label'] = labels
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2', color='label'))
             + geom_point(size=3, alpha=0.7)
-            + labs(title=title, x='UMAP 1', y='UMAP 2')
+            + labs(title=title, x=x_label, y=y_label)
             + theme_minimal()
-            + theme(
-                text=element_text(size=18),
-                axis_title=element_text(size=22, weight='bold'),
-                axis_text=element_text(size=18),
-                plot_title=element_text(size=24, weight='bold'),
-                legend_title=element_text(size=20, weight='bold'),
-                legend_text=element_text(size=18)
-            )
         )
+
+        # Build theme based on options
+        theme_dict = {
+            'text': element_text(size=18),
+            'plot_title': element_text(size=24, weight='bold'),
+            'legend_title': element_text(size=20, weight='bold'),
+            'legend_text': element_text(size=18),
+            'plot_margin': 0.1
+        }
+
+        if show_axis_labels:
+            theme_dict['axis_title'] = element_text(size=22, weight='bold')
+        else:
+            theme_dict['axis_title'] = element_blank()
+
+        if show_axis_ticks:
+            theme_dict['axis_text'] = element_text(size=18)
+        else:
+            theme_dict['axis_text'] = element_blank()
+            theme_dict['axis_ticks'] = element_blank()
+
+        plot = plot + theme(**theme_dict)
     else:
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2'))
             + geom_point(size=3, alpha=0.7, color='steelblue')
-            + labs(title=title, x='UMAP 1', y='UMAP 2')
+            + labs(title=title, x=x_label, y=y_label)
             + theme_minimal()
-            + theme(
-                text=element_text(size=18),
-                axis_title=element_text(size=22, weight='bold'),
-                axis_text=element_text(size=18),
-                plot_title=element_text(size=24, weight='bold')
-            )
         )
+
+        # Build theme based on options
+        theme_dict = {
+            'text': element_text(size=18),
+            'plot_title': element_text(size=24, weight='bold'),
+            'plot_margin': 0.1
+        }
+
+        if show_axis_labels:
+            theme_dict['axis_title'] = element_text(size=22, weight='bold')
+        else:
+            theme_dict['axis_title'] = element_blank()
+
+        if show_axis_ticks:
+            theme_dict['axis_text'] = element_text(size=18)
+        else:
+            theme_dict['axis_text'] = element_blank()
+            theme_dict['axis_ticks'] = element_blank()
+
+        plot = plot + theme(**theme_dict)
 
     return plot
 
@@ -98,7 +133,9 @@ def plot_umap_comparable(
     title: str = "UMAP Projection",
     n_neighbors: int = 15,
     min_dist: float = 0.1,
-    random_state: int = 42
+    random_state: int = 42,
+    show_axis_labels: bool = False,
+    show_axis_ticks: bool = False
 ):
     """
     Create comparable UMAP plots from multiple datasets using the same UMAP reduction.
@@ -112,6 +149,8 @@ def plot_umap_comparable(
         n_neighbors: UMAP n_neighbors parameter
         min_dist: UMAP min_dist parameter
         random_state: Random state for reproducibility
+        show_axis_labels: Whether to show x and y axis labels (default: False)
+        show_axis_ticks: Whether to show x and y axis ticks (default: False)
 
     Returns:
         Dictionary mapping dataset names to plotnine ggplot objects
@@ -125,7 +164,7 @@ def plot_umap_comparable(
         ) from e
 
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -158,6 +197,10 @@ def plot_umap_comparable(
     )
     embedding = reducer.fit_transform(all_vectors)
 
+    # Determine axis labels
+    x_label = 'UMAP 1' if show_axis_labels else ''
+    y_label = 'UMAP 2' if show_axis_labels else ''
+
     # Create combined plot with all datasets
     df_combined = pd.DataFrame({
         'UMAP1': embedding[:, 0],
@@ -168,17 +211,30 @@ def plot_umap_comparable(
     combined_plot = (
         ggplot(df_combined, aes(x='UMAP1', y='UMAP2', color='Dataset'))
         + geom_point(size=3, alpha=0.7)
-        + labs(title=f"{title} - All Datasets", x='UMAP 1', y='UMAP 2')
+        + labs(title=f"{title}", x=x_label, y=y_label)
         + theme_minimal()
-        + theme(
-            text=element_text(size=18),
-            axis_title=element_text(size=22, weight='bold'),
-            axis_text=element_text(size=18),
-            plot_title=element_text(size=24, weight='bold'),
-            legend_title=element_text(size=20, weight='bold'),
-            legend_text=element_text(size=18)
-        )
     )
+
+    # Build theme for combined plot
+    theme_dict = {
+        'text': element_text(size=18),
+        'plot_title': element_text(size=24, weight='bold'),
+        'legend_title': element_text(size=20, weight='bold'),
+        'legend_text': element_text(size=18)
+    }
+
+    if show_axis_labels:
+        theme_dict['axis_title'] = element_text(size=22, weight='bold')
+    else:
+        theme_dict['axis_title'] = element_blank()
+
+    if show_axis_ticks:
+        theme_dict['axis_text'] = element_text(size=18)
+    else:
+        theme_dict['axis_text'] = element_blank()
+        theme_dict['axis_ticks'] = element_blank()
+
+    combined_plot = combined_plot + theme(**theme_dict)
 
     # Split embeddings back into separate datasets
     plots = {'combined': combined_plot}
@@ -197,15 +253,28 @@ def plot_umap_comparable(
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2'))
             + geom_point(size=3, alpha=0.7, color='steelblue')
-            + labs(title=f"{title} - {name}", x='UMAP 1', y='UMAP 2')
+            + labs(title=f"{title} - {name}", x=x_label, y=y_label)
             + theme_minimal()
-            + theme(
-                text=element_text(size=18),
-                axis_title=element_text(size=22, weight='bold'),
-                axis_text=element_text(size=18),
-                plot_title=element_text(size=24, weight='bold')
-            )
         )
+
+        # Build theme for individual plot
+        theme_dict_individual = {
+            'text': element_text(size=18),
+            'plot_title': element_text(size=24, weight='bold')
+        }
+
+        if show_axis_labels:
+            theme_dict_individual['axis_title'] = element_text(size=22, weight='bold')
+        else:
+            theme_dict_individual['axis_title'] = element_blank()
+
+        if show_axis_ticks:
+            theme_dict_individual['axis_text'] = element_text(size=18)
+        else:
+            theme_dict_individual['axis_text'] = element_blank()
+            theme_dict_individual['axis_ticks'] = element_blank()
+
+        plot = plot + theme(**theme_dict_individual)
 
         plots[name] = plot
         start_idx = end_idx

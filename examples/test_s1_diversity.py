@@ -32,7 +32,7 @@ class TestS1Diversity:
         semantic_plots = plot_umap_comparable(
             {"Gemini": s1g_sem, "DeepSeek": s1d_sem, # "AIME-I": aime_sem, "Math500": math500_sem
              },
-            title="S1 Semantic Embeddings"
+            title="   Semantic Representations"
         )
         for name, plot in semantic_plots.items():
             # Handle the combined plot and individual plots
@@ -51,7 +51,7 @@ class TestS1Diversity:
         style_plots = plot_umap_comparable(
             {"Gemini": s1g_style, "DeepSeek": s1d_style , # "AIME-I": aime_style, "Math500": math500_style
              },
-            title="S1 Style Embeddings"
+            title="Style Representations"
         )
         for name, plot in style_plots.items():
             # Handle the combined plot and individual plots
