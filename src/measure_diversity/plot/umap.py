@@ -220,7 +220,8 @@ def plot_umap_comparable(
         'text': element_text(size=18),
         'plot_title': element_text(size=24, weight='bold'),
         'legend_title': element_text(size=20, weight='bold'),
-        'legend_text': element_text(size=18)
+        'legend_text': element_text(size=18),
+        'plot_margin': 0.1
     }
 
     if show_axis_labels:
@@ -260,7 +261,8 @@ def plot_umap_comparable(
         # Build theme for individual plot
         theme_dict_individual = {
             'text': element_text(size=18),
-            'plot_title': element_text(size=24, weight='bold')
+            'plot_title': element_text(size=24, weight='bold'),
+            'plot_margin': 0.1
         }
 
         if show_axis_labels:
