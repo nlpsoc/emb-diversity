@@ -28,14 +28,11 @@ class TestMRPCDiversity:
 
         # Plot UMAP with comparable embeddings (same reduction)
         semantic_plots = plot_umap_comparable(
-            {"Original": originals_sem, "Paraphrase": paraphrases_sem},
-            title="MRPC Semantic Embeddings"
+            {"Original": originals_sem, "Mistral Rephrase": paraphrases_sem},
+            title="Semantic Representations",
+            save_dir=".",
+            dpi=300
         )
-        for name, plot in semantic_plots.items():
-            # Handle the combined plot and individual plots
-            filename = f"mrpc_semantic_{name.lower().replace(' ', '_')}_umap.png"
-            plot.save(filename, dpi=300)
-            print(f"Saved {filename}")
 
         print("Encoding style for MRPC data")
         originals_style = encode_style_sentences(originals)
@@ -43,14 +40,11 @@ class TestMRPCDiversity:
 
         # Plot UMAP with comparable embeddings (same reduction)
         style_plots = plot_umap_comparable(
-            {"Original": originals_style, "Paraphrase": paraphrases_style},
-            title="MRPC Style Embeddings"
+            {"Original": originals_style, "Mistral Rephrase": paraphrases_style},
+            title="Style Representations",
+            save_dir=".",
+            dpi=300
         )
-        for name, plot in style_plots.items():
-            # Handle the combined plot and individual plots
-            filename = f"mrpc_style_{name.lower().replace(' ', '_')}_umap.png"
-            plot.save(filename, dpi=300)
-            print(f"Saved {filename}")
 
         # Evaluate diversity measures
         print("\n=== Style Embeddings Diversity ===")

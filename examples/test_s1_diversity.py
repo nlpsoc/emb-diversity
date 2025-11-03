@@ -32,12 +32,10 @@ class TestS1Diversity:
         semantic_plots = plot_umap_comparable(
             {"Gemini": s1g_sem, "DeepSeek": s1d_sem, # "AIME-I": aime_sem, "Math500": math500_sem
              },
-            title="   Semantic Representations"
+            title="Semantic Representations",
+            save_dir=".",
+            dpi=300
         )
-        for name, plot in semantic_plots.items():
-            # Handle the combined plot and individual plots
-            filename = f"s1_semantic_{name.lower().replace('-', '')}_umap.png"
-            plot.save(filename, dpi=300)
 
 
         print("encoding style")
@@ -51,12 +49,10 @@ class TestS1Diversity:
         style_plots = plot_umap_comparable(
             {"Gemini": s1g_style, "DeepSeek": s1d_style , # "AIME-I": aime_style, "Math500": math500_style
              },
-            title="Style Representations"
+            title="Style Representations",
+            save_dir=".",
+            dpi=300
         )
-        for name, plot in style_plots.items():
-            # Handle the combined plot and individual plots
-            filename = f"s1_style_{name.lower().replace('-', '')}_umap.png"
-            plot.save(filename, dpi=300)
             
 
 
