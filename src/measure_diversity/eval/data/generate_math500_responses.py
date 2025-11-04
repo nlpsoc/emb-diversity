@@ -38,7 +38,8 @@ def generate_response(
     tokenizer,
     max_new_tokens: int = 2048,
     temperature: float = 0.7,
-    top_p: float = 0.9
+    top_p: float = 0.9,
+    use_thinking_mode: bool = True
 ) -> str:
     """
     Generate a response for a given math problem.
@@ -50,12 +51,18 @@ def generate_response(
         max_new_tokens: Maximum number of tokens to generate
         temperature: Sampling temperature
         top_p: Nucleus sampling parameter
+        use_thinking_mode: Whether to use <|im_start|>think prefix for thinking tokens
 
     Returns:
         The generated response
     """
-    # Construct the prompt
-    prompt = f"{problem}"
+    # Construct the prompt with thinking mode suffix if requested
+    # According to the s1 paper (https://arxiv.org/pdf/2501.19393#page=20.08),
+    # the models are trained to generate thinking trajectories when prompted with <|im_start|>think after the problem
+    if use_thinking_mode:
+        prompt = f"{problem}\n<|im_start|>think\n"
+    else:
+        prompt = f"{problem}"
 
     # Tokenize the input
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
@@ -141,7 +148,8 @@ def generate_responses_for_math500(
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
     use_flash_attention: bool = False,
     save_interval: int = 10,
-    resume: bool = True
+    resume: bool = True,
+    use_thinking_mode: bool = True
 ) -> None:
     """
     Generate responses for all problems in the MATH-500 dataset and save to CSV.
@@ -154,6 +162,7 @@ def generate_responses_for_math500(
         use_flash_attention: Whether to use Flash Attention 2 for faster inference (default: True)
         save_interval: Save results every N samples (default: 10)
         resume: Whether to resume from existing results if found (default: True)
+        use_thinking_mode: Whether to use <|im_start|>think prefix for thinking tokens (default: True)
     """
     print(f"Loading MATH-500 dataset...")
     data = load_math500_dataset()
@@ -216,7 +225,8 @@ def generate_responses_for_math500(
             response = generate_response(
                 item['problem'],
                 model,
-                tokenizer
+                tokenizer,
+                use_thinking_mode=use_thinking_mode
             )
 
             results.append({
@@ -243,22 +253,24 @@ def generate_responses_for_math500(
 
 
 if __name__ == "__main__":
-    # Generate responses for s1-32B model
+    # Generate responses for s1-32B model with thinking mode
     print("=" * 80)
-    print("Generating responses with s1-32B model...")
+    print("Generating responses with s1-32B model (thinking mode enabled)...")
     print("=" * 80)
     generate_responses_for_math500(
         model_name="simplescaling/s1-32B",
-        output_csv="math500_s1_responses.csv",
-        max_samples=None  # Process all samples
+        output_csv="math500-reasoning_s1_responses.csv",
+        max_samples=None,  # Process all samples
+        use_thinking_mode=True  # Use <|im_start|>think prefix as per s1 paper
     )
 
-    # Generate responses for s1.1-32B model
+    # Generate responses for s1.1-32B model with thinking mode
     print("\n" + "=" * 80)
-    print("Generating responses with s1.1-32B model...")
+    print("Generating responses with s1.1-32B model (thinking mode enabled)...")
     print("=" * 80)
     generate_responses_for_math500(
         model_name="simplescaling/s1.1-32B",
-        output_csv="math500_s1.1_responses.csv",
-        max_samples=None  # Process all samples
+        output_csv="math500-reasoning_s1.1_responses.csv",
+        max_samples=None,  # Process all samples
+        use_thinking_mode=True  # Use <|im_start|>think prefix as per s1 paper
     )
