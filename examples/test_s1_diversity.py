@@ -1,8 +1,13 @@
-from measure_diversity.eval.data.s1 import get_s1_gemini_dataset, get_s1_deepseek_dataset, get_aime_I_dataset, get_math500_dataset, get_math500_s1_responses, get_math500_s1_1_responses
+from measure_diversity.eval.data.s1 import get_s1_gemini_dataset, get_s1_deepseek_dataset, get_aime_I_dataset, get_math500_dataset, get_model_responses, get_math500_s1_1_responses, get_math500_s1_reasoning, get_math500_s1_reasoning, get_math500_s1_1_reasoning
 from measure_diversity import evaluate_measures
 from measure_diversity.measure import (mean_pairwise_distance, distance_dispersion, cluster_inertia_diversity)
 from measure_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
 from measure_diversity.plot.umap import plot_umap_comparable
+
+import pydevd_pycharm
+pydevd_pycharm.settrace('hpcs05', port=5678, stdout_to_server=True,
+                        stderr_to_server=True)
+
 
 class TestS1Diversity:
     def test_diversity_s1(self):
@@ -67,8 +72,8 @@ class TestS1Diversity:
 
     def test_generation_diversity(self):
         # Load first 270 entries from CSV files
-        math500_s1 = get_math500_s1_responses(n_entries=270)
-        math500_s1_1 = get_math500_s1_1_responses(n_entries=270)
+        math500_s1 = get_math500_s1_reasoning(n_entries=270)
+        math500_s1_1 = get_math500_s1_1_reasoning(n_entries=270)
 
         # Load first 270 entries from HuggingFace datasets
         s1_gem = get_s1_gemini_dataset()[:270]
@@ -83,12 +88,12 @@ class TestS1Diversity:
         # Create combined UMAP plot for semantic representations
         semantic_plots = plot_umap_comparable(
             {
-                # "M500-Gemini": math500_s1_sem,
-                "M500-DeepSeek": math500_s1_1_sem,
-                "S1K-Gemini": s1g_sem,
-                "S1K-DeepSeek": s1d_sem
+                "Qwen-DeepSeek": math500_s1_1_sem,
+                "Qwen-Gemini": math500_s1_sem,
+                "DeepSeek": s1d_sem,
+                "Gemini": s1g_sem,
             },
-            title="G Semantic Representations",
+            title="Semantic Representations",
             save_dir=".",
             dpi=300
         )
@@ -102,12 +107,12 @@ class TestS1Diversity:
         # Create combined UMAP plot for style representations
         style_plots = plot_umap_comparable(
             {
-                "M500-Gemini": math500_s1_style,
-                # "M500-DeepSeek": math500_s1_1_style,
-                "S1K-Gemini": s1g_style,
-                "S1K-DeepSeek": s1d_style
+                "Qwen-DeepSeek": math500_s1_1_style,
+                "Qwen-Gemini": math500_s1_style,
+                "DeepSeek": s1d_style,
+                "Gemini": s1g_style,
             },
-            title="G Style Representations",
+            title="Style Representations",
             save_dir=".",
             dpi=300
         )

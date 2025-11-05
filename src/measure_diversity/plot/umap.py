@@ -57,8 +57,8 @@ def create_umap_plot(
     show_axis_ticks: bool = False,
     show_legend: bool = True,
     color: str = 'steelblue',
-    point_size: float = 5,
-    point_alpha: float = 0.6,
+    point_size: float = 7,
+    point_alpha: float = 0.45,
     font_size: int = 39,
     title_size: int = 42,
     axis_title_size: int = 39,
@@ -66,7 +66,8 @@ def create_umap_plot(
     legend_text_size: int = 39,
     width: float = 10,
     height: float = 8,
-    dpi: int = 300
+    dpi: int = 300,
+    label_order: Optional[List[str]] = None
 ):
     """
     Create a plot from UMAP embeddings.
@@ -90,12 +91,13 @@ def create_umap_plot(
         width: Width of saved plot in inches
         height: Height of saved plot in inches
         dpi: DPI (resolution) for saved plot
+        label_order: Optional list specifying the order of labels in the legend
 
     Returns:
         plotnine ggplot object
     """
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank, scale_color_discrete
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -124,6 +126,11 @@ def create_umap_plot(
             + labs(title=title, x=x_label, y=y_label)
             + theme_minimal()
         )
+        # Add scale_color_discrete to control both color assignment and legend order
+        # - limits: controls the mapping of categories to colors (assigns colors in this order)
+        # - breaks: controls the display order in the legend
+        if label_order is not None:
+            plot = plot + scale_color_discrete(limits=label_order, breaks=label_order)
     else:
         plot = (
             ggplot(df, aes(x='UMAP1', y='UMAP2'))
@@ -288,7 +295,11 @@ def plot_umap_comparable(
     same embedding space.
 
     Args:
-        datasets: Dictionary mapping dataset names to their vectors
+        datasets: Dictionary mapping dataset names to their vectors.
+                  The order of keys in the dictionary determines:
+                  1. Legend order (first key appears first in legend)
+                  2. Color assignment (first key gets first color)
+                  3. Plotting order (first key plotted LAST, appearing on top)
         title: Base title for plots (dataset name will be appended)
         save_dir: Optional directory to save plots. If provided, saves:
                   - {save_dir}/{title}_combined.png (always)
@@ -317,12 +328,17 @@ def plot_umap_comparable(
         else:
             converted_datasets[name] = vectors
 
-    # Concatenate all datasets
-    all_vectors = np.vstack(list(converted_datasets.values()))
+    # Preserve the order for legend (as provided in input)
+    dataset_order = list(converted_datasets.keys())
 
-    # Create labels to track which dataset each point belongs to
+    # Concatenate datasets in REVERSE order for plotting
+    # This way, the first dataset in the legend will be plotted last (on top)
+    reversed_datasets = list(reversed(list(converted_datasets.items())))
+    all_vectors = np.vstack([vectors for name, vectors in reversed_datasets])
+
+    # Create labels in reversed order to match the concatenation
     dataset_labels = []
-    for name, vectors in converted_datasets.items():
+    for name, vectors in reversed_datasets:
         dataset_labels.extend([name] * len(vectors))
 
     # Compute UMAP embedding once for all data
@@ -343,6 +359,7 @@ def plot_umap_comparable(
         combined_save_path = os.path.join(save_dir, f"{safe_title}_combined.png")
 
     # Create combined plot with all datasets
+    # Pass label_order to preserve the order of datasets in the legend
     combined_plot = create_umap_plot(
         embedding=embedding,
         title=title,
@@ -353,7 +370,8 @@ def plot_umap_comparable(
         show_legend=show_legend,
         width=width,
         height=height,
-        dpi=dpi
+        dpi=dpi,
+        label_order=dataset_order
     )
 
     # Only create individual plots if requested
@@ -361,9 +379,10 @@ def plot_umap_comparable(
         return combined_plot
 
     # Split embeddings back into separate datasets and create individual plots
+    # Note: embeddings are in reversed order, so iterate through reversed_datasets
     plots = {'combined': combined_plot}
     start_idx = 0
-    for name, vectors in converted_datasets.items():
+    for name, vectors in reversed_datasets:
         end_idx = start_idx + len(vectors)
         dataset_embedding = embedding[start_idx:end_idx]
 

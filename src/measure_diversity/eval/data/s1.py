@@ -10,8 +10,8 @@ def get_s1_gemini_dataset() -> list[str]:
     # load and return https://huggingface.co/datasets/simplescaling/s1K
     dataset = load_dataset("simplescaling/s1K-1.1")["train"]
     # extract thinking_trajectories
-    # thinking_trajectories = [sample["thinking_trajectories"][0] for sample in dataset]
-    thinking_trajectories = [sample["gemini_attempt"] for sample in dataset]
+    thinking_trajectories = [sample["gemini_thinking_trajectory"] for sample in dataset]
+    # thinking_trajectories = [sample["gemini_attempt"] for sample in dataset]
     return thinking_trajectories
 
 
@@ -19,8 +19,8 @@ def get_s1_deepseek_dataset() -> list[str]:
     # load and return https://huggingface.co/datasets/simplescaling/s1K-1.1
     dataset = load_dataset("simplescaling/s1K-1.1")["train"]
     # extract deepseek_thinking_trajectory
-    # deepseek_thinking_trajectories = [sample["deepseek_thinking_trajectory"] for sample in dataset]
-    deepseek_thinking_trajectories = [sample["deepseek_attempt"] for sample in dataset]
+    deepseek_thinking_trajectories = [sample["deepseek_thinking_trajectory"] for sample in dataset]
+    # deepseek_thinking_trajectories = [sample["deepseek_attempt"] for sample in dataset]
 
     return deepseek_thinking_trajectories
 
@@ -38,19 +38,20 @@ def get_math500_dataset() -> list[str]:
     problems = [sample["solution"] for sample in dataset]
     return problems
 
-def get_math500_s1_responses(n_entries: int = None) -> list[str]:
+def get_model_responses(csv_path: str = "math500_s1_responses.csv", n_entries: int = None) -> list[str]:
     """
-    Load model responses from math500_s1_responses.csv
+    Load model responses from csv_path
 
     Args:
         n_entries: Number of entries to load. If None, loads all entries.
+        csv_path: Path to the CSV file containing model responses.
 
     Returns:
         List of model responses
     """
     # Get the directory where this file is located
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(current_dir, "math500_s1_responses.csv")
+    csv_path = os.path.join(current_dir, csv_path)
 
     # Load CSV
     df = pd.read_csv(csv_path)
@@ -73,17 +74,28 @@ def get_math500_s1_1_responses(n_entries: int = None) -> list[str]:
     Returns:
         List of model responses
     """
-    # Get the directory where this file is located
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(current_dir, "math500_s1.1_responses.csv")
+    return get_model_responses(csv_path="math500_s1.1_responses.csv", n_entries=n_entries)
 
-    # Load CSV
-    df = pd.read_csv(csv_path)
+def get_math500_s1_reasoning(n_entries: int = None) -> list[str]:
+    """
+    Load reasoning steps from "math500-reasoning_s1_responses.csv"
 
-    # Get the specified number of entries
-    if n_entries is not None:
-        df = df.head(n_entries)
+    Args:
+        n_entries: Number of entries to load. If None, loads all entries.
 
-    # Extract model_response column
-    responses = df["model_response"].tolist()
-    return responses
+    Returns:
+        List of reasoning steps
+    """
+    return get_model_responses(csv_path="math500-reasoning_s1_responses.csv", n_entries=n_entries)
+
+def get_math500_s1_1_reasoning(n_entries: int = None) -> list[str]:
+    """
+    Load reasoning steps from "math500-reasoning_s1.1_responses.csv"
+
+    Args:
+        n_entries: Number of entries to load. If None, loads all entries.
+
+    Returns:
+        List of reasoning steps
+    """
+    return get_model_responses(csv_path="math500-reasoning_s1.1_responses.csv", n_entries=n_entries)
