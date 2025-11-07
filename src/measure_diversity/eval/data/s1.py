@@ -74,7 +74,7 @@ def get_math500_s1_1_responses(n_entries: int = None) -> list[str]:
     Returns:
         List of model responses
     """
-    return get_model_responses(csv_path="math500_s1.1_responses.csv", n_entries=n_entries)
+    return get_model_responses(csv_path="../../../../pilot_datasets/style_diversity/s1/math500_s1.1_responses.csv", n_entries=n_entries)
 
 def get_math500_s1_reasoning(n_entries: int = None) -> list[str]:
     """
@@ -86,7 +86,7 @@ def get_math500_s1_reasoning(n_entries: int = None) -> list[str]:
     Returns:
         List of reasoning steps
     """
-    return get_model_responses(csv_path="math500-reasoning_s1_responses.csv", n_entries=n_entries)
+    return get_model_responses(csv_path="../../../../pilot_datasets/style_diversity/s1/math500-reasoning_s1_responses.csv", n_entries=n_entries)
 
 def get_math500_s1_1_reasoning(n_entries: int = None) -> list[str]:
     """
@@ -98,4 +98,4 @@ def get_math500_s1_1_reasoning(n_entries: int = None) -> list[str]:
     Returns:
         List of reasoning steps
     """
-    return get_model_responses(csv_path="math500-reasoning_s1.1_responses.csv", n_entries=n_entries)
+    return get_model_responses(csv_path="../../../../pilot_datasets/style_diversity/s1/math500-reasoning_s1.1_responses.csv", n_entries=n_entries)
