@@ -179,16 +179,18 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
                 result.append(point)
     return result
 
-def create_toy_dataset1_axioms_challenges(num_points: int) -> list[Tuple[float, float]]:
+def create_toy_dataset1_axioms_challenges(num_points: int) -> Tuple[list[Tuple[float, float]], list[Tuple[float, float]]]:
     """
     Create the toy dataset from the 'Average and SumAverage' of
     the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025). 
     Parameters:
-            num_points (int): Number of points to generate
+        num_points (int): Number of points to generate
 
     Returns:
-        list[Tuple[float, float]]: List of (x, y) coordinates
-
+        Tuple[list[Tuple[float, float]], list[Tuple[float, float]]]: 
+            A tuple containing two datasets:
+            - The first list is the low diversity dataset (points at corners).
+            - The second list is the high diversity dataset (points evenly distributed).
     """
     corners = [(0, 0), (1, 0), (1, 1), (0, 1)]
 
