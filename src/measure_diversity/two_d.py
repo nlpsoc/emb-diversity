@@ -1,3 +1,5 @@
+import random
+import math
 import numpy as np
 from typing import List, Tuple, Optional
 
@@ -130,3 +132,88 @@ def plot_points(points: List[Tuple[float, float]],
         ax.set_ylim(ylim)
 
     plt.show()
+
+
+def duplicate_dataset(points_orig: list[Tuple[float, float]],
+                      duplicate_int: Optional[list[int]] = None,
+                      near_duplicates: bool = False,
+                      perturb_lambda: float = 0.01) -> list[Tuple[float, float]]:
+    """
+    Duplicate each point in the dataset according to the
+    corresponding value in duplicate_int. Also supports near duplicates
+    (small random perturbations of the original data points)
+
+    Parameters:
+        points_orig (list[Tuple[float, float]]): Original dataset.
+        duplicate_int (list[int], optional): List of integers indicating how many
+                                   duplicates to add for each point. Should be the
+                                   same length as points_orig. If None, all points
+                                   are duplicated once.
+        near_duplicates (bool, optional): If True, perturb duplicates.
+        perturb_lambda (float, optional): Magnitude of perturbation.
+
+    Returns:
+        list[Tuple[float, float]]: New list of (x, y) coordinates
+    """
+    # if not provided, all points are duplicated once
+    if duplicate_int is None:
+        duplicate_int = [1] * len(points_orig)
+
+    if len(points_orig) != len(duplicate_int):
+        raise ValueError("points_orig and duplicate_int must have the same length")
+
+
+    result = []
+    for point, num_duplicates in zip(points_orig, duplicate_int):
+        # Add the original
+        result.append(point)
+
+        # add the duplicates
+        for _ in range(num_duplicates):
+            if near_duplicates:
+              x, y = point
+              result.append((
+                x + random.uniform(-perturb_lambda, perturb_lambda),
+                y + random.uniform(-perturb_lambda, perturb_lambda)))
+            else:
+              result.append(point)
+    return result
+
+def create_toy_dataset1_axioms_challenges(num_points: int) -> list[Tuple[float, float]]:
+    """
+    Create the toy dataset from the 'Average and SumAverage' of
+    the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025). 
+    Parameters:
+            num_points (int): Number of points to generate
+
+        Returns:
+            list[Tuple[float, float]]: List of (x, y) coordinates
+
+    """
+    corners = [(0, 0), (1, 0), (1, 1), (0, 1)]
+
+    # Dataset 1 (lower diversity):
+    # all points at the corners of a unit square
+    num_each = math.floor(num_points / 4)
+
+    dataset_low_div = []
+    for corner in corners:
+        dataset_low_div.extend([corner] * num_each)
+
+    # Add any remainder points
+    remainder = num_points - len(dataset_low_div)
+    dataset_low_div.extend(corners[:remainder])
+
+    # Dataset 2 (higher diversity)
+    # All points are evenly distributed across the space
+
+    # Determine the steps
+    n_side = math.ceil(math.sqrt(num_points))
+    coords = [i / (n_side - 1) for i in range(n_side)]
+
+    # Generate points
+    dataset_high_div = [(x, y) for x in coords for y in coords]
+    # Trim to the specific number of points
+    dataset_high_div = dataset_high_div[:num_points]
+
+    return dataset_low_div, dataset_high_div
