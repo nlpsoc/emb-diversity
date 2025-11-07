@@ -171,12 +171,12 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
         # add the duplicates
         for _ in range(num_duplicates):
             if near_duplicates:
-              x, y = point
-              result.append((
-                x + random.uniform(-perturb_lambda, perturb_lambda),
-                y + random.uniform(-perturb_lambda, perturb_lambda)))
+                x, y = point
+                result.append((
+                    x + random.uniform(-perturb_lambda, perturb_lambda),
+                    y + random.uniform(-perturb_lambda, perturb_lambda)))
             else:
-              result.append(point)
+                result.append(point)
     return result
 
 def create_toy_dataset1_axioms_challenges(num_points: int) -> list[Tuple[float, float]]:
