@@ -139,7 +139,7 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
                       near_duplicates: bool = False,
                       perturb_lambda: float = 0.01) -> list[Tuple[float, float]]:
     """
-    Duplicate each point in the dataset according to the
+    Duplicate each point in the dataset duplicate_int[index] times, i.e., according to the
     corresponding value in duplicate_int. Also supports near duplicates
     (small random perturbations of the original data points)
 
@@ -182,7 +182,7 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
 def create_toy_dataset1_axioms_challenges(num_points: int) -> Tuple[list[Tuple[float, float]], list[Tuple[float, float]]]:
     """
     Create the toy dataset from the 'Average and SumAverage' of
-    the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025). 
+    the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025), https://openreview.net/forum?id=2pdFMgv54m.
     Parameters:
         num_points (int): Number of points to generate
 
