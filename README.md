@@ -2,20 +2,39 @@
 
 A minimal Python package with a simple diversity function.
 
-## Install (dev)
-```bash
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-```
-or 
-```bash
-conda create -n measure_diversity python=3.11 -y
-conda activate measure_diversity
-```
-Then install the package and its dependencies:
-```bash
-pip install -r requirements-dev.txt
-pip install -e . # Install in editable mode
-```
+## Install
+> [!NOTE]
+> You must have **uv** installed before running `uv sync`.
+> Full installation guide: <https://docs.astral.sh/uv/getting-started/installation/>
+
+After installing `uv` on your system, you can now follow either **development mode** or **standard installation mode** depending on your use case.
+
+### Development mode
+
+Follow these steps to set up the project for development.
+- Clone the repo
+- Install all dependencies required for development mode: mode
+   ```bash
+   uv sync --group dev
+   ```
+- Activate the Python environment created by `uv`
+   ```bash
+   source .venv/bin/activate
+   ```
+
+### standard installation
+
+To use the library directly do the following,
+
+- Clone the repo
+- Install all dependencies required for standard mode
+   ```bash
+   uv sync --no-group dev
+   ```
+-  Activate the Python environment created by `uv`
+   ```bash
+   source .venv/bin/activate
+   ```
 
 ## Usage
 
