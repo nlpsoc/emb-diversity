@@ -3,13 +3,37 @@ requires = ["setuptools>=61.0"] # Ensure setuptools is at least version 61.0, wh
 build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
-name = "your-package"
+name = "diversity-measurement"
 version = "0.1.0"
 description = "A tiny package with a simple diversity function"
 readme = "README.md"
-requires-python = ">=3.9"
-authors = [{ name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" }]
-dependencies = []
+requires-python = ">=3.11"
+authors = [ 
+    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" },
+    {name = "Cantao Su", email = "c.su@uu.nl"},
+    {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"}
+]
+dependencies = [
+    "datasets~=3.3.2",
+    "matplotlib~=3.10.0",
+    "numpy~=2.0.1",
+    "pandas~=2.3.1",
+    "scikit-learn~=1.7.1",
+    "scipy~=1.16.0",
+    "sentence-transformers>=2.7.0",
+]
+
+[dependency-groups]
+dev = [
+    "datasets~=3.3.2",
+    "matplotlib~=3.10.0",
+    "numpy~=2.0.1",
+    "pandas~=2.3.1",
+    "pytest~=8.4.1",
+    "scikit-learn~=1.7.1",
+    "scipy~=1.16.0",
+    "sentence-transformers>=2.7.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
