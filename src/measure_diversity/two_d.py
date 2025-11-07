@@ -186,8 +186,8 @@ def create_toy_dataset1_axioms_challenges(num_points: int) -> list[Tuple[float, 
     Parameters:
             num_points (int): Number of points to generate
 
-        Returns:
-            list[Tuple[float, float]]: List of (x, y) coordinates
+    Returns:
+        list[Tuple[float, float]]: List of (x, y) coordinates
 
     """
     corners = [(0, 0), (1, 0), (1, 1), (0, 1)]
