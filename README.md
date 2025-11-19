@@ -35,6 +35,9 @@ To use the library directly do the following,
    ```bash
    source .venv/bin/activate
    ```
+There are few more items you need to be aware of uv before working on it. Please
+[Jump to the working with uv section](#working-with-uv)
+
 
 ## Usage
 
@@ -76,3 +79,42 @@ print(result)  # Output: 5
     git push origin --delete feature/my-feature
     ```
     
+
+## Working with uv
+
+### Adding Packages with `uv add`
+
+To add packages to your project, always use `uv add` rather than `uv pip install`. This ensures that your dependencies are properly managed and recorded in your `pyproject.toml`. For example:
+
+```bash
+uv add <package-name>
+```
+
+### Adding Packages to a Dev Group
+
+If you need to add a package specifically to your development environment, you can add it to the `dev` group like this:
+
+```bash
+uv add --group dev <package-name>
+```
+
+### Switching Between Dev and Standard Mode
+
+After you are done with the testing and want to go back to standard mode, you can do this so that uv removes packages utilized in the development mode
+
+```bash
+uv sync --no-group dev
+```
+
+This will disable all additional groups and just load your main project dependencies.
+
+### Best Practice: Run `uv lock -U`
+
+Whenever you upgrade, downgrade, or change versions of packages, it’s a good practice to run:
+
+```bash
+uv lock -U
+```
+
+This updates your pyproject.toml file to ensure all versions are consistent and everything is in sync.
+
