@@ -367,6 +367,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "sentence-transformers" },
+    { name = "vendi-score" },
 ]
 
 [package.dev-dependencies]
@@ -390,6 +391,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = "~=1.7.1" },
     { name = "scipy", specifier = "~=1.16.0" },
     { name = "sentence-transformers", specifier = ">=2.7.0" },
+    { name = "vendi-score", specifier = ">=0.0.3" },
 ]
 
 [package.metadata.requires-dev]
@@ -2077,6 +2079,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795, upload-time = "2025-06-18T14:07:40.39Z" },
 ]
+
+[[package]]
+name = "vendi-score"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7f/4c/ffff6368e4f13a17b8b65df59c868f6a2c8c9feadaaa203e7b6ac5e5f659/vendi-score-0.0.3.tar.gz", hash = "sha256:7b133fd293d63038aea032b2933c68a7040991ee91d9b953fb6b1ede43526c53", size = 13158, upload-time = "2022-08-30T15:58:35.418Z" }
 
 [[package]]
 name = "xxhash"
