@@ -139,9 +139,10 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
                       near_duplicates: bool = False,
                       perturb_lambda: float = 0.01) -> list[Tuple[float, float]]:
     """
-    Duplicate each point in the dataset duplicate_int[index] times, i.e., according to the
-    corresponding value in duplicate_int. Also supports near duplicates
-    (small random perturbations of the original data points)
+    Duplicate each point in the dataset duplicate_int[index] times, i.e., 
+    according to the corresponding value in duplicate_int. 
+    Also supports near duplicates (small random perturbations of 
+    the original data points)
 
     Parameters:
         points_orig (list[Tuple[float, float]]): Original dataset.
@@ -179,10 +180,12 @@ def duplicate_dataset(points_orig: list[Tuple[float, float]],
                 result.append(point)
     return result
 
+
 def create_toy_dataset1_axioms_challenges(num_points: int) -> Tuple[list[Tuple[float, float]], list[Tuple[float, float]]]:
     """
     Create the toy dataset from the 'Average and SumAverage' of
-    the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025), https://openreview.net/forum?id=2pdFMgv54m.
+    the axioms and challenges paper (Mironov and Prokhorenkova, ICML 2025), 
+    https://openreview.net/forum?id=2pdFMgv54m.
     Parameters:
         num_points (int): Number of points to generate
 
@@ -192,7 +195,7 @@ def create_toy_dataset1_axioms_challenges(num_points: int) -> Tuple[list[Tuple[f
             - The first list is the low diversity dataset (points at corners).
             - The second list is the high diversity dataset (points evenly distributed).
     """
-    corners = [(0, 0), (1, 0), (1, 1), (0, 1)]
+    corners = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
 
     # Dataset 1 (lower diversity):
     # all points at the corners of a unit square
@@ -207,14 +210,20 @@ def create_toy_dataset1_axioms_challenges(num_points: int) -> Tuple[list[Tuple[f
     dataset_low_div.extend(corners[:remainder])
 
     # Dataset 2 (higher diversity)
-    # All points are evenly distributed across the space
+    # All points are evenly distributed across space
 
     # Determine the steps
     n_side = math.ceil(math.sqrt(num_points))
-    coords = [i / (n_side - 1) for i in range(n_side)]
+    
+    # avoid division by zero
+    if n_side == 1:
+        coords = [0.0]
+    else:
+        coords = [i / (n_side - 1) for i in range(n_side)]
 
     # Generate points
     dataset_high_div = [(x, y) for x in coords for y in coords]
+
     # Trim to the specific number of points
     dataset_high_div = dataset_high_div[:num_points]
 
