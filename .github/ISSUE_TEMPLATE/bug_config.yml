@@ -26,3 +26,16 @@ body:
         Please write the steps taken to reproduce this bug here. Also add the your enviroment setting like the OS you are working on, the python version your using etc..
     validations:
       required: true
+
+- type: dropdown
+    id: severity
+    attributes:
+      label: Severity / Priority
+      description: How much does this affect the user experience?
+      options:
+        - Critical (Crash / Data Loss)
+        - Major (Feature Broken)
+        - Minor (Annoyance / UI Glitch)
+        - Trivial (Typo)
+    validations:
+      required: true
