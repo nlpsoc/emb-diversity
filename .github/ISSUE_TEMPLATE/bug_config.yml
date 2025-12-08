@@ -35,9 +35,9 @@ body:
       label: Severity / Priority
       description: How much does this affect the user experience?
       options:
-        - Critical (Crash / Data Loss)
+        - Critical (Crash)
         - Major (Feature Broken)
-        - Minor (Annoyance / UI Glitch)
+        - Minor (Annoyance)
         - Trivial (Typo)
     validations:
       required: true
