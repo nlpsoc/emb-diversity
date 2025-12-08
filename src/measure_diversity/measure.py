@@ -115,7 +115,7 @@ def diameter(
         ValueError: If data is empty or contains only one datapoint.
     """
     dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
-    return max(dists)
+    return float(max(dists))
 
 
 def bottleneck(
@@ -139,7 +139,7 @@ def bottleneck(
         ValueError: If data is empty or contains only one datapoint.
     """
     dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
-    return min(dists)
+    return float(min(dists))
 
 
 def cluster_inertia_diversity(

@@ -106,7 +106,7 @@ class TestDiameter:
 
     def test_three_points(self):
         # cosine distances
-        # cosine distance between the first two points is 1 (as they are orthogonal) 
+        # cosine distance between the first two points is 1 (as they are orthogonal)
         # so cosine similarity is 0 --> distance = 1
         data = [[0, 1], [1, 0], [0.5, 0.5]]
         result = diameter(data)
@@ -114,12 +114,12 @@ class TestDiameter:
 
         # vectors are all pointing in the same direction,
         # so cosine sim = 1 --> distance = 0
-        data = [[1,0], [3,0], [5,0]]
+        data = [[1, 0], [3, 0], [5, 0]]
         result = diameter(data)
         assert result == 0.0
 
         # duplicates
-        data = [[-1,0], [-1,0], [-1,0]]
+        data = [[-1, 0], [-1, 0], [-1, 0]]
         result = diameter(data)
         assert result == 0.0
 
@@ -147,16 +147,21 @@ class TestBottleneck:
         # cosine distances
         data = [[0, 1], [1, 0], [0.5, 0.5]]
         result = bottleneck(data)
-        assert np.isclose(result, 1 - np.sqrt(0.5**2 + 0.5**2))
+
+        # dot product between [0, 1] (or [1,0])) and [0.5, 0.5]
+        # 0 * 0.5 + 1 + 0.5 = 0.5
+        # cosine similarity (divide dot product by vector norms):
+        # 0.5/(1 * sqrt(0.5^2 + 0.5^2))
+        assert np.isclose(result, 1 - 0.5/np.sqrt(0.5))
 
         # vectors are all pointing in the same direction,
         # so cosine sim = 1 --> distance = 0
-        data = [[1,0], [3,0], [5,0]]
+        data = [[1, 0], [3, 0], [5, 0]]
         result = bottleneck(data)
         assert result == 0.0
 
         # duplicates
-        data = [[-1,0], [-1,0], [-1,0]]
+        data = [[-1, 0], [-1, 0], [-1, 0]]
         result = bottleneck(data)
         assert result == 0.0
 
