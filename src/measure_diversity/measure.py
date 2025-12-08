@@ -4,7 +4,7 @@
 from collections import Counter
 from typing import List, Iterable, Any, Sequence, Union, Callable
 import numpy as np
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, squareform, cdist
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
 ### Distance-Based Diversity Measure
@@ -132,6 +132,32 @@ def cluster_inertia_diversity(
     kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10 is a value to determine how many times the k-means algorithm will be run with different centroid seeds
     kmeans.fit(X)
     return float(kmeans.inertia_)
+
+def span_with_centroid(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        percentile: float = 90.0,
+        **metric_kwargs: Any,
+) -> float:
+    """
+    Span with Centroid diversity (Cox et al., 2021).
+    ...
+    """
+    X = np.asarray(data, dtype=float)
+    if X.ndim != 2:
+        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
+    n, d = X.shape
+    if n < 2:
+        raise ValueError("Cannot compute span_with_centroid for fewer than 2 datapoints")
+
+    # Centroid μ = (1/n) * sum_i x_i, shape (1, d)
+    centroid = X.mean(axis=0, keepdims=True)
+
+    # Distances D_i = d(x_i, μ), shape (n, 1) → flatten to (n,)
+    dists = cdist(X, centroid, metric=metric, **metric_kwargs).ravel()
+
+    # Span = Percentile_p(D)
+    return float(np.percentile(dists, percentile))
 
 ### Volume-Based Diversity Measure
 
