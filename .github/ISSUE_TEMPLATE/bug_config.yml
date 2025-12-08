@@ -23,8 +23,6 @@ body:
       label: Reproduction Steps
       description: How do we reproduce the behavior?
       placeholder: |
-        1. Go to '...'
-        2. Click on '...'
-        3. See error
+        Please write the steps taken to reproduce this bug here. Also add the your enviroment setting like the OS you are working on, the python version your using etc..
     validations:
       required: true
