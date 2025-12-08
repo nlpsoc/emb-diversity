@@ -21,15 +21,6 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives
-      description: Describe any alternative solutions you've considered.
-      placeholder: "I also thought about..."
-    validations:
-      required: false
-
   - type: dropdown
     id: priority
     attributes:
