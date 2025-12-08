@@ -1,0 +1,43 @@
+name: 🚀 Feature Request
+description: Suggest an idea for this project
+title: "[FEAT] "
+labels: ["enhancement", "discussion"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The Problem
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like.
+      placeholder: "It would be great if..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Describe any alternative solutions you've considered.
+      placeholder: "I also thought about..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this feature?
+      options:
+        - Low (Nice to have)
+        - Medium (Important)
+        - High (Critical blocker)
+    validations:
+      required: true
