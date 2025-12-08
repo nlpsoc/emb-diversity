@@ -4,7 +4,7 @@
 from collections import Counter
 from typing import List, Iterable, Any, Sequence, Union, Callable
 import numpy as np
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
 ### Distance-Based Diversity Measure
@@ -14,6 +14,12 @@ try:
     _HAS_VENDI = True
 except ImportError:  
     _HAS_VENDI = False
+
+try:
+    import elkai  # type: ignore[import-untyped]
+    _HAS_ELKAI = True
+except ImportError:
+    _HAS_ELKAI = False
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 
@@ -92,6 +98,91 @@ def distance_dispersion(
     """
     dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
     return float(np.sum(dists))
+
+
+def hamdiv(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Compute geometric diversity as the length of the shortest Hamiltonian circuit
+    (Traveling Salesman Problem tour) through all points.
+
+    This function:
+      1. Computes pairwise distances between all points using ``_compute_pairwise_distances``.
+      2. Converts the distances into a full distance matrix.
+      3. Uses the ``elkai`` TSP solver to find an (approximately) shortest tour.
+      4. Returns the total length of that tour (including the closing edge).
+
+    Args:
+        data:
+            Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric:
+            Distance metric name or callable, as accepted by ``scipy.spatial.distance.pdist``.
+            Default is ``"cosine"``.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to ``pdist``.
+
+    Returns:
+        The length of the Hamiltonian circuit as a Python float.
+
+    Raises:
+        ImportError:
+            If ``elkai`` is not installed.
+        ValueError:
+            If data is empty or contains fewer than 2 datapoints.
+    """
+    if not _HAS_ELKAI:
+        raise ImportError(
+            "elkai is not installed. Please `pip install elkai` to use hamdiv."
+        )
+
+    # This will validate data and raise ValueError on empty / single-point inputs.
+    condensed = _compute_pairwise_distances(data, metric, **metric_kwargs)
+
+    # Convert condensed distance representation to a full (n, n) matrix.
+    dist_matrix = squareform(condensed)
+
+    # elkai expects a (square) distance matrix as a Python list-of-lists.
+    # It can handle symmetric matrices; diagonal should be zeros.
+    distance_matrix = dist_matrix.tolist()
+
+    # Solve TSP using elkai. Prefer the DistanceMatrix API if available.
+    try:
+        tsp_instance = elkai.DistanceMatrix(distance_matrix)
+        tour = tsp_instance.solve_tsp()
+    except AttributeError:
+        # Fallback for older elkai versions exposing a direct solve_tsp function.
+        tour = elkai.solve_tsp(distance_matrix)  # type: ignore[attr-defined]
+
+    n = dist_matrix.shape[0]
+    if n == 0:
+        # Should not happen because _compute_pairwise_distances would have raised,
+        # but keep as a safety net.
+        raise ValueError("Cannot compute hamdiv for empty data")
+
+    # elkai typically returns a permutation of 0..n-1 (possibly without returning to the start).
+    # If it returns a cycle with the start node repeated at the end, strip the duplicate.
+    if len(tour) == n + 1 and tour[0] == tour[-1]:
+        tour = tour[:-1]
+
+    # Ensure the tour covers all nodes; if not, fall back to adding any missing nodes at the end.
+    visited = list(dict.fromkeys(tour))  # preserve order, remove duplicates
+    if len(visited) < n:
+        missing = [i for i in range(n) if i not in visited]
+        visited.extend(missing)
+    elif len(visited) > n:
+        visited = visited[:n]
+
+    # Compute total circuit length, explicitly closing the tour.
+    total_length = 0.0
+    for i in range(n):
+        a = visited[i]
+        b = visited[(i + 1) % n]
+        total_length += float(dist_matrix[a, b])
+
+    return float(total_length)
 
 
 def cluster_inertia_diversity(

@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume
+    convex_hull_volume, hamdiv
 import pytest
 import numpy as np
 
@@ -246,6 +246,55 @@ class TestClusterInertiaDiversity:
         result2 = cluster_inertia_diversity(data, n_clusters=2)
 
         assert result1 == result2  # Should be exactly equal due to random_state
+
+
+class TestHamDiv:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+            hamdiv([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+            hamdiv(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 0], [1, 0], [0, 1]]
+        result = hamdiv(data, metric="euclidean")
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_two_points_circuit_length(self):
+        """Test that two points produce twice their distance as circuit length."""
+        data = [[0, 0], [1, 0]]
+        value = hamdiv(data, metric="euclidean")
+        expected = 2.0  # distance there and back
+        assert np.isclose(value, expected)
+
+    def test_equilateral_triangle_circuit_length(self):
+        """Test Hamiltonian circuit length for an equilateral triangle."""
+        side = 1.0
+        data = [
+            [0.0, 0.0],
+            [side, 0.0],
+            [0.5 * side, np.sqrt(3) / 2 * side],
+        ]
+        length = hamdiv(data, metric="euclidean")
+        expected = 3.0 * side
+        assert np.isclose(length, expected, rtol=1e-4, atol=1e-4)
+
+    def test_scaling_coordinates_scales_hamdiv(self):
+        """Test that scaling coordinates scales hamdiv by the same factor."""
+        data = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
+        value1 = hamdiv(data, metric="euclidean")
+        scale = 10.0
+        scaled = [[scale * x, scale * y] for x, y in data]
+        value2 = hamdiv(scaled, metric="euclidean")
+        assert np.isclose(value2, scale * value1, rtol=1e-5)
 
 
 
