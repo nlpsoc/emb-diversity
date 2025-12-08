@@ -163,7 +163,7 @@ def chamfer_distance_diversity(
         raise ValueError("Cannot compute chamfer distance for fewer than 2 datapoints")
 
     # compute all pairwise distances
-    dist_vec = pdist(X, metric=metric, **metric_kwargs)
+    dist_vec = _compute_pairwise_distances(data, metric, **metric_kwargs)
     dist_mat = squareform(dist_vec)
 
     # set the diagonal to inf, to force exclude j = i
