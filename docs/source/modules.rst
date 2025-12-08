@@ -25,8 +25,21 @@ measure_diversity.two_d
    :undoc-members:
    :show-inheritance:
 
+measure_diversity.evaluate_measures
+------------------------------------
+
+.. automodule:: measure_diversity.evaluate_measures
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 measure_diversity.embeddings
 -----------------------------
+
+.. automodule:: measure_diversity.embeddings
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 measure_diversity.embeddings.SBERT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
