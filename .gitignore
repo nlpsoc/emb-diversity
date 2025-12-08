@@ -11,3 +11,7 @@ build/
 *.egg-info/
 __pycache__/
 *.pyc
+
+# Local test artifacts
+outputs/
+local_test.py
