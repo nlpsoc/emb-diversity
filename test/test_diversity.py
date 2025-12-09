@@ -184,11 +184,14 @@ class TestEnergy:
         # cosine distances
         data = [[0, 1], [1, 0], [1, 1]]
 
-        # cosine distance between [0, 1] and [1,0]: orthogonal, so
-        # cosine similarity is 0. Distance is 1.
-        # cosine distance between [0,1] and [1,1]:
-        # 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) ~ 0.2929
-        # -(1/3) * (1/1 + 1/0.2929 + 1/0.2929)
+        # Pairwise cosine distances:
+        # [0, 1] and [1, 0]: orthogonal, cosine similarity = 0, distance = 1.0
+        # [0, 1] and [1, 1]: 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) ~ 0.2929
+        # [1, 0] vs [1, 1]: 1 - (1 / (sqrt(1^2 + 0^2) * sqrt(1^2 + 1^2))) ~ 0.2929
+        # So, distances are [1.0, 0.2929, 0.2929]
+        # Energy = -(1/3) * (1/1 + 1/0.2929 + 1/0.2929)
+
+
         assert np.isclose(energy(data), -2.6095)
 
 

@@ -150,13 +150,18 @@ def energy(
         **metric_kwargs: Any
 ) -> float:
     """
-    Implements the energy metric (Velikonivtsev et al., NeurIPS 2024)
-    
+    Implements the energy-based diversity metric for a set of vector representations,
+    as described in Velikonivtsev et al., NeurIPS 2024.
+    When gamma is set to 1, this  can be interpreted as the average
+    pairwise energy for a system of equally charged particles.
+    Because of the multiplication by -1, the value is larger for
+    more diverse datasets.
+
     Args:
         data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
         metric: Metric name or callable, as accepted by scipy.spatial.distance.pdist
                 Default is "cosine".
-        gamma: The gamma value to use, default is 1.0 (as in the paper)
+        gamma: The exponent parameter in the energy calculation, default is 1.0 (as in the paper)
         epsilon: Ensures that each distance is at least epsilon for numerical stability
         **metric_kwargs: Extra keyword arguments passed to pdist. (as in scipy docs)
 
