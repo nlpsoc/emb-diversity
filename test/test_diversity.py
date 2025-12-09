@@ -170,22 +170,21 @@ class TestBottleneck:
 class TestEnergy:
 
     def test_duplicates(self):
-        data = [[0, 1], [0,1]]
+        data = [[0, 1], [0, 1]]
         # - 1/0.1 = -10
         assert np.isclose(energy(data, epsilon=0.1), -10)
 
         # 4 / (sqrt(2) * sqrt(8)) = 1, so distance is 0
-        data = [[1, 1], [2,2]]
+        data = [[1, 1], [2, 2]]
         # - 1/0.1 = -10
         assert np.isclose(energy(data, epsilon=0.1), -10)
 
 
     def test_three_datapoints(self):
         # cosine distances
-        data = [[0, 1], [1, 0], [1,1]]
-        print(energy(data))
+        data = [[0, 1], [1, 0], [1, 1]]
 
-        # cosine distance between [0, 1] and [1,0]: orthogonal, so 
+        # cosine distance between [0, 1] and [1,0]: orthogonal, so
         # cosine similarity is 0. Distance is 1.
         # cosine distance between [0,1] and [1,1]:
         # 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) ~ 0.2929
