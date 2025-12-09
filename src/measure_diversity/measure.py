@@ -242,7 +242,7 @@ def span_with_medoid(
     # 3) medoid = the row with the minimum sum of distances
     medoid_idx = int(np.argmin(row_sums))
 
-    # distances to the medoid, and take the average
+    # 4) distances to the medoid, and take the average
     dists_to_medoid = dist_mat[:, medoid_idx]
     return float(np.mean(dists_to_medoid))
 
