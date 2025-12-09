@@ -47,7 +47,7 @@ def _compute_pairwise_distances(
     if n == 0:
         raise ValueError("Cannot compute distances for empty data")
     if n == 1:
-        raise ValueError("Cannot compute pairwise distances with only 1 data point (need at least 2)")
+        raise ValueError("Cannot compute distances for single data point")
 
     return pdist(X, metric=metric, **metric_kwargs)
 
