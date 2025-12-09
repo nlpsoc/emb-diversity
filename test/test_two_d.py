@@ -1,6 +1,7 @@
-from measure_diversity.two_d import create_normed_datapoints
+from measure_diversity.two_d import create_normed_datapoints, duplicate_dataset, create_toy_dataset1_axioms_challenges
 import pytest
 import numpy as np
+from collections import Counter
 
 class TestCreateNormedDatapoints:
 
@@ -63,3 +64,45 @@ class TestCreateNormedDatapoints:
 
             # Allow some tolerance for equidistant spacing
             assert abs(spacing - expected_spacing) < 0.5
+
+
+class TestDuplicateDatapoints:
+
+    def test_duplicates_default(self):
+        """Duplicate instances when no specific number of duplicates is provided."""
+        dataset_orig = [[1,1], [0,0], [4.5, 3]]
+        expected_result =  [[1,1], [1,1], [0,0], [0,0], [4.5, 3], [4.5, 3]]
+        assert duplicate_dataset(dataset_orig) == expected_result
+
+    def test_duplicates_num_specified(self):
+        """Duplicate instances when a specific number of duplicates is provided."""
+        dataset_orig = [[1,1], [0,0], [4.5, 3]]
+        num_duplicates = [0,0,3]
+        expected_result =  [[1,1], [0,0], [4.5, 3], [4.5, 3], [4.5, 3], [4.5, 3]]
+        assert duplicate_dataset(dataset_orig, num_duplicates) == expected_result
+
+
+class TestToyDataset1AxiomsChallenges:
+
+    def test_paper_example(self):
+        """Test example with 16 points as presented in the paper"""
+        low_div_data, high_div_data  = create_toy_dataset1_axioms_challenges(16)
+
+        low_div_data_expected = [(0, 0)] * 4 + [(1, 0)] * 4 + [(0, 1)] * 4 + [(1, 1)] * 4
+
+        # use Counter because order doesn't matter
+        assert Counter(low_div_data) == Counter(low_div_data_expected)
+
+        high_div_expected = [(0,0), (0, 1/3), (0, 2/3), (0,1),
+                            (1/3, 0), (1/3, 1/3), (1/3, 2/3), (1/3,1),
+                            (2/3, 0), (2/3, 1/3), (2/3, 2/3), (2/3,1),
+                            (1, 0), (1, 1/3), (1, 2/3), (1,1),
+                            ]
+
+        assert Counter(high_div_data) == Counter(high_div_expected)
+
+
+    def test_small_number_points(self):
+        low_div_data, high_div_data  = create_toy_dataset1_axioms_challenges(1)
+        assert low_div_data == [(0.0,0.0)]
+        assert high_div_data == [(0.0,0.0)]
