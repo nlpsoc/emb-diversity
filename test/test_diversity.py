@@ -1,4 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
+    convex_hull_volume, diameter, bottleneck, energy
     convex_hull_volume, graph_entropy, diameter, bottleneck, hamdiv
 import pytest
 import numpy as np
@@ -165,6 +166,33 @@ class TestBottleneck:
         data = [[-1, 0], [-1, 0], [-1, 0]]
         result = bottleneck(data)
         assert result == 0.0
+
+
+class TestEnergy:
+
+    def test_duplicates(self):
+        data = [[0, 1], [0, 1]]
+        # - 1/0.1 = -10
+        assert np.isclose(energy(data, epsilon=0.1), -10)
+
+        # 4 / (sqrt(2) * sqrt(8)) = 1, so distance is 0
+        data = [[1, 1], [2, 2]]
+        # - 1/0.1 = -10
+        assert np.isclose(energy(data, epsilon=0.1), -10)
+
+
+    def test_three_datapoints(self):
+        # cosine distances
+        data = [[0, 1], [1, 0], [1, 1]]
+
+        # Pairwise cosine distances:
+        # [0, 1] and [1, 0]: orthogonal, cosine similarity = 0, distance = 1.0
+        # [0, 1] and [1, 1]: 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) ~ 0.2929
+        # [1, 0] vs [1, 1]: 1 - (1 / (sqrt(1^2 + 0^2) * sqrt(1^2 + 1^2))) ~ 0.2929
+        # So, distances are [1.0, 0.2929, 0.2929]
+        # Energy = -(1/3) * (1/1 + 1/0.2929 + 1/0.2929)
+
+        assert np.isclose(energy(data), -2.6095)
 
 
 class TestDistanceDispersion:
