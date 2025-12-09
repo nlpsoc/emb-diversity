@@ -191,7 +191,6 @@ class TestEnergy:
         # So, distances are [1.0, 0.2929, 0.2929]
         # Energy = -(1/3) * (1/1 + 1/0.2929 + 1/0.2929)
 
-
         assert np.isclose(energy(data), -2.6095)
 
 

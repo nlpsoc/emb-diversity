@@ -179,7 +179,6 @@ def energy(
     return -float((1.0 / (dists ** gamma)).mean())
 
 
-
 def cluster_inertia_diversity(
         data: Sequence[Sequence[float]],
         n_clusters: int = 10
