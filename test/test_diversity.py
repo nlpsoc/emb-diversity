@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume
+    convex_hull_volume, graph_entropy
 import pytest
 import numpy as np
 
@@ -248,5 +248,71 @@ class TestClusterInertiaDiversity:
         assert result1 == result2  # Should be exactly equal due to random_state
 
 
+
+class TestGraphEntropy:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = graph_entropy(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_identical_points_zero_entropy(self):
+        """Test that identical points result in zero entropy."""
+        # If all points are identical, all distances are 0.
+        # The code handles the 0/0 division by returning 0 probability,
+        # leading to 0 entropy.
+        data = [[1, 1], [1, 1], [1, 1]]
+        result = graph_entropy(data, metric="euclidean")
+        assert np.isclose(result, 0.0)
+
+    def test_orthogonal_vectors_known_entropy(self):
+        """Test entropy calculation for known orthogonal vectors."""
+        # 3 orthogonal unit vectors (e.g., axes x, y, z)
+        # Pairwise Cosine Distance for all pairs is 1.0.
+        # For any node i, sum of distances = 1.0 + 1.0 = 2.0.
+        # Probabilities to neighbors are 1/2.
+        # Local Entropy = - (0.5 * log(0.5) + 0.5 * log(0.5)) = log(2)
+        # Total Graph Entropy (sum) = 3 * log(2)
+        data = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        
+        result = graph_entropy(data, metric="cosine")
+        expected_local_entropy = np.log(2)
+        expected_total_entropy = 3 * expected_local_entropy
+        
+        assert np.isclose(result, expected_total_entropy)
+
+    def test_scale_invariance_cosine(self):
+        """Test that scaling vectors does not change cosine-based graph entropy."""
+        data = [[1, 2], [3, 4], [5, 6]]
+        scaled_data = [[10, 20], [30, 40], [50, 60]]
+
+        entropy_original = graph_entropy(data, metric="cosine")
+        entropy_scaled = graph_entropy(scaled_data, metric="cosine")
+
+        assert np.isclose(entropy_original, entropy_scaled)
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different entropy values."""
+        data = [[0, 0], [1, 1], [2, 2]]
+        
+        # Euclidean distances will vary (0, sqrt(2), 2*sqrt(2)).
+        # Cosine distances will be 0 (or close to) because points are collinear.
+        euclidean_ent = graph_entropy(data, metric="euclidean")
+        cosine_ent = graph_entropy(data, metric="cosine")
+
+        assert not np.isclose(euclidean_ent, cosine_ent)
 
 
