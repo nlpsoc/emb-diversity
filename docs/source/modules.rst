@@ -56,3 +56,27 @@ measure_diversity.embeddings.SimCSE
    :members:
    :undoc-members:
    :show-inheritance:
+
+measure_diversity.utility.project_root
+---------------------------------------
+
+.. automodule:: measure_diversity.utility.project_root
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+measure_diversity.eval.data.STEL
+----------------------------------
+
+.. automodule:: measure_diversity.eval.data.STEL
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+measure_diversity.eval.data.synthstel
+---------------------------------------
+
+.. automodule:: measure_diversity.eval.data.synthstel
+   :members:
+   :undoc-members:
+   :show-inheritance:
