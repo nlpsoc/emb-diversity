@@ -7,11 +7,13 @@ name = "diversity-measurement"
 version = "0.1.0"
 description = "A tiny package with a simple diversity function"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 authors = [ 
     {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" },
     {name = "Cantao Su", email = "c.su@uu.nl"},
-    {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"}
+    {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
+    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"}
+
 ]
 dependencies = [
     "datasets~=3.3.2",

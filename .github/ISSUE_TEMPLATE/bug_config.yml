@@ -22,7 +22,22 @@ body:
     attributes:
       label: Reproduction Steps
       description: How do we reproduce the behavior?
+      # Fixed typos below: 'environment', 'you are'
       placeholder: |
-        Please write the steps taken to reproduce this bug here. Also add the your enviroment setting like the OS you are working on, the python version your using etc..
+        Please write the steps taken to reproduce this bug here. 
+        Also add your environment settings (OS, Python version, etc.)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity / Priority
+      description: How much does this affect the user experience?
+      options:
+        - Critical (Crash)
+        - Major (Feature Broken)
+        - Minor (Annoyance)
+        - Trivial (Typo)
     validations:
       required: true
