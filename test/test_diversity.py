@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume
+    convex_hull_volume, diameter, bottleneck
 import pytest
 import numpy as np
 
@@ -85,6 +85,86 @@ class TestMeanPairwiseDistance:
         )
 
 
+class TestDiameter:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+            diameter([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+            diameter(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = diameter(data)
+        assert isinstance(result, float)
+
+    def test_three_points(self):
+        # cosine distances
+
+        # cosine distance between the first two points is 1 (as they are orthogonal)
+        # so cosine similarity is 0 --> distance = 1
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = diameter(data)
+        assert result == 1.0
+
+        # vectors are all pointing in the same direction,
+        # so cosine sim = 1 --> distance = 0
+        data = [[1, 0], [3, 0], [5, 0]]
+        result = diameter(data)
+        assert result == 0.0
+
+        # duplicates
+        data = [[-1, 0], [-1, 0], [-1, 0]]
+        result = diameter(data)
+        assert result == 0.0
+
+
+class TestBottleneck:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+            bottleneck([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+            bottleneck(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = bottleneck(data)
+        assert isinstance(result, float)
+
+    def test_three_points(self):
+        # cosine distances
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = bottleneck(data)
+
+        # dot product between [0, 1] (or [1,0])) and [0.5, 0.5]
+        # 0 * 0.5 + 1 * 0.5 = 0.5
+        # cosine similarity (divide dot product by vector norms):
+        # 0.5/(1 * sqrt(0.5^2 + 0.5^2))
+        assert np.isclose(result, 1 - 0.5/np.sqrt(0.5))
+
+        # vectors are all pointing in the same direction,
+        # so cosine sim = 1 --> distance = 0
+        data = [[1, 0], [3, 0], [5, 0]]
+        result = bottleneck(data)
+        assert result == 0.0
+
+        # duplicates
+        data = [[-1, 0], [-1, 0], [-1, 0]]
+        result = bottleneck(data)
+        assert result == 0.0
 
 
 class TestDistanceDispersion:
