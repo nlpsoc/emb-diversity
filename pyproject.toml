@@ -17,8 +17,9 @@ authors = [
 ]
 dependencies = [
     "datasets~=3.3.2",
+    "elkai>=2.0.1",
     "matplotlib~=3.10.0",
-    "numpy~=2.0.1",
+    "numpy~=2.3.5",
     "pandas~=2.3.1",
     "scikit-learn~=1.7.1",
     "scipy~=1.16.0",
@@ -30,18 +31,23 @@ dependencies = [
 dev = [
     "datasets~=3.3.2",
     "matplotlib~=3.10.0",
-    "numpy~=2.0.1",
+    "numpy~=2.3.5",
     "pandas~=2.3.1",
     "pytest~=8.4.1",
     "scikit-learn~=1.7.1",
     "scipy~=1.16.0",
     "sentence-transformers>=2.7.0",
+    "sphinx>=8.0.0",
+    "sphinx-rtd-theme>=3.0.0",
+    "sphinx-autodoc-typehints>=3.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["examples", "build", "dist"] 
 pythonpath = ["src"]
 markers = [
     "integration: marks tests as integration tests (slow, requires internet)"

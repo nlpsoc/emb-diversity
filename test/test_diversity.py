@@ -1,5 +1,6 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
     convex_hull_volume, diameter, bottleneck, energy
+    convex_hull_volume, graph_entropy, diameter, bottleneck, hamdiv
 import pytest
 import numpy as np
 
@@ -355,5 +356,116 @@ class TestClusterInertiaDiversity:
         assert result1 == result2  # Should be exactly equal due to random_state
 
 
+class TestHamDiv:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit"):
+            hamdiv([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit"):
+            hamdiv(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 0], [1, 0], [0, 1]]
+        result = hamdiv(data, metric="euclidean")
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_two_points_circuit_length(self):
+        """Test that two points produce twice their distance as circuit length."""
+        data = [[0, 0], [1, 0]]
+        value = hamdiv(data, metric="euclidean")
+        expected = 2.0  # distance there and back
+        assert np.isclose(value, expected)
+
+    def test_equilateral_triangle_circuit_length(self):
+        """Test Hamiltonian circuit length for an equilateral triangle."""
+        side = 1.0
+        data = [
+            [0.0, 0.0],
+            [side, 0.0],
+            [0.5 * side, np.sqrt(3) / 2 * side],
+        ]
+        length = hamdiv(data, metric="euclidean")
+        expected = 3.0 * side
+        assert np.isclose(length, expected, rtol=1e-4, atol=1e-4)
+
+    def test_scaling_coordinates_scales_hamdiv(self):
+        """Test that scaling coordinates scales hamdiv by the same factor."""
+        data = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
+        value1 = hamdiv(data, metric="euclidean")
+        scale = 10.0
+        scaled = [[scale * x, scale * y] for x, y in data]
+        value2 = hamdiv(scaled, metric="euclidean")
+        assert np.isclose(value2, scale * value1, rtol=1e-5)
+
+
+
+class TestGraphEntropy:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises AssertionError."""
+        # We need to ensure the empty array has 2 dimensions (0, D) or handled as (0,)
+        # depending on how data.shape is unpacked.
+        # Typically np.array([]) is (0,), so unpacking n,d = data.shape might fail
+        # with a ValueError before the assertion if not careful.
+        # Assuming input is at least 2D or handled before:
+        empty_data = np.empty((0, 3))
+
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(empty_data)
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises AssertionError."""
+        single_point = np.array([[1, 2, 3]])
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = np.array([[0, 1], [1, 0], [0.5, 0.5]])
+        result = graph_entropy(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_identical_points_zero_entropy(self):
+        """Test that identical points result in zero entropy."""
+        data = np.array([[1, 1], [1, 1], [1, 1]])
+        result = graph_entropy(data, metric="euclidean")
+        assert np.isclose(result, 0.0)
+
+    def test_orthogonal_vectors_known_entropy(self):
+        """Test entropy calculation for known orthogonal vectors."""
+        data = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+        result = graph_entropy(data, metric="cosine")
+        expected_local_entropy = np.log(2)
+        expected_total_entropy = 3 * expected_local_entropy
+
+        assert np.isclose(result, expected_total_entropy)
+
+    def test_scale_invariance_cosine(self):
+        """Test that scaling vectors does not change cosine-based graph entropy."""
+        data = np.array([[1, 2], [3, 4], [5, 6]])
+        scaled_data = np.array([[10, 20], [30, 40], [50, 60]])
+
+        entropy_original = graph_entropy(data, metric="cosine")
+        entropy_scaled = graph_entropy(scaled_data, metric="cosine")
+
+        assert np.isclose(entropy_original, entropy_scaled)
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different entropy values."""
+        data = np.array([[0, 0], [1, 1], [2, 2]])
+
+        euclidean_ent = graph_entropy(data, metric="euclidean")
+        cosine_ent = graph_entropy(data, metric="cosine")
+
+        assert not np.isclose(euclidean_ent, cosine_ent)
 
 
