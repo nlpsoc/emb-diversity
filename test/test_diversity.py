@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, diameter, bottleneck, dcscore
+    convex_hull_volume, graph_entropy, diameter, bottleneck, dcscore
 import pytest
 import numpy as np
 
@@ -326,6 +326,71 @@ class TestClusterInertiaDiversity:
         result2 = cluster_inertia_diversity(data, n_clusters=2)
 
         assert result1 == result2  # Should be exactly equal due to random_state
+
+
+
+class TestGraphEntropy:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises AssertionError."""
+        # We need to ensure the empty array has 2 dimensions (0, D) or handled as (0,) 
+        # depending on how data.shape is unpacked. 
+        # Typically np.array([]) is (0,), so unpacking n,d = data.shape might fail 
+        # with a ValueError before the assertion if not careful.
+        # Assuming input is at least 2D or handled before:
+        empty_data = np.empty((0, 3)) 
+        
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(empty_data)
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises AssertionError."""
+        single_point = np.array([[1, 2, 3]])
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = np.array([[0, 1], [1, 0], [0.5, 0.5]])
+        result = graph_entropy(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_identical_points_zero_entropy(self):
+        """Test that identical points result in zero entropy."""
+        data = np.array([[1, 1], [1, 1], [1, 1]])
+        result = graph_entropy(data, metric="euclidean")
+        assert np.isclose(result, 0.0)
+
+    def test_orthogonal_vectors_known_entropy(self):
+        """Test entropy calculation for known orthogonal vectors."""
+        data = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        
+        result = graph_entropy(data, metric="cosine")
+        expected_local_entropy = np.log(2)
+        expected_total_entropy = 3 * expected_local_entropy
+        
+        assert np.isclose(result, expected_total_entropy)
+
+    def test_scale_invariance_cosine(self):
+        """Test that scaling vectors does not change cosine-based graph entropy."""
+        data = np.array([[1, 2], [3, 4], [5, 6]])
+        scaled_data = np.array([[10, 20], [30, 40], [50, 60]])
+
+        entropy_original = graph_entropy(data, metric="cosine")
+        entropy_scaled = graph_entropy(scaled_data, metric="cosine")
+
+        assert np.isclose(entropy_original, entropy_scaled)
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different entropy values."""
+        data = np.array([[0, 0], [1, 1], [2, 2]])
+        
+        euclidean_ent = graph_entropy(data, metric="euclidean")
+        cosine_ent = graph_entropy(data, metric="cosine")
+
+        assert not np.isclose(euclidean_ent, cosine_ent)
+
 
 
 class TestDCScore:
