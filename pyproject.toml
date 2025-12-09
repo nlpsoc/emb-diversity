@@ -7,11 +7,13 @@ name = "diversity-measurement"
 version = "0.1.0"
 description = "A tiny package with a simple diversity function"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 authors = [ 
     {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" },
     {name = "Cantao Su", email = "c.su@uu.nl"},
-    {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"}
+    {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
+    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"}
+
 ]
 dependencies = [
     "datasets~=3.3.2",
@@ -35,12 +37,18 @@ dev = [
     "scikit-learn~=1.7.1",
     "scipy~=1.16.0",
     "sentence-transformers>=2.7.0",
+    "sphinx>=8.0.0",
+    "sphinx-rtd-theme>=3.0.0",
+    "sphinx-autodoc-typehints>=3.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["examples", "build", "dist"] 
+pythonpath = ["src"]
 markers = [
     "integration: marks tests as integration tests (slow, requires internet)"
 ]

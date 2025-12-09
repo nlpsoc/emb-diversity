@@ -7,6 +7,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
+import torch
 import elkai
 ### Distance-Based Diversity Measure
 
@@ -18,7 +19,9 @@ except ImportError:
 
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
-
+#custom signature for a function to accept numpy or pytorch type arrays
+#these are two most common tensor types we would expect
+TensorLike = Union[Sequence[Sequence[float]], np.ndarray, torch.Tensor]
 
 def _compute_pairwise_distances(
         data: Sequence[Sequence[float]],
@@ -164,6 +167,54 @@ def hamdiv(
     return float(total_length)
 
 
+def diameter(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Find the largest distance between any two instances in the embedding space
+    of a dataset.
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric: Metric name or callable, as accepted by scipy.spatial.distance.pdist
+                Default is "cosine".
+        **metric_kwargs: Extra keyword arguments passed to pdist. (as in scipy docs)
+
+    Returns:
+        The largest distance among all pairwise distances across all unique pairs.
+
+    Raises:
+        ValueError: If data is empty or contains only one datapoint.
+    """
+    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    return float(np.max(dists))
+
+
+def bottleneck(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Find the smallest distance between any two instances in the embedding space
+    of a dataset.
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric: Metric name or callable, as accepted by scipy.spatial.distance.pdist
+                Default is "cosine".
+        **metric_kwargs: Extra keyword arguments passed to pdist. (as in scipy docs)
+
+    Returns:
+        The minimum distance among all pairwise distances across all unique pairs.
+
+    Raises:
+        ValueError: If data is empty or contains only one datapoint.
+    """
+    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    return float(np.min(dists))
+
+
 def cluster_inertia_diversity(
         data: Sequence[Sequence[float]],
         n_clusters: int = 10
@@ -202,6 +253,88 @@ def cluster_inertia_diversity(
     kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10 is a value to determine how many times the k-means algorithm will be run with different centroid seeds
     kmeans.fit(X)
     return float(kmeans.inertia_)
+
+def span_with_centroid(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        percentile: float = 90.0,
+        **metric_kwargs: Any,
+) -> float:
+    """
+    Span with Centroid diversity (Cox et al., 2021).
+    Computes diversity as the specified percentile (90th by default) of distances from each
+    datapoint to the dataset centroid.
+
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric: Metric name or callable, as accepted by scipy.spatial.distance.cdist.
+                Default is "cosine".
+        percentile: Percentile value (0-100) to compute. Default is 90.0.
+        **metric_kwargs: Extra keyword arguments passed to cdist.
+
+    Returns:
+        The specified percentile of distances from datapoints to the centroid.
+        Higher values indicate higher diversity/spread.
+
+    Raises:
+        ValueError: If data has wrong shape or fewer than 2 datapoints.
+    """
+    X = np.asarray(data, dtype=float)
+    if X.ndim != 2:
+        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
+    n, d = X.shape
+    if n < 2:
+        raise ValueError("Cannot compute span_with_centroid for fewer than 2 datapoints")
+
+    # Centroid μ = (1/n) * sum_i x_i, shape (1, d)
+    centroid = X.mean(axis=0, keepdims=True)
+
+    # Distances D_i = d(x_i, μ), shape (n, 1) → flatten to (n,)
+    dists = cdist(X, centroid, metric=metric, **metric_kwargs).ravel()
+
+    # Span = Percentile_p(D)
+    return float(np.percentile(dists, percentile))
+def chamfer_distance_diversity(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Chamfer-distance-based diversity: for each point, take the distance
+    to its nearest neighbour (excluding itself), then average over points.
+
+    This implements:
+        Chamfer(X) = (1/n) * sum_i min_{j != i} d_ij
+
+    Args:
+        data: Iterable of vectors, shape (n, d).
+        metric: Distance metric as in scipy.spatial.distance.pdist.
+        **metric_kwargs: Extra keyword arguments passed to pdist.
+
+    Returns:
+        The average nearest-neighbour distance. Higher values indicate
+        more dispersed datasets.
+
+    Raises:
+        ValueError: If there are fewer than 2 datapoints.
+    """
+    X = np.asarray(data, dtype=float)
+    n = X.shape[0]
+    if n < 2:
+        raise ValueError("Cannot compute chamfer distance for fewer than 2 datapoints")
+
+    # compute all pairwise distances
+    dist_vec = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    dist_mat = squareform(dist_vec)
+
+    # set the diagonal to inf, to force exclude j = i
+    np.fill_diagonal(dist_mat, np.inf)
+
+    # for each i, take the minimum distance in the row min_{j≠i} d_ij
+    min_dists = np.min(dist_mat, axis=1)
+
+    # finally, take the average of all i (1/n) ∑_i min_{j≠i} d_ij
+    return float(np.mean(min_dists))
 
 ### Volume-Based Diversity Measure
 
@@ -282,50 +415,39 @@ def radius_diversity(
 
     return geom_mean
 
-
-### Graph-Based Diversity Measure
-def graph_entropy(data: Sequence[Sequence[float]]) -> float:
+def span_with_medoid(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any,
+) -> float:
     """
-    Compute Graph Entropy diversity measure as in Yu et al. (2022):
-    - Treat each embedding as a node in a fully connected graph.
-    - Edge weights are cosine distances d_ij = 1 - cos(x_i, x_j).
-    - For each node i, define f_i(d_ij) = d_ij / sum_k d_ik.
-    - Local entropy: I(x_i) = - sum_j f_i(d_ij) log f_i(d_ij).
-    - GraphEntropy(X) = sum_i I(x_i).
-
-    Args:
-        data: Iterable of embedding vectors (lists/tuples/np.ndarrays), shape (n, d).
-
-    Returns:
-        The graph entropy of the dataset. Higher values indicate higher diversity.
+    Compute the Span with Medoid diversity measure (Cox et al., 2021).
 
     Raises:
-        ValueError: If data is empty or contains only one datapoint.
+        ValueError:
+            If data is empty or contains only one datapoint.
     """
     X = np.asarray(data, dtype=float)
-    n, d = X.shape
-    if n < 2:
-        raise ValueError("Cannot compute graph entropy for fewer than 2 datapoints")
+    n = X.shape[0]
 
-    # normalize
-    norms = np.linalg.norm(X, axis=1, keepdims=True)
-    norms = np.clip(norms, a_min=1e-12, a_max=None)
-    X_norm = X / norms
+    if n == 0:
+        raise ValueError("Cannot compute span_with_medoid for empty data")
+    if n == 1:
+        raise ValueError("Cannot compute span_with_medoid for a single datapoint")
 
-    sim = X_norm @ X_norm.T          # (n, n)
-    dist = 1.0 - sim
-    np.fill_diagonal(dist, 0.0)
+    # 1) pairwise distances (condensed) -> full matrix (n, n)
+    dist_vec = pdist(X, metric=metric, **metric_kwargs)
+    dist_mat = squareform(dist_vec)  # symmetric, zeros on diagonal
 
-    row_sums = dist.sum(axis=1, keepdims=True)  # (n, 1)
+    # sum of distances for each row
+    row_sums = dist_mat.sum(axis=1)
 
-    # 用 where 做安全除法，避免 bool index 形状不匹配
-    p = np.divide(dist, row_sums, out=np.zeros_like(dist), where=row_sums > 0)
+    # 3) medoid = the row with the minimum sum of distances
+    medoid_idx = int(np.argmin(row_sums))
 
-    p_safe = np.clip(p, 1e-12, 1.0)
-    local_entropies = -np.sum(p * np.log(p_safe), axis=1)
-
-    return float(np.sum(local_entropies))
-
+    # 4) distances to the medoid, and take the average
+    dists_to_medoid = dist_mat[:, medoid_idx]
+    return float(np.mean(dists_to_medoid))
 
 ### Distribution-Based Diversity Measure
 
@@ -417,3 +539,67 @@ def dummy_diversity(data: List[List[Any]] | Iterable[Iterable[Any]]) -> float:
     counts = Counter(rows)
     most_common_count = counts.most_common(1)[0][1]
     return 1 - (most_common_count / len(rows))
+
+
+
+### Graph-Based Diversity Measure
+def graph_entropy(data:TensorLike,
+                   metric: DISTANCE_METRIC = "cosine"
+    )-> float:
+
+    """
+    Computes the graph entropy of a dataset, a metric for structural diversity.
+
+    This implementation follows the methodology described in Tao's notes (Pages 11-12).
+    It constructs a complete weighted graph where vertices correspond to data samples
+    and edge weights correspond to pairwise distances.
+
+    The calculation proceeds in two main steps:
+    1. Local Probabilities (Eq. 30): Determines the relative contribution of each
+       edge to a node's total connectivity.
+    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based
+       on its distance distribution.
+
+    Args:
+        data (TensorLike): The input dataset of shape (N, D), where N is the number
+            of samples and D is the dimensionality. Must contain at least 2 samples.
+        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights.
+            Defaults to "cosine".
+
+    Returns:
+        float: The total graph entropy, calculated as the sum of all local node
+        entropies.
+    """
+
+    #ensure whether graph entropy can be calculated
+    n,d = data.shape
+    assert n >= 2, "Cannot compute graph entropy for fewer than 2 datapoints"
+
+    #calulate essentials
+
+    #1. pairwise distances
+    #only issue with pairwise distances is that it returns a condensed matrix
+    # (basically a flattened upper triangular matrix)
+    # need to write logic to get a particular distance from the condensed matrix
+    dist_condensed= _compute_pairwise_distances(data, metric=metric)
+
+    #2.lets get the square matrix from the condensed matrix
+    dist_sqaure = squareform(dist_condensed)
+
+    # 3. calulate the sum of all distances for each node
+    # denomianator of eqaution 30 in Tao's notes
+    node_distance_sums = dist_sqaure.sum(axis=1, keepdims=True)  # (n, 1)
+
+
+    #since all the essentials are calculated, we can now do f_i(d_ij) = d_ij / sum_k d_ik.
+    #essentially the local probabilities from a node to all other nodes
+    F = np.divide(dist_sqaure, node_distance_sums, out=np.zeros_like(dist_sqaure), where=node_distance_sums != 0)
+    F_safe = np.clip(F, 1e-12, 1.0)  # avoid log(0)
+
+    #local entropies
+    local_entropies = -np.sum(F * np.log(F_safe), axis=1)
+
+    #finally the graph entropy
+    #we can choose mean as well, but strictly follwoing Tao's notes in page 11 and 12
+    return float(np.sum(local_entropies))
+

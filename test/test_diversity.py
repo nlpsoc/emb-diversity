@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, hamdiv
+    convex_hull_volume, graph_entropy, diameter, bottleneck, hamdiv
 import pytest
 import numpy as np
 
@@ -85,6 +85,86 @@ class TestMeanPairwiseDistance:
         )
 
 
+class TestDiameter:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+            diameter([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+            diameter(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = diameter(data)
+        assert isinstance(result, float)
+
+    def test_three_points(self):
+        # cosine distances
+
+        # cosine distance between the first two points is 1 (as they are orthogonal)
+        # so cosine similarity is 0 --> distance = 1
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = diameter(data)
+        assert result == 1.0
+
+        # vectors are all pointing in the same direction,
+        # so cosine sim = 1 --> distance = 0
+        data = [[1, 0], [3, 0], [5, 0]]
+        result = diameter(data)
+        assert result == 0.0
+
+        # duplicates
+        data = [[-1, 0], [-1, 0], [-1, 0]]
+        result = diameter(data)
+        assert result == 0.0
+
+
+class TestBottleneck:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+            bottleneck([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+            bottleneck(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = bottleneck(data)
+        assert isinstance(result, float)
+
+    def test_three_points(self):
+        # cosine distances
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = bottleneck(data)
+
+        # dot product between [0, 1] (or [1,0])) and [0.5, 0.5]
+        # 0 * 0.5 + 1 * 0.5 = 0.5
+        # cosine similarity (divide dot product by vector norms):
+        # 0.5/(1 * sqrt(0.5^2 + 0.5^2))
+        assert np.isclose(result, 1 - 0.5/np.sqrt(0.5))
+
+        # vectors are all pointing in the same direction,
+        # so cosine sim = 1 --> distance = 0
+        data = [[1, 0], [3, 0], [5, 0]]
+        result = bottleneck(data)
+        assert result == 0.0
+
+        # duplicates
+        data = [[-1, 0], [-1, 0], [-1, 0]]
+        result = bottleneck(data)
+        assert result == 0.0
 
 
 class TestDistanceDispersion:
@@ -297,5 +377,67 @@ class TestHamDiv:
         assert np.isclose(value2, scale * value1, rtol=1e-5)
 
 
+
+class TestGraphEntropy:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises AssertionError."""
+        # We need to ensure the empty array has 2 dimensions (0, D) or handled as (0,)
+        # depending on how data.shape is unpacked.
+        # Typically np.array([]) is (0,), so unpacking n,d = data.shape might fail
+        # with a ValueError before the assertion if not careful.
+        # Assuming input is at least 2D or handled before:
+        empty_data = np.empty((0, 3))
+
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(empty_data)
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises AssertionError."""
+        single_point = np.array([[1, 2, 3]])
+        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+            graph_entropy(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = np.array([[0, 1], [1, 0], [0.5, 0.5]])
+        result = graph_entropy(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_identical_points_zero_entropy(self):
+        """Test that identical points result in zero entropy."""
+        data = np.array([[1, 1], [1, 1], [1, 1]])
+        result = graph_entropy(data, metric="euclidean")
+        assert np.isclose(result, 0.0)
+
+    def test_orthogonal_vectors_known_entropy(self):
+        """Test entropy calculation for known orthogonal vectors."""
+        data = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+        result = graph_entropy(data, metric="cosine")
+        expected_local_entropy = np.log(2)
+        expected_total_entropy = 3 * expected_local_entropy
+
+        assert np.isclose(result, expected_total_entropy)
+
+    def test_scale_invariance_cosine(self):
+        """Test that scaling vectors does not change cosine-based graph entropy."""
+        data = np.array([[1, 2], [3, 4], [5, 6]])
+        scaled_data = np.array([[10, 20], [30, 40], [50, 60]])
+
+        entropy_original = graph_entropy(data, metric="cosine")
+        entropy_scaled = graph_entropy(scaled_data, metric="cosine")
+
+        assert np.isclose(entropy_original, entropy_scaled)
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different entropy values."""
+        data = np.array([[0, 0], [1, 1], [2, 2]])
+
+        euclidean_ent = graph_entropy(data, metric="euclidean")
+        cosine_ent = graph_entropy(data, metric="cosine")
+
+        assert not np.isclose(euclidean_ent, cosine_ent)
 
 

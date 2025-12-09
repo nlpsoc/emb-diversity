@@ -1,0 +1,43 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+      placeholder: "I clicked X and Y happened..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: How do we reproduce the behavior?
+      # Fixed typos below: 'environment', 'you are'
+      placeholder: |
+        Please write the steps taken to reproduce this bug here. 
+        Also add your environment settings (OS, Python version, etc.)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity / Priority
+      description: How much does this affect the user experience?
+      options:
+        - Critical (Crash)
+        - Major (Feature Broken)
+        - Minor (Annoyance)
+        - Trivial (Typo)
+    validations:
+      required: true
