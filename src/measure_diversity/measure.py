@@ -4,7 +4,7 @@
 from collections import Counter
 from typing import List, Iterable, Any, Sequence, Union, Callable
 import numpy as np
-from scipy.spatial.distance import pdist, squareform, cdist
+from scipy.spatial.distance import pdist, cdist
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
 ### Distance-Based Diversity Measure
