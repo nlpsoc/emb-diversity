@@ -66,7 +66,7 @@ measure_diversity.utility.project_root
    :show-inheritance:
 
 measure_diversity.eval.data.STEL
-----------------------------------
+--------------------------------
 
 .. automodule:: measure_diversity.eval.data.STEL
    :members:
@@ -74,7 +74,7 @@ measure_diversity.eval.data.STEL
    :show-inheritance:
 
 measure_diversity.eval.data.synthstel
----------------------------------------
+-------------------------------------
 
 .. automodule:: measure_diversity.eval.data.synthstel
    :members:
