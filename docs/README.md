@@ -12,12 +12,6 @@ Make sure you have installed the development dependencies:
 uv sync --group dev
 ```
 
-Or install Sphinx and related packages manually:
-
-```bash
-pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
-```
-
 ### Building HTML Documentation
 
 To build the HTML documentation, run:
