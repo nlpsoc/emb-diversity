@@ -141,7 +141,22 @@ def span_with_centroid(
 ) -> float:
     """
     Span with Centroid diversity (Cox et al., 2021).
-    ...
+    Computes diversity as the specified percentile (90th by default) of distances from each
+    datapoint to the dataset centroid.
+
+    Args:
+        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric: Metric name or callable, as accepted by scipy.spatial.distance.cdist.
+                Default is "cosine".
+        percentile: Percentile value (0-100) to compute. Default is 90.0.
+        **metric_kwargs: Extra keyword arguments passed to cdist.
+
+    Returns:
+        The specified percentile of distances from datapoints to the centroid.
+        Higher values indicate higher diversity/spread.
+
+    Raises:
+        ValueError: If data has wrong shape or fewer than 2 datapoints.
     """
     X = np.asarray(data, dtype=float)
     if X.ndim != 2:
