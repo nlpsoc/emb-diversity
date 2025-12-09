@@ -42,6 +42,8 @@ dev = [
 where = ["src"]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["examples", "build", "dist"] 
 markers = [
     "integration: marks tests as integration tests (slow, requires internet)"
 ]
