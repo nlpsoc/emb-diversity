@@ -7,6 +7,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
+import elkai
 ### Distance-Based Diversity Measure
 
 try:
@@ -15,11 +16,6 @@ try:
 except ImportError:  
     _HAS_VENDI = False
 
-try:
-    import elkai  # type: ignore[import-untyped]
-    _HAS_ELKAI = True
-except ImportError:
-    _HAS_ELKAI = False
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 
@@ -32,8 +28,13 @@ def _compute_pairwise_distances(
     """
     Helper function to compute all pairwise distances.
 
+    Args:
+        data: Input data points.
+        metric: Distance metric to use.
+        **metric_kwargs: Additional arguments passed to the distance metric.
+
     Returns:
-        Array of pairwise distances.
+        Array of pairwise distances in condensed form (1D)
 
     Raises:
         ValueError: If data is empty or contains only one datapoint.
@@ -43,7 +44,7 @@ def _compute_pairwise_distances(
     if n == 0:
         raise ValueError("Cannot compute distances for empty data")
     if n == 1:
-        raise ValueError("Cannot compute distances for single data point")
+        raise ValueError("Cannot compute pairwise distances with only 1 data point (need at least 2)")
 
     return pdist(X, metric=metric, **metric_kwargs)
 
@@ -133,13 +134,16 @@ def hamdiv(
         ValueError:
             If data is empty or contains fewer than 2 datapoints.
     """
-    if not _HAS_ELKAI:
-        raise ImportError(
-            "elkai is not installed. Please `pip install elkai` to use hamdiv."
-        )
+    if len(data) < 2:
+        raise ValueError("hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit")
 
     # This will validate data and raise ValueError on empty / single-point inputs.
     condensed = _compute_pairwise_distances(data, metric, **metric_kwargs)
+
+    if len(data) == 2:
+        # tsp-solve not defined for 2 points
+        # But for 2 points, the circuit is just: point A -> point B -> point A
+        return 2.0 * float(condensed[0])
 
     # Convert condensed distance representation to a full (n, n) matrix.
     dist_matrix = squareform(condensed)
@@ -149,38 +153,13 @@ def hamdiv(
     distance_matrix = dist_matrix.tolist()
 
     # Solve TSP using elkai. Prefer the DistanceMatrix API if available.
-    try:
-        tsp_instance = elkai.DistanceMatrix(distance_matrix)
-        tour = tsp_instance.solve_tsp()
-    except AttributeError:
-        # Fallback for older elkai versions exposing a direct solve_tsp function.
-        tour = elkai.solve_tsp(distance_matrix)  # type: ignore[attr-defined]
-
-    n = dist_matrix.shape[0]
-    if n == 0:
-        # Should not happen because _compute_pairwise_distances would have raised,
-        # but keep as a safety net.
-        raise ValueError("Cannot compute hamdiv for empty data")
-
-    # elkai typically returns a permutation of 0..n-1 (possibly without returning to the start).
-    # If it returns a cycle with the start node repeated at the end, strip the duplicate.
-    if len(tour) == n + 1 and tour[0] == tour[-1]:
-        tour = tour[:-1]
-
-    # Ensure the tour covers all nodes; if not, fall back to adding any missing nodes at the end.
-    visited = list(dict.fromkeys(tour))  # preserve order, remove duplicates
-    if len(visited) < n:
-        missing = [i for i in range(n) if i not in visited]
-        visited.extend(missing)
-    elif len(visited) > n:
-        visited = visited[:n]
+    tsp_instance = elkai.DistanceMatrix(distance_matrix)
+    tour = tsp_instance.solve_tsp()
 
     # Compute total circuit length, explicitly closing the tour.
     total_length = 0.0
-    for i in range(n):
-        a = visited[i]
-        b = visited[(i + 1) % n]
-        total_length += float(dist_matrix[a, b])
+    for i in range(len(tour) - 1):  # elkai returns a permutation like [0, 1, 2, 0]
+        total_length += float(dist_matrix[tour[i], tour[i+1]])
 
     return float(total_length)
 

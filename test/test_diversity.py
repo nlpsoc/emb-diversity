@@ -252,13 +252,13 @@ class TestHamDiv:
 
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
+        with pytest.raises(ValueError, match="hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit"):
             hamdiv([])
 
     def test_single_datapoint_raises_error(self):
         """Test that single datapoint raises ValueError."""
         single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
+        with pytest.raises(ValueError, match="hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit"):
             hamdiv(single_point)
 
     def test_return_type(self):
