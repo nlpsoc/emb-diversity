@@ -12,6 +12,13 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+clean:
+	@test -n "$(BUILDDIR)" || (echo "ERROR: BUILDDIR is empty" && exit 1)
+	@test -d "$(BUILDDIR)" || (echo "ERROR: BUILDDIR does not exist" && exit 1)
+	@test "$(BUILDDIR)" != "/" || (echo "ERROR: BUILDDIR is root" && exit 1)
+	rm -rf "$(BUILDDIR)"
+	mkdir -p "$(BUILDDIR)"
+
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
