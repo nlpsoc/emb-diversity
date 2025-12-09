@@ -1,6 +1,7 @@
 # Diversity Measurement Package
 
-A minimal Python package with a simple diversity function.
+A minimal Python package for measuring data diversity. Although the package focuses on text (NLP) datasets, many  of its metrics are broadly applicable and can be applied to other types of data as well.
+This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 
 ## Install
 > [!NOTE]
@@ -118,3 +119,5 @@ uv lock -U
 
 This updates your pyproject.toml file to ensure all versions are consistent and everything is in sync.
 
+# Funding
+This work is supported by the ERC Starting Grant **DataDivers** (101162980).
