@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
 import torch
+import elkai
 ### Distance-Based Diversity Measure
 
 try:
@@ -15,6 +16,7 @@ try:
     _HAS_VENDI = True
 except ImportError:  
     _HAS_VENDI = False
+
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 #custom signature for a function to accept numpy or pytorch type arrays
@@ -29,8 +31,13 @@ def _compute_pairwise_distances(
     """
     Helper function to compute all pairwise distances.
 
+    Args:
+        data: Input data points.
+        metric: Distance metric to use.
+        **metric_kwargs: Additional arguments passed to the distance metric.
+
     Returns:
-        Array of pairwise distances.
+        Array of pairwise distances in condensed form (1D)
 
     Raises:
         ValueError: If data is empty or contains only one datapoint.
@@ -95,6 +102,69 @@ def distance_dispersion(
     """
     dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
     return float(np.sum(dists))
+
+
+def hamdiv(
+        data: Sequence[Sequence[float]],
+        metric: DISTANCE_METRIC = "cosine",
+        **metric_kwargs: Any
+) -> float:
+    """
+    Compute geometric diversity as the length of the shortest Hamiltonian circuit
+    (Traveling Salesman Problem tour) through all points.
+
+    This function:
+      1. Computes pairwise distances between all points using ``_compute_pairwise_distances``.
+      2. Converts the distances into a full distance matrix.
+      3. Uses the ``elkai`` TSP solver to find an (approximately) shortest tour.
+      4. Returns the total length of that tour (including the closing edge).
+
+    Args:
+        data:
+            Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d).
+        metric:
+            Distance metric name or callable, as accepted by ``scipy.spatial.distance.pdist``.
+            Default is ``"cosine"``.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to ``pdist``.
+
+    Returns:
+        The length of the Hamiltonian circuit as a Python float.
+
+    Raises:
+        ImportError:
+            If ``elkai`` is not installed.
+        ValueError:
+            If data is empty or contains fewer than 2 datapoints.
+    """
+    if len(data) < 2:
+        raise ValueError("hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit")
+
+    # This will validate data and raise ValueError on empty / single-point inputs.
+    condensed = _compute_pairwise_distances(data, metric, **metric_kwargs)
+
+    if len(data) == 2:
+        # tsp-solve not defined for 2 points
+        # But for 2 points, the circuit is just: point A -> point B -> point A
+        return 2.0 * float(condensed[0])
+
+    # Convert condensed distance representation to a full (n, n) matrix.
+    dist_matrix = squareform(condensed)
+
+    # elkai expects a (square) distance matrix as a Python list-of-lists.
+    # It can handle symmetric matrices; diagonal should be zeros.
+    distance_matrix = dist_matrix.tolist()
+
+    # Solve TSP using elkai. Prefer the DistanceMatrix API if available.
+    tsp_instance = elkai.DistanceMatrix(distance_matrix)
+    tour = tsp_instance.solve_tsp()
+
+    # Compute total circuit length, explicitly closing the tour.
+    total_length = 0.0
+    for i in range(len(tour) - 1):  # elkai returns a permutation like [0, 1, 2, 0]
+        total_length += float(dist_matrix[tour[i], tour[i+1]])
+
+    return float(total_length)
 
 
 def diameter(
@@ -476,28 +546,28 @@ def dummy_diversity(data: List[List[Any]] | Iterable[Iterable[Any]]) -> float:
 def graph_entropy(data:TensorLike,
                    metric: DISTANCE_METRIC = "cosine"
     )-> float:
-    
+
     """
     Computes the graph entropy of a dataset, a metric for structural diversity.
-    
+
     This implementation follows the methodology described in Tao's notes (Pages 11-12).
-    It constructs a complete weighted graph where vertices correspond to data samples 
+    It constructs a complete weighted graph where vertices correspond to data samples
     and edge weights correspond to pairwise distances.
-    
+
     The calculation proceeds in two main steps:
-    1. Local Probabilities (Eq. 30): Determines the relative contribution of each 
+    1. Local Probabilities (Eq. 30): Determines the relative contribution of each
        edge to a node's total connectivity.
-    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based 
+    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based
        on its distance distribution.
-       
+
     Args:
-        data (TensorLike): The input dataset of shape (N, D), where N is the number 
+        data (TensorLike): The input dataset of shape (N, D), where N is the number
             of samples and D is the dimensionality. Must contain at least 2 samples.
-        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights. 
+        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights.
             Defaults to "cosine".
 
     Returns:
-        float: The total graph entropy, calculated as the sum of all local node 
+        float: The total graph entropy, calculated as the sum of all local node
         entropies.
     """
 
@@ -508,7 +578,7 @@ def graph_entropy(data:TensorLike,
     #calulate essentials
 
     #1. pairwise distances
-    #only issue with pairwise distances is that it returns a condensed matrix 
+    #only issue with pairwise distances is that it returns a condensed matrix
     # (basically a flattened upper triangular matrix)
     # need to write logic to get a particular distance from the condensed matrix
     dist_condensed= _compute_pairwise_distances(data, metric=metric)
@@ -516,7 +586,7 @@ def graph_entropy(data:TensorLike,
     #2.lets get the square matrix from the condensed matrix
     dist_sqaure = squareform(dist_condensed)
 
-    # 3. calulate the sum of all distances for each node 
+    # 3. calulate the sum of all distances for each node
     # denomianator of eqaution 30 in Tao's notes
     node_distance_sums = dist_sqaure.sum(axis=1, keepdims=True)  # (n, 1)
 
