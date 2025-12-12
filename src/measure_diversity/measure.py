@@ -2,14 +2,11 @@
     Diversity measures based on vector representations of data.
 """
 from collections import Counter
-from typing import List, Iterable, Any, Sequence, Union, Callable
+from typing import List, Iterable, Literal, Union, Callable
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
-from sklearn.preprocessing import StandardScaler
 import torch
-from typing import Sequence, Any, Literal
-from scipy.spatial.distance import squareform
 import networkx as nx
 from networkx.algorithms.approximation import greedy_tsp, christofides
 
