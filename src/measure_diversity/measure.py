@@ -11,7 +11,7 @@ import torch
 from typing import Sequence, Any, Literal
 from scipy.spatial.distance import squareform
 import networkx as nx
-from networkx.algorithms.approximation import greedy_tsp, christofides, simulated_annealing_tsp
+from networkx.algorithms.approximation import greedy_tsp, christofides
 
 ### Distance-Based Diversity Measure
 
