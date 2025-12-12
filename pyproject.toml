@@ -17,10 +17,11 @@ authors = [
 ]
 dependencies = [
     "datasets~=3.3.2",
-    "elkai>=2.0.1",
     "matplotlib~=3.10.0",
+    "networkx>=2.8.8",
     "numpy~=2.3.5",
     "pandas~=2.3.1",
+    "python-tsp>=0.5.0",
     "scikit-learn~=1.7.1",
     "scipy~=1.16.0",
     "sentence-transformers>=2.7.0",

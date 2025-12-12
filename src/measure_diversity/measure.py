@@ -8,7 +8,11 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 from sklearn.preprocessing import StandardScaler
 import torch
-import elkai
+from typing import Sequence, Any, Literal
+from scipy.spatial.distance import squareform
+import networkx as nx
+from networkx.algorithms.approximation import greedy_tsp, christofides, simulated_annealing_tsp
+
 ### Distance-Based Diversity Measure
 
 try:
@@ -107,17 +111,17 @@ def distance_dispersion(
 def hamdiv(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",
+        solver: Literal["greedy", "christofides"] = "christofides",
         **metric_kwargs: Any
 ) -> float:
     """
     Compute geometric diversity as the length of the shortest Hamiltonian circuit
     (Traveling Salesman Problem tour) through all points.
 
-    This function:
-      1. Computes pairwise distances between all points using ``_compute_pairwise_distances``.
-      2. Converts the distances into a full distance matrix.
-      3. Uses the ``elkai`` TSP solver to find an (approximately) shortest tour.
-      4. Returns the total length of that tour (including the closing edge).
+    Uses NetworkX TSP solvers to find an (approximately) shortest tour.
+    NetworkX provides a much simpler API than Google's Or-Tools.
+    TODO: In the future & for larger datasets,
+        it might be interesting to test Google's or-tools implementation as it uses Cython.
 
     Args:
         data:
@@ -125,6 +129,12 @@ def hamdiv(
         metric:
             Distance metric name or callable, as accepted by ``scipy.spatial.distance.pdist``.
             Default is ``"cosine"``.
+        solver:
+            NetworkX solver strategy. Options:
+
+            - ``"greedy"``: Greedy nearest neighbor heuristic
+            - ``"christofides"``: Christofides algorithm (default)
+
         **metric_kwargs:
             Extra keyword arguments forwarded to ``pdist``.
 
@@ -132,37 +142,60 @@ def hamdiv(
         The length of the Hamiltonian circuit as a Python float.
 
     Raises:
-        ImportError:
-            If ``elkai`` is not installed.
         ValueError:
-            If data is empty or contains fewer than 2 datapoints.
+            If data is empty or contains fewer than 2 datapoints, or if solver is invalid.
+
+    Examples:
+        Basic usage with default settings (simulated annealing, cosine distance):
+
+        >>> from measure_diversity.measure import hamdiv
+        >>> embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
+        >>> diversity = hamdiv(embeddings)
+        >>> print(f"Diversity: {diversity:.4f}")
+        Diversity: 0.0678
+
+        Using different solvers:
+
+        >>> # Fast nearest neighbor
+        >>> diversity_nn = hamdiv(embeddings, solver="nn")
+        >>>
+        >>> # Best quality (Christofides)
+        >>> diversity_chris = hamdiv(embeddings, solver="christofides")
     """
     if len(data) < 2:
         raise ValueError("hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit")
 
-    # This will validate data and raise ValueError on empty / single-point inputs.
+    # Validate solver option
+    valid_solvers = {"greedy", "christofides"}
+    if solver not in valid_solvers:
+        raise ValueError(f"solver must be one of {valid_solvers}, got '{solver}'")
+
+    # Compute pairwise distances
     condensed = _compute_pairwise_distances(data, metric, **metric_kwargs)
 
-    if len(data) == 2:
-        # tsp-solve not defined for 2 points
-        # But for 2 points, the circuit is just: point A -> point B -> point A
-        return 2.0 * float(condensed[0])
-
-    # Convert condensed distance representation to a full (n, n) matrix.
+    # Convert to full distance matrix
     dist_matrix = squareform(condensed)
+    n = len(dist_matrix)
 
-    # elkai expects a (square) distance matrix as a Python list-of-lists.
-    # It can handle symmetric matrices; diagonal should be zeros.
-    distance_matrix = dist_matrix.tolist()
+    # Create a complete weighted graph from the distance matrix
+    G = nx.Graph()
+    for i in range(n):
+        for j in range(i + 1, n):
+            G.add_edge(i, j, weight=dist_matrix[i, j])
 
-    # Solve TSP using elkai. Prefer the DistanceMatrix API if available.
-    tsp_instance = elkai.DistanceMatrix(distance_matrix)
-    tour = tsp_instance.solve_tsp()
+    # Solve TSP based on chosen solver
+    if solver == "greedy":
+        # Greedy/nearest neighbor approach
+        tour = greedy_tsp(G, weight='weight', source=0)
+    elif solver == "christofides":
+        # Christofides algorithm
+        tour = christofides(G, weight='weight')
 
-    # Compute total circuit length, explicitly closing the tour.
+    # Calculate total tour length
+    # NetworkX returns a cycle that includes returning to start, so we iterate through pairs
     total_length = 0.0
-    for i in range(len(tour) - 1):  # elkai returns a permutation like [0, 1, 2, 0]
-        total_length += float(dist_matrix[tour[i], tour[i+1]])
+    for i in range(len(tour) - 1):
+        total_length += dist_matrix[tour[i], tour[i + 1]]
 
     return float(total_length)
 

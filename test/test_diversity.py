@@ -1,6 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, diameter, bottleneck, energy
-    convex_hull_volume, graph_entropy, diameter, bottleneck, hamdiv
+    convex_hull_volume, energy, graph_entropy, diameter, bottleneck, hamdiv
 import pytest
 import numpy as np
 
