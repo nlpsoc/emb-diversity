@@ -146,7 +146,7 @@ def hamdiv(
             If data is empty or contains fewer than 2 datapoints, or if solver is invalid.
 
     Examples:
-        Basic usage with default settings (simulated annealing, cosine distance):
+        Basic usage with default settings (christofides, cosine distance):
 
         >>> from measure_diversity.measure import hamdiv
         >>> embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
@@ -157,7 +157,7 @@ def hamdiv(
         Using different solvers:
 
         >>> # Fast nearest neighbor
-        >>> diversity_nn = hamdiv(embeddings, solver="nn")
+        >>> diversity_nn = hamdiv(embeddings, solver="greedy")
         >>>
         >>> # Best quality (Christofides)
         >>> diversity_chris = hamdiv(embeddings, solver="christofides")
