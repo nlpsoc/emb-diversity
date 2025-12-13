@@ -46,7 +46,7 @@ dev = [
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["test"]
 norecursedirs = ["examples", "build", "dist"] 
 pythonpath = ["src"]
 markers = [

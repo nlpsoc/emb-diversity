@@ -18,7 +18,6 @@ try:
 except ImportError:  
     _HAS_VENDI = False
 
-
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 #custom signature for a function to accept numpy or pytorch type arrays
 #these are two most common tensor types we would expect
@@ -32,13 +31,8 @@ def _compute_pairwise_distances(
     """
     Helper function to compute all pairwise distances.
 
-    Args:
-        data: Input data points.
-        metric: Distance metric to use.
-        **metric_kwargs: Additional arguments passed to the distance metric.
-
     Returns:
-        Array of pairwise distances in condensed form (1D)
+        Array of pairwise distances.
 
     Raises:
         ValueError: If data is empty or contains only one datapoint.
@@ -613,28 +607,28 @@ def dummy_diversity(data: List[List[Any]] | Iterable[Iterable[Any]]) -> float:
 def graph_entropy(data:TensorLike,
                    metric: DISTANCE_METRIC = "cosine"
     )-> float:
-
+    
     """
     Computes the graph entropy of a dataset, a metric for structural diversity.
-
+    
     This implementation follows the methodology described in Tao's notes (Pages 11-12).
-    It constructs a complete weighted graph where vertices correspond to data samples
+    It constructs a complete weighted graph where vertices correspond to data samples 
     and edge weights correspond to pairwise distances.
-
+    
     The calculation proceeds in two main steps:
-    1. Local Probabilities (Eq. 30): Determines the relative contribution of each
+    1. Local Probabilities (Eq. 30): Determines the relative contribution of each 
        edge to a node's total connectivity.
-    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based
+    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based 
        on its distance distribution.
-
+       
     Args:
-        data (TensorLike): The input dataset of shape (N, D), where N is the number
+        data (TensorLike): The input dataset of shape (N, D), where N is the number 
             of samples and D is the dimensionality. Must contain at least 2 samples.
-        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights.
+        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights. 
             Defaults to "cosine".
 
     Returns:
-        float: The total graph entropy, calculated as the sum of all local node
+        float: The total graph entropy, calculated as the sum of all local node 
         entropies.
     """
 
@@ -645,7 +639,7 @@ def graph_entropy(data:TensorLike,
     #calulate essentials
 
     #1. pairwise distances
-    #only issue with pairwise distances is that it returns a condensed matrix
+    #only issue with pairwise distances is that it returns a condensed matrix 
     # (basically a flattened upper triangular matrix)
     # need to write logic to get a particular distance from the condensed matrix
     dist_condensed= _compute_pairwise_distances(data, metric=metric)
@@ -653,7 +647,7 @@ def graph_entropy(data:TensorLike,
     #2.lets get the square matrix from the condensed matrix
     dist_sqaure = squareform(dist_condensed)
 
-    # 3. calulate the sum of all distances for each node
+    # 3. calulate the sum of all distances for each node 
     # denomianator of eqaution 30 in Tao's notes
     node_distance_sums = dist_sqaure.sum(axis=1, keepdims=True)  # (n, 1)
 
