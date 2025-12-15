@@ -419,3 +419,71 @@ class TestGraphEntropy:
         assert not np.isclose(euclidean_ent, cosine_ent)
 
 
+
+class TestDCScore:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="requires at least 2 datapoints"):
+            dcscore([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        with pytest.raises(ValueError, match="requires at least 2 datapoints"):
+            dcscore([[1.0, 2.0, 3.0]])
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = dcscore(data)
+        assert isinstance(score, float)
+
+    def test_two_orthogonal_vectors_cs_kernel(self):
+        """
+        For two orthogonal unit vectors with cosine-like kernel:
+        X = [[1,0], [0,1]], normalize=True, tau=1
+
+        K = [[1, 0],
+             [0, 1]]
+
+        Row-wise softmax:
+          row1: [e^1 / (e^1 + e^0), e^0 / (e^1 + e^0)]
+          row2: [e^0 / (e^1 + e^0), e^1 / (e^1 + e^0)]
+
+        So DCScore = sum diag(P) = 2 * e^1 / (e^1 + e^0)
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = dcscore(data, kernel_type="cs", tau=1.0, normalize=True)
+
+        e1 = np.exp(1.0)
+        expected = 2.0 * e1 / (e1 + 1.0)
+        assert np.isclose(score, expected)
+
+    def test_scale_invariance_with_normalize(self):
+        """
+        With normalize=True, scaling the vectors should not change the score
+        for the cosine-like kernel.
+        """
+        small = [[0.5, 0.5], [-0.5, -0.5]]
+        large = [[1.0, 1.0], [-1.0, -1.0]]
+
+        score_small = dcscore(small, kernel_type="cs", tau=1.0, normalize=True)
+        score_large = dcscore(large, kernel_type="cs", tau=1.0, normalize=True)
+
+        assert np.isclose(score_small, score_large)
+
+    def test_higher_tau_flattens_softmax(self):
+        """
+        Larger tau should make the softmax more uniform, which typically
+        reduces the diagonal dominance and thus the DCScore.
+
+        We don't assert a strict inequality for all possible datasets,
+        but we can use a simple asymmetric example where we expect
+        smaller DCScore for larger tau.
+        """
+        data = [[1.0, 0.0], [0.8, 0.2], [0.0, 1.0]]
+
+        score_tau_small = dcscore(data, kernel_type="cs", tau=0.5, normalize=True)
+        score_tau_large = dcscore(data, kernel_type="cs", tau=5.0, normalize=True)
+
+        assert score_tau_small > score_tau_large
