@@ -18,6 +18,7 @@ authors = [
 dependencies = [
     "datasets~=3.3.2",
     "matplotlib~=3.10.0",
+    "networkx>=2.8.8",
     "numpy~=2.3.5",
     "pandas~=2.3.1",
     "scikit-learn~=1.7.1",
@@ -45,7 +46,7 @@ dev = [
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["test"]
 norecursedirs = ["examples", "build", "dist"] 
 pythonpath = ["src"]
 markers = [
