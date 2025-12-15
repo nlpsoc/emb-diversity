@@ -4,7 +4,7 @@
 from collections import Counter
 from typing import List, Iterable, Literal, Union, Callable, Sequence
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist, squareform, cdist
 from scipy.spatial import ConvexHull
 import torch
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
