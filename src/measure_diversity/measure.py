@@ -733,9 +733,18 @@ def graph_entropy(data:TensorLike,
         entropies.
     """
 
-    #ensure whether graph entropy can be calculated
-    n,d = data.shape
-    assert n >= 2, "Cannot compute graph entropy for fewer than 2 datapoints"
+    # normalize input to numpy array
+    if isinstance(data, torch.Tensor):
+        X = data.detach().cpu().numpy()
+    else:
+        X = np.asarray(data, dtype=float)
+
+    if X.ndim != 2:
+        raise ValueError(f"Expected shape (n, d), got {X.shape}")
+
+    n, d = X.shape
+    if n < 2:
+        raise ValueError("Cannot compute graph entropy for fewer than 2 datapoints")
 
     #calulate essentials
 
@@ -743,7 +752,7 @@ def graph_entropy(data:TensorLike,
     #only issue with pairwise distances is that it returns a condensed matrix 
     # (basically a flattened upper triangular matrix)
     # need to write logic to get a particular distance from the condensed matrix
-    dist_condensed= _compute_pairwise_distances(data, metric=metric)
+    dist_condensed= _compute_pairwise_distances(X, metric=metric)
 
     #2.lets get the square matrix from the condensed matrix
     dist_sqaure = squareform(dist_condensed)
