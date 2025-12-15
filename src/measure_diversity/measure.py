@@ -660,7 +660,9 @@ def dcscore(
 
     elif kernel_type == "poly":
         # sklearn: polynomial_kernel(X, Y, degree, gamma=None, coef0=1)
-        K = polynomial_kernel(X, X, degree=tau)
+        if not float(tau).is_integer():
+            raise ValueError("For 'poly' kernel, tau must be an integer (degree of the polynomial).")
+        K = polynomial_kernel(X, X, degree=int(tau))
 
     else:
         raise NotImplementedError(
