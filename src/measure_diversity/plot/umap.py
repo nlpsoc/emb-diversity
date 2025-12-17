@@ -57,6 +57,7 @@ def create_umap_plot(
     show_axis_ticks: bool = False,
     show_legend: bool = True,
     color: str = 'steelblue',
+    colors: Optional[Dict[str, str]] = None,
     point_size: float = 7,
     point_alpha: float = 0.45,
     font_size: int = 39,
@@ -81,6 +82,8 @@ def create_umap_plot(
         show_axis_ticks: Whether to show x and y axis ticks
         show_legend: Whether to show the legend (only applies when labels provided)
         color: Color for points when labels is None
+        colors: Optional dictionary mapping label names to color hex codes (e.g., {"Dataset1": "#FF0000", "Dataset2": "#0000FF"}).
+                Only used when labels is not None. If None, uses plotnine's default color palette.
         point_size: Size of points
         point_alpha: Transparency of points (0-1)
         font_size: Base font size for axis text
@@ -97,7 +100,7 @@ def create_umap_plot(
         plotnine ggplot object
     """
     try:
-        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank, scale_color_discrete
+        from plotnine import ggplot, aes, geom_point, labs, theme_minimal, theme, element_text, element_blank, scale_color_discrete, scale_color_manual
     except ImportError as e:
         raise ImportError(
             "plotnine is required for plotting. "
@@ -126,10 +129,19 @@ def create_umap_plot(
             + labs(title=title, x=x_label, y=y_label)
             + theme_minimal()
         )
-        # Add scale_color_discrete to control both color assignment and legend order
-        # - limits: controls the mapping of categories to colors (assigns colors in this order)
-        # - breaks: controls the display order in the legend
-        if label_order is not None:
+        # Add color scale to control both color assignment and legend order
+        if colors is not None:
+            # Use custom colors with scale_color_manual
+            # - values: maps categories to specific colors
+            # - limits/breaks: controls the display order in the legend
+            if label_order is not None:
+                plot = plot + scale_color_manual(values=colors, limits=label_order, breaks=label_order)
+            else:
+                plot = plot + scale_color_manual(values=colors)
+        elif label_order is not None:
+            # Use default colors but control the order
+            # - limits: controls the mapping of categories to colors (assigns colors in this order)
+            # - breaks: controls the display order in the legend
             plot = plot + scale_color_discrete(limits=label_order, breaks=label_order)
     else:
         plot = (
@@ -276,6 +288,7 @@ def plot_umap_comparable(
     title: str = "UMAP Projection",
     save_dir: Optional[str] = None,
     create_individual_plots: bool = False,
+    colors: Optional[Dict[str, str]] = None,
     n_neighbors: int = 15,
     min_dist: float = 0.1,
     metric: str = "cosine",
@@ -298,13 +311,16 @@ def plot_umap_comparable(
         datasets: Dictionary mapping dataset names to their vectors.
                   The order of keys in the dictionary determines:
                   1. Legend order (first key appears first in legend)
-                  2. Color assignment (first key gets first color)
+                  2. Color assignment (first key gets first color, unless custom colors specified)
                   3. Plotting order (first key plotted LAST, appearing on top)
         title: Base title for plots (dataset name will be appended)
         save_dir: Optional directory to save plots. If provided, saves:
                   - {save_dir}/{title}_combined.png (always)
                   - {save_dir}/{title}_{dataset_name}.png (only if create_individual_plots=True)
         create_individual_plots: Whether to create individual plots for each dataset (default: False)
+        colors: Optional dictionary mapping dataset names to color hex codes
+                (e.g., {"Gemini": "#FF0000", "DeepSeek": "#0000FF"}).
+                If None, uses plotnine's default color palette.
         n_neighbors: UMAP n_neighbors parameter
         min_dist: UMAP min_dist parameter
         metric: UMAP distance metric (default: "cosine")
@@ -368,6 +384,7 @@ def plot_umap_comparable(
         show_axis_labels=show_axis_labels,
         show_axis_ticks=show_axis_ticks,
         show_legend=show_legend,
+        colors=colors,
         width=width,
         height=height,
         dpi=dpi,

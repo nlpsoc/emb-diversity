@@ -32,6 +32,7 @@ class TestS1Diversity:
         # math500_sem = encode_semantic_sentences(math500)
 
         # Plot UMAP with comparable embeddings (same reduction)
+        # Using default colors (colors=None) - can be customized with colors={"Gemini": "#FF0000", ...}
         semantic_plots = plot_umap_comparable(
             {"Gemini": s1g_sem, "DeepSeek": s1d_sem, # "AIME-I": aime_sem, "Math500": math500_sem
              },
@@ -47,10 +48,12 @@ class TestS1Diversity:
 
 
         # Plot UMAP with comparable embeddings (same reduction)
+        # Default plotnine colors shown explicitly - modify as needed
         style_plots = plot_umap_comparable(
             {"Gemini": s1g_style, "DeepSeek": s1d_style , # "AIME-I": aime_style, "Math500": math500_style
              },
             title="Style Representations",
+            colors={"Gemini": "#1f77b4", "DeepSeek": "#ff7f0e"},
             save_dir=".",
             dpi=300
         )
