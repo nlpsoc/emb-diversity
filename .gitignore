@@ -1,8 +1,7 @@
 # MacOS system files
 .DS_Store
 
-# hidden files and folders start with "_" or "."
-_*
+# hidden files and folders start with "."
 .*
 
 # Distribution / packaging files
@@ -11,3 +10,11 @@ build/
 *.egg-info/
 __pycache__/
 *.pyc
+
+# Local test artifacts
+outputs/
+local_test.py
+
+# Sphinx auto-generated documentation files
+docs/source/modules.rst
+docs/source/measure_diversity*.rst

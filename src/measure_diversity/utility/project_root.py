@@ -5,7 +5,7 @@ from pathlib import Path
 def find(marker_files=None):
     """Find project root by looking for marker files."""
     if marker_files is None:
-        marker_files = ['.project_root', 'pyproject.toml', 'setup.py', '.git', 'requirements.txt']
+        marker_files = ['.project_root', 'pyproject.toml', 'setup.py', '.git']
 
     current_dir = Path(__file__).resolve().parent
 

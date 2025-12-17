@@ -4,17 +4,15 @@ from measure_diversity.measure import (mean_pairwise_distance, distance_dispersi
 from measure_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
 from measure_diversity.plot.umap import plot_umap_comparable
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('hpcs05', port=5678, stdout_to_server=True,
-                        stderr_to_server=True)
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('hpcs05', port=5678, stdout_to_server=True,
+#                         stderr_to_server=True)
 
 
 class TestS1Diversity:
     def test_diversity_s1(self):
         s1_gem = get_s1_gemini_dataset()# [:10]
         s1_ds = get_s1_deepseek_dataset()# [:10]
-        aimeI = get_aime_I_dataset()# [:10]
-        math500 = get_math500_dataset()# [:10]
 
         measures = [
             lambda data: mean_pairwise_distance(data, metric="euclidean"),
@@ -28,10 +26,10 @@ class TestS1Diversity:
         measures[2].__name__ = "distance_dispersion_cosine"
 
         print("encoding semantics")
-        aime_sem = encode_semantic_sentences(aimeI)
+        # aime_sem = encode_semantic_sentences(aimeI)
         s1g_sem = encode_semantic_sentences(s1_gem)
         s1d_sem = encode_semantic_sentences(s1_ds)
-        math500_sem = encode_semantic_sentences(math500)
+        # math500_sem = encode_semantic_sentences(math500)
 
         # Plot UMAP with comparable embeddings (same reduction)
         semantic_plots = plot_umap_comparable(
@@ -46,8 +44,6 @@ class TestS1Diversity:
         print("encoding style")
         s1g_style = encode_style_sentences(s1_gem)
         s1d_style = encode_style_sentences(s1_ds)
-        aime_style = encode_style_sentences(aimeI)
-        math500_style = encode_style_sentences(math500)
 
 
         # Plot UMAP with comparable embeddings (same reduction)
@@ -58,9 +54,6 @@ class TestS1Diversity:
             save_dir=".",
             dpi=300
         )
-            
-
-
 
         evaluate_measures.evaluate_monotone_order(
             [s1g_style, s1d_style], measures,
