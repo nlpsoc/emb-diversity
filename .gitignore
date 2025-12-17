@@ -12,8 +12,7 @@ __pycache__/
 *.pyc
 
 # Local test artifacts
-outputs/
-local_test.py
+local_test/
 
 # Sphinx auto-generated documentation files
 docs/source/modules.rst
