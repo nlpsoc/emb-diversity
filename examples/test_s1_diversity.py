@@ -11,8 +11,8 @@ from measure_diversity.plot.umap import plot_umap_comparable
 
 class TestS1Diversity:
     def test_diversity_s1(self):
-        s1_gem = get_s1_gemini_dataset()# [:10]
-        s1_ds = get_s1_deepseek_dataset()# [:10]
+        s1_gem = get_s1_gemini_dataset()[:500]
+        s1_ds = get_s1_deepseek_dataset()[:500]
 
         measures = [
             lambda data: mean_pairwise_distance(data, metric="euclidean"),
@@ -37,6 +37,11 @@ class TestS1Diversity:
             {"Gemini": s1g_sem, "DeepSeek": s1d_sem, # "AIME-I": aime_sem, "Math500": math500_sem
              },
             title="Semantic Representations",
+            # colors={"Gemini": "#1f77b4", "DeepSeek": "#ff7f0e"},
+            # colors={"Gemini": "#14345A", "DeepSeek": "#E6A823"},
+            # colors={"Gemini": "#1F4E79", "DeepSeek": "#D28E00"},
+            colors={"Gemini": "#003B44", "DeepSeek": "#E07A7A"},
+            # colors={"Gemini": "#7EC9D3", "DeepSeek": "#5A1414"},
             save_dir=".",
             dpi=300
         )
@@ -53,7 +58,7 @@ class TestS1Diversity:
             {"Gemini": s1g_style, "DeepSeek": s1d_style , # "AIME-I": aime_style, "Math500": math500_style
              },
             title="Style Representations",
-            colors={"Gemini": "#1f77b4", "DeepSeek": "#ff7f0e"},
+            colors={"Gemini": "#003B44", "DeepSeek": "#E07A7A"},
             save_dir=".",
             dpi=300
         )
@@ -89,6 +94,7 @@ class TestS1Diversity:
                 "DeepSeek": s1d_sem,
                 "Gemini": s1g_sem,
             },
+            colors={"Qwen-DeepSeek": "#000000", "Qwen-Gemini": "#0072B2", "DeepSeek": "#D55E00", "Gemini": "#CC79A7"},
             title="Semantic Representations",
             save_dir=".",
             dpi=300
@@ -109,6 +115,7 @@ class TestS1Diversity:
                 "Gemini": s1g_style,
             },
             title="Style Representations",
+            colors={"Qwen-DeepSeek": "#000000", "Qwen-Gemini": "#0072B2", "DeepSeek": "#D55E00", "Gemini": "#CC79A7"},
             save_dir=".",
             dpi=300
         )

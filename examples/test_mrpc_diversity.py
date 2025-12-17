@@ -8,8 +8,8 @@ from measure_diversity.plot.umap import plot_umap_comparable
 class TestMRPCDiversity:
     def test_diversity_mrpc(self):
         # Load MRPC data
-        originals = load_original_sentences()
-        paraphrases = load_paraphrases()
+        originals = load_original_sentences()[:500]
+        paraphrases = load_paraphrases()[:500]
 
         measures = [
             lambda data: mean_pairwise_distance(data, metric="euclidean"),
@@ -30,6 +30,7 @@ class TestMRPCDiversity:
         semantic_plots = plot_umap_comparable(
             {"Original": originals_sem, "Mistral Rephrase": paraphrases_sem},
             title="Semantic Representations",
+            colors={"Original": "#E07A7A", "Mistral Rephrase": "#003B44"},
             save_dir=".",
             dpi=300
         )
@@ -42,6 +43,7 @@ class TestMRPCDiversity:
         style_plots = plot_umap_comparable(
             {"Original": originals_style, "Mistral Rephrase": paraphrases_style},
             title="Style Representations",
+            colors={"Original": "#E07A7A", "Mistral Rephrase": "#003B44"},
             save_dir=".",
             dpi=300
         )
