@@ -738,16 +738,20 @@ def log_determinant_diversity(
             If the matrix determinant is not positive (sign <= 0) after adding eps.
             Try increasing eps or re-checking kernel choice.
     """
-    X = np.asarray(data, dtype=float)
-    if X.ndim != 2:
-        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
-    n, d = X.shape
-    if n < 2:
+    # Check data length first (before converting to numpy array)
+    # This ensures consistent error messages and API behavior with other metrics
+    if len(data) < 2:
         raise ValueError("LDD requires at least 2 datapoints")
+    
     if eps <= 0:
         raise ValueError("eps must be positive")
     if tau <= 0:
         raise ValueError("tau must be positive")
+    
+    X = np.asarray(data, dtype=float)
+    if X.ndim != 2:
+        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
+    n, d = X.shape
 
     # ---- Build similarity/kernel matrix K ----
     if kernel_type == "cs":
