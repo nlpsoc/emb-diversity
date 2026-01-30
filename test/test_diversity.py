@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, bottleneck, energy, hamdiv
+    convex_hull_volume, energy, graph_entropy, diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore
 import pytest
 import numpy as np
 
@@ -257,7 +257,8 @@ class TestConvexHullVolume:
 
     def test_few_points_raises_error(self):
         """Test behavior when there are insufficient points for the dimension."""
-        with pytest.raises(ValueError, match="Cannot compute convex hull for fewer than dimension\+1 {} points \(got {}\)".format(4, 2)):
+        with pytest.raises(ValueError, match=rf"Cannot compute convex hull for fewer than dimension\+1 {4} points \(got {2}\)"):
+
             convex_hull_volume([[0, 0, 0], [1, 1, 1]])
 
     def test_return_type(self):
@@ -359,7 +360,7 @@ class TestClusterInertiaDiversity:
 class TestGraphEntropy:
 
     def test_empty_data_raises_error(self):
-        """Test that empty data raises AssertionError."""
+        """Test that empty data raises ValueError."""
         # We need to ensure the empty array has 2 dimensions (0, D) or handled as (0,) 
         # depending on how data.shape is unpacked. 
         # Typically np.array([]) is (0,), so unpacking n,d = data.shape might fail 
@@ -367,13 +368,13 @@ class TestGraphEntropy:
         # Assuming input is at least 2D or handled before:
         empty_data = np.empty((0, 3)) 
         
-        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
             graph_entropy(empty_data)
 
     def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises AssertionError."""
+        """Test that single datapoint raises ValueError."""
         single_point = np.array([[1, 2, 3]])
-        with pytest.raises(AssertionError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
+        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
             graph_entropy(single_point)
 
     def test_return_type(self):
@@ -487,3 +488,204 @@ class TestDCScore:
         score_tau_large = dcscore(data, kernel_type="cs", tau=5.0, normalize=True)
 
         assert score_tau_small > score_tau_large
+
+
+class TestLogDeterminantDiversity:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
+            log_determinant_diversity([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1.0, 2.0, 3.0]]
+        with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
+            log_determinant_diversity(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        result = log_determinant_diversity(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_negative_eps_raises_error(self):
+        """Test that negative eps raises ValueError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="eps must be positive"):
+            log_determinant_diversity(data, eps=-1.0)
+
+    def test_zero_eps_raises_error(self):
+        """Test that zero eps raises ValueError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="eps must be positive"):
+            log_determinant_diversity(data, eps=0.0)
+
+    def test_negative_tau_raises_error(self):
+        """Test that negative tau raises ValueError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="tau must be positive"):
+            log_determinant_diversity(data, tau=-1.0)
+
+    def test_zero_tau_raises_error(self):
+        """Test that zero tau raises ValueError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="tau must be positive"):
+            log_determinant_diversity(data, tau=0.0)
+
+    def test_unknown_kernel_type_raises_error(self):
+        """Test that unknown kernel_type raises NotImplementedError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(NotImplementedError, match="Unknown kernel_type"):
+            log_determinant_diversity(data, kernel_type="unknown")
+
+    def test_poly_kernel_non_integer_tau_raises_error(self):
+        """Test that poly kernel with non-integer tau raises ValueError."""
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="For 'poly' kernel, tau must be an integer"):
+            log_determinant_diversity(data, kernel_type="poly", tau=2.5)
+
+    def test_two_orthogonal_vectors_cs_kernel(self):
+        """
+        Test with two orthogonal unit vectors using cosine-like kernel.
+        X = [[1,0], [0,1]], normalize=True, tau=1
+        
+        K = [[1, 0],
+             [0, 1]]
+        
+        A = K + eps*I = [[1+eps, 0],
+                         [0, 1+eps]]
+        
+        logdet = log((1+eps)^2) = 2*log(1+eps)
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        eps = 1e-6
+        result = log_determinant_diversity(data, kernel_type="cs", tau=1.0, normalize=True, eps=eps)
+        expected = 2.0 * np.log(1.0 + eps)
+        assert np.isclose(result, expected, rtol=1e-5)
+
+    def test_identical_vectors_cs_kernel(self):
+        """
+        Test with identical vectors. The similarity matrix should have
+        high diagonal values and off-diagonal values equal to 1 (for normalized vectors).
+        For identical normalized vectors, K = [[1, 1], [1, 1]], which is singular.
+        With eps*I added, logdet should be finite but can be negative and small.
+        """
+        data = [[1.0, 0.0], [1.0, 0.0]]
+        result = log_determinant_diversity(data, kernel_type="cs", normalize=True, eps=1e-6)
+        # For identical vectors, the matrix is near-singular, so logdet can be negative
+        # With eps=1e-6, the matrix becomes [[1+eps, 1], [1, 1+eps]]
+        # det = (1+eps)^2 - 1 = 2*eps + eps^2, so logdet = log(2*eps + eps^2) ≈ log(2e-6) ≈ -13.1
+        assert result < 0  # Should be negative for near-singular matrix
+        assert np.isfinite(result)  # Should be finite
+        assert isinstance(result, float)
+
+    def test_different_kernel_types_produce_different_results(self):
+        """Test that different kernel types produce different logdet values."""
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result_cs = log_determinant_diversity(data, kernel_type="cs", tau=1.0)
+        result_rbf = log_determinant_diversity(data, kernel_type="rbf", tau=1.0)
+        result_lap = log_determinant_diversity(data, kernel_type="lap", tau=1.0)
+        
+        # Results should be different for different kernels
+        assert not np.isclose(result_cs, result_rbf)
+        assert not np.isclose(result_cs, result_lap)
+        assert not np.isclose(result_rbf, result_lap)
+
+    def test_scale_invariance_with_normalize_cs(self):
+        """
+        With normalize=True, scaling the vectors should not change the logdet
+        for the cosine-like kernel.
+        """
+        small = [[0.5, 0.5], [-0.5, -0.5]]
+        large = [[1.0, 1.0], [-1.0, -1.0]]
+        
+        score_small = log_determinant_diversity(small, kernel_type="cs", normalize=True, tau=1.0)
+        score_large = log_determinant_diversity(large, kernel_type="cs", normalize=True, tau=1.0)
+        
+        assert np.isclose(score_small, score_large, rtol=1e-5)
+
+    def test_tau_affects_result(self):
+        """
+        Different tau values should produce different logdet values.
+        For cs kernel, larger tau scales down the similarity matrix.
+        """
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result_tau_small = log_determinant_diversity(data, kernel_type="cs", tau=0.5, normalize=True)
+        result_tau_large = log_determinant_diversity(data, kernel_type="cs", tau=5.0, normalize=True)
+        
+        # Results should be different
+        assert not np.isclose(result_tau_small, result_tau_large)
+
+    def test_eps_affects_result(self):
+        """
+        Different eps values should produce different logdet values.
+        Larger eps makes the matrix more positive definite.
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        
+        result_eps_small = log_determinant_diversity(data, kernel_type="cs", eps=1e-8)
+        result_eps_large = log_determinant_diversity(data, kernel_type="cs", eps=1e-4)
+        
+        # Results should be different
+        assert not np.isclose(result_eps_small, result_eps_large)
+
+    def test_cholesky_vs_slogdet_consistency(self):
+        """
+        Test that Cholesky and slogdet methods produce consistent results
+        when both are applicable.
+        """
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result_cholesky = log_determinant_diversity(data, kernel_type="cs", use_cholesky=True)
+        result_slogdet = log_determinant_diversity(data, kernel_type="cs", use_cholesky=False)
+        
+        # Should be very close (within numerical precision)
+        assert np.isclose(result_cholesky, result_slogdet, rtol=1e-5)
+
+    def test_poly_kernel_with_integer_tau(self):
+        """Test polynomial kernel with valid integer tau."""
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result = log_determinant_diversity(data, kernel_type="poly", tau=2, eps=1e-6)
+        
+        assert isinstance(result, float)
+        assert np.isfinite(result)
+
+    def test_rbf_kernel_basic(self):
+        """Test RBF kernel produces valid results."""
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result = log_determinant_diversity(data, kernel_type="rbf", tau=1.0, eps=1e-6)
+        
+        assert isinstance(result, float)
+        assert np.isfinite(result)
+
+    def test_lap_kernel_basic(self):
+        """Test Laplacian kernel produces valid results."""
+        data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+        
+        result = log_determinant_diversity(data, kernel_type="lap", tau=1.0, eps=1e-6)
+        
+        assert isinstance(result, float)
+        assert np.isfinite(result)
+
+    def test_diversity_increases_with_more_diverse_data(self):
+        """
+        Test that more diverse (spread out) data produces higher logdet values
+        than less diverse (clustered) data.
+        """
+        # More diverse: orthogonal vectors
+        diverse_data = [[1.0, 0.0], [0.0, 1.0], [-1.0, 0.0], [0.0, -1.0]]
+        
+        # Less diverse: similar vectors
+        clustered_data = [[1.0, 0.0], [0.99, 0.01], [0.98, 0.02], [0.97, 0.03]]
+        
+        diverse_ldd = log_determinant_diversity(diverse_data, kernel_type="cs", normalize=True)
+        clustered_ldd = log_determinant_diversity(clustered_data, kernel_type="cs", normalize=True)
+        
+        # More diverse data should have higher logdet (more volume in feature space)
+        assert diverse_ldd > clustered_ldd
