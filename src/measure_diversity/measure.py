@@ -6,6 +6,7 @@ from typing import List, Iterable, Literal, Union, Callable, Sequence, Any
 import numpy as np
 from scipy.spatial.distance import pdist, squareform, cdist
 from scipy.spatial import ConvexHull
+from scipy.sparse.csgraph import minimum_spanning_tree
 import torch
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
@@ -894,4 +895,40 @@ def graph_entropy(data:TensorLike,
     #finally the graph entropy
     #we can choose mean as well, but strictly follwoing Tao's notes in page 11 and 12
     return float(np.sum(local_entropies))
+
+
+def mst_dispersion(data:TensorLike,
+                   metric: DISTANCE_METRIC = "cosine"
+    )-> float:
+
+    # normalize input to numpy array
+    if isinstance(data, torch.Tensor):
+        X = data.detach().cpu().numpy()
+    else:
+        X = np.asarray(data, dtype=float)
+
+    if X.ndim != 2:
+        raise ValueError(f"Expected shape (n, d), got {X.shape}")
+
+    n, d = X.shape
+    if n < 2:
+        raise ValueError("Cannot compute graph entropy for fewer than 2 datapoints")
+    
+    #now we create and adjacency matrix with a specified pairwise distance metric
+    #by default its cosine distance
+    dist_condensed= _compute_pairwise_distances(X, metric=metric)
+    #need to convert it to square form
+    #we use this as our adjacency matrix of a complete graph formed by all datapoints
+    dist_sqaure = squareform(dist_condensed)    
+
+    #we use the scipy minimum spanning tree implementation
+    mst = minimum_spanning_tree(dist_sqaure)
+
+    #to obtain the mst dispersion
+    #we sums the lengths of the edges required to connect all samples with the minimum total cost
+    mst_dispersion = mst.sum()
+
+    return float(mst_dispersion)
+
+
 
