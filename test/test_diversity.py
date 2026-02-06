@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore
+    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore
 import pytest
 import numpy as np
 
@@ -125,6 +125,145 @@ class TestDiameter:
         assert result == 0.0
 
 
+
+class TestSumDiameter:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="SumDiameter requires at least 2 datapoints"):
+            sum_diameter([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="SumDiameter requires at least 2 datapoints"):
+            sum_diameter(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = sum_diameter(data)
+        assert isinstance(result, float)
+
+    def test_two_points_basic(self):
+        """Test basic functionality with two points."""
+        data = [[0, 0], [1, 1]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        expected = 2 * np.sqrt(2)  # Both points have max distance sqrt(2) to the other
+        assert np.isclose(sum_diam, expected)
+
+    def test_three_points_symmetric(self):
+        """Test with three symmetric points (equilateral triangle)."""
+        # Three points forming equilateral triangle with unit distances
+        data = [[0, 0], [1, 0], [0.5, np.sqrt(3)/2]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        # Each point has max distance 1.0 to one of the other points
+        expected = 3.0  # 1.0 + 1.0 + 1.0
+        assert np.isclose(sum_diam, expected)
+
+    def test_collinear_points(self):
+        """Test with collinear points."""
+        # Three collinear points: [0,0], [1,0], [2,0]
+        data = [[0, 0], [1, 0], [2, 0]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        # Max distances: [0]->2.0, [1]->2.0 (either direction), [2]->2.0
+        # Actually: [0] max is 2.0 (to [2]), [1] max is 1.0 (to [0] or [2]), [2] max is 2.0 (to [0])
+        # sum = 2.0 + 1.0 + 2.0 = 5.0
+        expected = 5.0
+        assert np.isclose(sum_diam, expected)
+
+    def test_identical_points(self):
+        """Test with identical points - all distances are zero."""
+        data = [[1, 1], [1, 1], [1, 1]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        assert sum_diam == 0.0
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different results."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        
+        euclidean_sum = sum_diameter(data, metric="euclidean")
+        cosine_sum = sum_diameter(data, metric="cosine")
+        
+        # Different metrics should produce different results
+        assert not np.isclose(euclidean_sum, cosine_sum)
+
+    def test_normalize_by_n(self):
+        """Test the normalize_by_n parameter."""
+        data = [[0, 0], [1, 1], [2, 2]]
+        sum_diam = sum_diameter(data, metric="euclidean", normalize_by_n=False)
+        avg_diam = sum_diameter(data, metric="euclidean", normalize_by_n=True)
+        
+        n = len(data)
+        assert np.isclose(avg_diam, sum_diam / n)
+
+    def test_orthogonal_vectors_cosine(self):
+        """Test with orthogonal vectors using cosine distance."""
+        # Two orthogonal unit vectors
+        data = [[1, 0], [0, 1]]
+        sum_diam = sum_diameter(data, metric="cosine")
+        # Cosine distance between orthogonal unit vectors is 1.0
+        # Each point has max distance 1.0 to the other
+        expected = 2.0
+        assert np.isclose(sum_diam, expected)
+
+    def test_relationship_with_diameter(self):
+        """Test mathematical relationship: sum_diameter >= diameter."""
+        data = [[0, 0], [1, 1], [0, 1], [1, 0]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        max_diam = diameter(data, metric="euclidean")
+        
+        # sum_diameter should be >= diameter (it sums multiple max distances)
+        assert sum_diam >= max_diam
+
+    def test_scale_invariance_normalized_cosine(self):
+        """Test that scaling doesn't affect cosine-based sum_diameter."""
+        small = [[0.5, 0.5], [-0.5, -0.5]]
+        large = [[1.0, 1.0], [-1.0, -1.0]]
+        
+        sum_small = sum_diameter(small, metric="cosine")
+        sum_large = sum_diameter(large, metric="cosine")
+        
+        # Cosine distance is scale-invariant
+        assert np.isclose(sum_small, sum_large)
+
+    def test_four_points_square(self):
+        """Test with four points forming a square."""
+        data = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        
+        # Max distances from each corner:
+        # [0,0]: sqrt(2) (diagonal to [1,1])
+        # [1,0]: sqrt(2) (diagonal to [0,1])
+        # [1,1]: sqrt(2) (diagonal to [0,0])
+        # [0,1]: sqrt(2) (diagonal to [1,0])
+        expected = 4 * np.sqrt(2)
+        assert np.isclose(sum_diam, expected)
+
+    def test_two_clusters_distant_points(self):
+        """Test with two well-separated clusters."""
+        # Cluster 1 near origin, Cluster 2 far away
+        data = [[0, 0], [0.1, 0.1], [10, 10], [10.1, 10.1]]
+        sum_diam = sum_diameter(data, metric="euclidean")
+        
+        # Points in cluster 1 have max distance to cluster 2 (~14.14)
+        # Points in cluster 2 have max distance to cluster 1 (~14.14)
+        # sum ~ 4 * 14.14 ≈ 56.6
+        assert sum_diam > 50
+
+    def test_custom_metric_function(self):
+        """Test using a custom metric function."""
+        def manhattan_distance(u, v):
+            return np.sum(np.abs(u - v))
+        
+        data = [[0, 0], [1, 1], [2, 2]]
+        
+        custom_sum = sum_diameter(data, metric=manhattan_distance)
+        cityblock_sum = sum_diameter(data, metric="cityblock")
+        
+        assert np.isclose(custom_sum, cityblock_sum)
+
+        
 class TestBottleneck:
 
     def test_empty_data_raises_error(self):
