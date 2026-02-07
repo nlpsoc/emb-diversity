@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore
+    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy_pca
 import pytest
 import numpy as np
 
@@ -828,3 +828,95 @@ class TestLogDeterminantDiversity:
         
         # More diverse data should have higher logdet (more volume in feature space)
         assert diverse_ldd > clustered_ldd
+
+
+class TestBinsBasedEntropyPCA:
+    def test_empty_data_raises_error(self):
+        with pytest.raises(ValueError, match="fewer than 2 datapoints"):
+            bins_based_entropy_pca([])
+
+    def test_single_datapoint_raises_error(self):
+        with pytest.raises(ValueError, match="fewer than 2 datapoints"):
+            bins_based_entropy_pca([[1, 2, 3]])
+    def test_invalid_shape_raises_error(self):
+        with pytest.raises(ValueError, match="Expected 2D array"):
+            bins_based_entropy_pca([1, 2, 3])  # 1D input
+
+    def test_invalid_bins_raises_error(self):
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+
+        with pytest.raises(ValueError, match="must be positive integers"):
+            bins_based_entropy_pca(data, n_bins_x=0, n_bins_y=5)
+        with pytest.raises(ValueError, match="must be positive integers"):
+            bins_based_entropy_pca(data, n_bins_x=5, n_bins_y=-1)
+
+    def test_return_type_is_python_float(self):
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = bins_based_entropy_pca(data)
+        assert isinstance(result, float)
+        assert not isinstance(result, np.floating)
+
+    def test_normalized_entropy_in_range(self):
+        np.random.seed(42)
+        data = np.random.randn(50, 8)
+        entropy = bins_based_entropy_pca(data, n_bins_x=5, n_bins_y=5, normalize=True)
+        assert 0.0 <= entropy <= 1.0
+
+    def test_unnormalized_vs_normalized(self):
+        np.random.seed(42)
+        data = np.random.randn(50, 8)
+
+        normalized = bins_based_entropy_pca(data, n_bins_x=5, n_bins_y=5, normalize=True)
+        unnormalized = bins_based_entropy_pca(data, n_bins_x=5, n_bins_y=5, normalize=False)
+
+        # Unnormalized entropy should be >= normalized entropy (since normalization divides by log factor > 1)
+        assert unnormalized >= normalized
+
+    def test_deterministic_results(self):
+        # PCA is deterministic, so results should match exactly (or extremely close numerically).
+        data = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [0.5, 1.5, 2.5]], dtype=float)
+        r1 = bins_based_entropy_pca(data, n_bins_x=3, n_bins_y=3, normalize=True)
+        r2 = bins_based_entropy_pca(data, n_bins_x=3, n_bins_y=3, normalize=True)
+        assert np.isclose(r1, r2, atol=1e-12)
+
+    def test_all_points_in_same_bin_entropy_zero(self):
+        # Near-identical points -> PCA projection collapses -> all in same bin -> entropy ~= 0
+        data = np.array([[1,1,1],[1,1,1+1e-12],[1,1,1+2e-12]], dtype=float)
+
+
+        entropy = bins_based_entropy_pca(data, n_bins_x=2, n_bins_y=2, normalize=True)
+        assert np.isclose(entropy, 0.0, atol=1e-12)
+
+    def test_uniform_vs_clustered_relative(self):
+        # Prefer relative comparisons (more stable than absolute thresholds)
+        np.random.seed(0)
+
+        # uniform in 2D
+        uniform = np.random.uniform(-1, 1, size=(400, 2))
+
+        # clustered in 2D
+        clustered = np.random.normal(0, 0.05, size=(400, 2))
+
+        e_uniform = bins_based_entropy_pca(uniform, n_bins_x=6, n_bins_y=6, normalize=True)
+        e_clustered = bins_based_entropy_pca(clustered, n_bins_x=6, n_bins_y=6, normalize=True)
+        assert e_uniform > e_clustered
+
+
+    def test_non_square_bins(self):
+        np.random.seed(42)
+        data = np.random.randn(60, 6)
+
+        e_5x10 = bins_based_entropy_pca(data, n_bins_x=5, n_bins_y=10, normalize=True)
+        e_10x5 = bins_based_entropy_pca(data, n_bins_x=10, n_bins_y=5, normalize=True)
+        assert isinstance(e_5x10, float)
+        assert isinstance(e_10x5, float)
+        assert 0.0 <= e_5x10 <= 1.0
+        assert 0.0 <= e_10x5 <= 1.0
+
+    def test_large_dataset_smoke(self):
+        np.random.seed(42)
+        data = np.random.randn(500, 32)
+        entropy = bins_based_entropy_pca(data, n_bins_x=10, n_bins_y=10, normalize=True)
+        assert isinstance(entropy, float)
+        assert 0.0 <= entropy <= 1.0
+        assert entropy > 0.0
