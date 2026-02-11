@@ -11,8 +11,8 @@ build/
 __pycache__/
 *.pyc
 
-# Local test artifacts
-local_test/
+# Local test artifacts (Tao)
+local_misc/
 
 # Sphinx auto-generated documentation files
 docs/source/modules.rst
