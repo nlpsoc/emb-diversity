@@ -1,5 +1,5 @@
 from measure_diversity.measure import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy_pca
+    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy_pca, renyi_kernel_entropy
 import pytest
 import numpy as np
 
@@ -920,3 +920,87 @@ class TestBinsBasedEntropyPCA:
         assert isinstance(entropy, float)
         assert 0.0 <= entropy <= 1.0
         assert entropy > 0.0
+
+class TestRenyiKernelEntropy:
+
+    def test_requires_at_least_2_datapoints(self):
+        with pytest.raises(ValueError, match="requires at least 2 datapoints"):
+            renyi_kernel_entropy([[1.0, 2.0, 3.0]])
+
+    def test_return_type_is_python_float(self):
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert isinstance(score, float)
+        assert not isinstance(score, np.floating)
+
+    def test_cs_orthogonal_vectors_alpha2_equals_log2(self):
+        """
+        X = [[1,0],[0,1]] with normalize=True, tau=1:
+          K = I
+          tr(K) = 2
+          A = K / tr(K) = 0.5 I
+          ||A||_F^2 = 0.5
+          RKE_2 = -log(0.5) = log(2)
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert np.isclose(score, np.log(2.0), atol=1e-12)
+
+    def test_cs_identical_vectors_alpha2_equals_zero(self):
+        """
+        Identical normalized vectors:
+          K = [[1,1],[1,1]]
+          tr(K)=2
+          A=0.5*[[1,1],[1,1]]
+          ||A||_F^2 = 1
+          RKE_2 = -log(1)=0
+        """
+        data = [[1.0, 0.0], [1.0, 0.0]]
+        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert np.isclose(score, 0.0, atol=1e-12)
+
+    def test_cs_scale_invariance_when_normalize_true(self):
+        """
+        With normalize=True for cs, scaling vectors should not change K (up to numerical eps),
+        hence RKE should be invariant.
+        """
+        small = [[0.5, 0.5], [-0.5, -0.5]]
+        large = [[1.0, 1.0], [-1.0, -1.0]]
+
+        s1 = renyi_kernel_entropy(small, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        s2 = renyi_kernel_entropy(large, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert np.isclose(s1, s2, atol=1e-12)
+
+    def test_alpha1_von_neumann_entropy_orthogonal_equals_log2(self):
+        """
+        For orthogonal case above, eigenvalues of A are [0.5, 0.5],
+        so von Neumann entropy = -sum p log p = log(2).
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = renyi_kernel_entropy(data, alpha=1.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert np.isclose(score, np.log(2.0), atol=1e-12)
+
+    def test_general_alpha_uniform_eigs_equals_log2(self):
+        """
+        Same orthogonal setup => eigenvalues are uniform [0.5,0.5],
+        so RKE_alpha should be log(2) for any alpha>0, alpha!=1 (and also for alpha=1).
+        We'll test alpha=3.
+        """
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        score = renyi_kernel_entropy(data, alpha=3.0, kernel_type="cs", tau=1.0, normalize=True)
+        assert np.isclose(score, np.log(2.0), atol=1e-12)
+
+    def test_invalid_kernel_type_raises(self):
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(NotImplementedError, match="Unknown kernel_type"):
+            renyi_kernel_entropy(data, kernel_type="wat")
+
+    def test_invalid_tau_raises(self):
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="tau must be positive"):
+            renyi_kernel_entropy(data, kernel_type="cs", tau=0.0)
+
+    def test_invalid_alpha_raises(self):
+        data = [[1.0, 0.0], [0.0, 1.0]]
+        with pytest.raises(ValueError, match="alpha must be > 0"):
+            renyi_kernel_entropy(data, alpha=0.0)
