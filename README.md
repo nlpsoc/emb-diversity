@@ -1,8 +1,10 @@
 # Diversity Measurement Package
 
-A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package. 
+<!-- docs-intro-start -->
+A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
 
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
+<!-- docs-intro-end -->
 
 📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
 
@@ -22,16 +24,41 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 ## Usage
 
-
+<!-- docs-usage-start -->
+**Starting from text** (embed first, then measure):
 
 ```python
-from measure_diversity import dummy_diversity
+from measure_diversity.embeddings.SBERT import encode_semantic_sentences
+from measure_diversity import mean_pairwise_distance
 
-result = dummy_diversity([[0, 1], [0, 0]])
-print(result)  # Output: 5
+texts = [
+    "The cat sat on the mat.",
+    "Dogs love to play fetch.",
+    "It was a sunny afternoon.",
+]
+embeddings = encode_semantic_sentences(texts)
+score = mean_pairwise_distance(embeddings)
+print(f"Diversity score: {score:.4f}")
 ```
 
+**Starting from vectors** (pass embeddings directly):
+
+```python
+import numpy as np
+from measure_diversity import mean_pairwise_distance
+
+vectors = np.array([
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0],
+])
+score = mean_pairwise_distance(vectors)
+print(f"Diversity score: {score:.4f}")
+```
+<!-- docs-usage-end -->
+
 ## Install
+<!-- docs-install-start -->
 > [!NOTE]
 > You must have **uv** installed before running `uv sync`.
 > Full installation guide: <https://docs.astral.sh/uv/getting-started/installation/>
@@ -51,7 +78,7 @@ Follow these steps to set up the project for development.
    source .venv/bin/activate
    ```
 
-### standard installation
+### Standard installation
 
 To use the library directly do the following,
 
@@ -64,6 +91,8 @@ To use the library directly do the following,
    ```bash
    source .venv/bin/activate
    ```
+<!-- docs-install-end -->
+
 There are few more items you need to be aware of uv before working on it. Please
 [Jump to the working with uv section](#working-with-uv)
 

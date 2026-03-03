@@ -8,12 +8,12 @@ version = "0.1.0"
 description = "A tiny package with a simple diversity function"
 readme = "README.md"
 requires-python = ">=3.14"
-authors = [ 
-    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl" },
+authors = [
+    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
     {name = "Cantao Su", email = "c.su@uu.nl"},
     {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
-    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"}
-
+    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
+    {name = "Esther Ploeger", email = "e.ploeger@uu.nl"},
 ]
 dependencies = [
     "datasets~=3.3.2",
@@ -40,6 +40,7 @@ dev = [
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "sphinx-autodoc-typehints>=3.0.0",
+    "myst-parser>=5.0.0",
 ]
 
 [tool.setuptools.packages.find]
