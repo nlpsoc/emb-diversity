@@ -1,7 +1,33 @@
 # Diversity Measurement Package
 
-A minimal Python package for measuring data diversity. Although the package focuses on text (NLP) datasets, many  of its metrics are broadly applicable and can be applied to other types of data as well.
+A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package. 
+
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
+
+## Table of Contents
+
+- [Usage](#usage)
+- [Install](#install)
+  - [Development mode](#development-mode)
+  - [Standard installation](#standard-installation)
+- [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
+- [Working with uv](#working-with-uv)
+  - [Adding Packages with `uv add`](#adding-packages-with-uv-add)
+  - [Adding Packages to a Dev Group](#adding-packages-to-a-dev-group)
+  - [Switching Between Dev and Standard Mode](#switching-between-dev-and-standard-mode)
+  - [Best Practice: Run `uv lock -U`](#best-practice-run-uv-lock--u)
+- [Funding](#funding)
+
+## Usage
+
+
+
+```python
+from measure_diversity import dummy_diversity
+
+result = dummy_diversity([[0, 1], [0, 0]])
+print(result)  # Output: 5
+```
 
 ## Install
 > [!NOTE]
@@ -40,14 +66,7 @@ There are few more items you need to be aware of uv before working on it. Please
 [Jump to the working with uv section](#working-with-uv)
 
 
-## Usage
 
-```python
-from measure_diversity import dummy_diversity
-
-result = dummy_diversity([[0, 1], [0, 0]])
-print(result)  # Output: 5
-```
 
 ## Suggested Workflow for Collaboration
 

@@ -1,0 +1,70 @@
+name: Deploy Docs to GitHub Pages
+
+# Trigger: runs every time you push to main
+on:
+  push:
+    branches: [main]
+
+# Permissions GitHub Pages needs to publish
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time; don't cancel in-progress ones
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ── Job 1: Build the documentation ──────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      # sphinx-apidoc scans your src/ code and generates .rst files
+      - name: Generate API docs (sphinx-apidoc)
+        working-directory: docs
+        run: uv run make apidoc
+
+      # sphinx-build turns the .rst files into HTML
+      - name: Build HTML documentation
+        working-directory: docs
+        run: uv run make html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Bundle the built HTML so the next job can deploy it
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/html
+
+  # ── Job 2: Deploy to GitHub Pages ───────────────────────────────────────────
+  deploy:
+    needs: build          # only runs if build succeeded
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
