@@ -32,8 +32,8 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install dev dependencies
-        run: uv sync --group dev
+      - name: Install docs dependencies
+        run: uv sync --only-group docs
 
       # sphinx-apidoc scans your src/ code and generates .rst files
       - name: Generate API docs (sphinx-apidoc)

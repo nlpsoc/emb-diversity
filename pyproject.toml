@@ -28,6 +28,12 @@ dependencies = [
 ]
 
 [dependency-groups]
+docs = [
+    "sphinx>=8.0.0",
+    "sphinx-rtd-theme>=3.0.0",
+    "sphinx-autodoc-typehints>=3.0.0",
+    "myst-parser>=5.0.0",
+]
 dev = [
     "datasets~=3.3.2",
     "matplotlib~=3.10.0",
