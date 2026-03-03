@@ -4,6 +4,8 @@ A Python package for measuring data diversity on small- to medium-sized text dat
 
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 
+📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
+
 ## Table of Contents
 
 - [Usage](#usage)

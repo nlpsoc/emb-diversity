@@ -36,7 +36,7 @@ API Reference
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   measure_diversity
 
 Indices and tables
 ==================
