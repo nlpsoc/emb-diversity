@@ -1,8 +1,9 @@
 # MacOS system files
 .DS_Store
 
-# hidden files and folders start with "."
-.*
+# ignore virtual environment directories / IDE project files
+.venv
+.idea
 
 # Distribution / packaging files
 dist/
