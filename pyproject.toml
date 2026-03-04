@@ -36,6 +36,7 @@ docs = [
 ]
 dev = [
     "datasets~=3.3.2",
+    "notebook>=7.0.0",
     "matplotlib~=3.10.0",
     "numpy~=2.3.5",
     "pandas~=2.3.1",
