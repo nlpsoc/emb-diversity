@@ -1,5 +1,5 @@
 from measure_diversity import evaluate_measures
-from measure_diversity.measure import (mean_pairwise_distance, distance_dispersion, cluster_inertia_diversity,
+from measure_diversity import (mean_pairwise_distance, distance_dispersion, cluster_inertia_diversity,
                                        convex_hull_volume)
 import numpy as np
 from measure_diversity import two_d
