@@ -13,7 +13,10 @@ def bins_based_entropy_pca(
     pca_kwargs=None,
 ) -> float:
     """
-    Compute bins-based entropy diversity using 2D PCA projection.
+    Compute bins-based entropy diversity using 2D UMAP projection.
+
+    Reference: 
+    Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Steps:
       1) Project embeddings to 2D with PCA.
