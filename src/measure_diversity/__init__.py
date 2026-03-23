@@ -20,7 +20,7 @@ from .measures.vendi_score_diversity import vendi_score_diversity
 from .measures.renyi_kernel_entropy import renyi_kernel_entropy
 from .measures.dcscore import dcscore
 from .measures.log_determinant_diversity import log_determinant_diversity
-from .measures.bins_based_entropy_pca import bins_based_entropy_pca
+from .measures.bins_based_entropy import bins_based_entropy
 
 #### Count Based Diversity Measures
 from .measures.dummy_diversity import dummy_diversity
@@ -33,5 +33,5 @@ from .measures.mst_dispersion import mst_dispersion
 __all__ = ["mean_pairwise_distance", "distance_dispersion", "hamdiv", "diameter", "bottleneck", "sum_diameter",
            "energy", "cluster_inertia_diversity", "span_with_centroid", "chamfer_distance_diversity",
            "convex_hull_volume", "radius_diversity", "span_with_medoid", "vendi_score_diversity",
-           "renyi_kernel_entropy", "dcscore", "log_determinant_diversity", "bins_based_entropy_pca", "dummy_diversity",
+           "renyi_kernel_entropy", "dcscore", "log_determinant_diversity", "bins_based_entropy", "dummy_diversity",
            "graph_entropy", "mst_dispersion"]

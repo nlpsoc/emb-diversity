@@ -48,7 +48,7 @@
 |---|---|
 | {func}`vendi_score_diversity <measure_diversity.measure.vendi_score_diversity>` | Vendi Score — effective number of distinct items (Friedman & Dieng, 2023) |
 | {func}`renyi_kernel_entropy <measure_diversity.measure.renyi_kernel_entropy>` | Rényi Kernel Entropy (RKE) / Matrix-based Rényi entropy |
-| {func}`bins_based_entropy_pca <measure_diversity.measure.bins_based_entropy_pca>` | Shannon entropy over a 2D PCA-projected histogram |
+| {func}`bins_based_entropy <measure_diversity.measure.bins_based_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
 | {func}`graph_entropy <measure_diversity.measure.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph |
 
 ### Geometry-based
