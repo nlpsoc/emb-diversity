@@ -1,5 +1,5 @@
 from measure_diversity import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, energy, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy, renyi_kernel_entropy
+    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy, renyi_kernel_entropy
 import pytest
 import numpy as np
 
