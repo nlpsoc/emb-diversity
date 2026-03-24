@@ -101,6 +101,7 @@ def bins_based_entropy(
     if projection == "umap":
         if UMAP is None:
             raise ImportError("UMAP is not installed.")
+        umap_kwargs.setdefault("random_state", 42)
         reducer = UMAP(n_components=2, **umap_kwargs)
     else:
         reducer = PCA(n_components=2, **pca_kwargs)
