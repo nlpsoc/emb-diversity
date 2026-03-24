@@ -3,20 +3,30 @@
 import numpy as np
 from sklearn.decomposition import PCA
 
+try:
+    from umap import UMAP
+except Exception:
+    UMAP = None
 
-def bins_based_entropy_pca(
+
+def bins_based_entropy(
     data,
     n_bins_x: int = 5,
     n_bins_y: int = 5,
     normalize: bool = True,
     normalization: str = "effective",  # "effective" -> log(min(n,B)), "bins" -> log(B)
+    projection: str = "umap",
     pca_kwargs=None,
+    umap_kwargs=None,
 ) -> float:
     """
-    Compute bins-based entropy diversity using 2D PCA projection.
+    Compute bins-based entropy diversity using a 2D projection (UMAP or PCA).
+
+    Reference: 
+    Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Steps:
-      1) Project embeddings to 2D with PCA.
+    1) Project embeddings to 2D with UMAP or PCA.
       2) Bin points into a n_bins_x × n_bins_y grid.
       3) Compute Shannon entropy over bin occupancies.
       4) Optionally normalize.
@@ -35,9 +45,14 @@ def bins_based_entropy_pca(
         normalization:
             - "effective": divide by log(min(n, B)) ensures result in [0,1]
             - "bins": divide by log(B) (paper-style; when n<B max < 1)
+        projection:
+            "umap" or "pca". Defaults to "umap".
         pca_kwargs:
             Extra kwargs passed to PCA(...).
             Defaults to {}. (PCA is deterministic for full SVD solver.)
+        umap_kwargs:
+            Extra kwargs passed to UMAP(...).
+            Defaults to {}.
 
     Returns:
         float: entropy (normalized if normalize=True).
@@ -60,23 +75,37 @@ def bins_based_entropy_pca(
 
     n, d = X.shape
     if n < 2:
-        raise ValueError("Cannot compute bins_based_entropy_pca for fewer than 2 datapoints")
+        raise ValueError("Cannot compute bins_based_entropy for fewer than 2 datapoints")
 
     if n_bins_x <= 0 or n_bins_y <= 0:
         raise ValueError("n_bins_x and n_bins_y must be positive integers")
 
     total_bins = int(n_bins_x) * int(n_bins_y)
 
-    # --- PCA kwargs (deterministic by default) ---
+    if projection not in {"umap", "pca"}:
+        raise ValueError('projection must be either "umap" or "pca"')
+
+    # --- Projection kwargs ---
     if pca_kwargs is None:
         pca_kwargs = {}
     else:
         pca_kwargs = dict(pca_kwargs)  # copy
 
-    # Ensure we always do 2D projection
-    # (User can still override solver/whiten/etc via pca_kwargs)
-    pca = PCA(n_components=2, **pca_kwargs)
-    Y = pca.fit_transform(X)  # shape (n, 2)
+    if umap_kwargs is None:
+        umap_kwargs = {}
+    else:
+        umap_kwargs = dict(umap_kwargs)  # copy
+
+    # 2D projection
+    # (User can still override solver/whiten/etc via kwargs)
+    if projection == "umap":
+        if UMAP is None:
+            raise ImportError("UMAP is not installed.")
+        reducer = UMAP(n_components=2, **umap_kwargs)
+    else:
+        reducer = PCA(n_components=2, **pca_kwargs)
+
+    Y = reducer.fit_transform(X)  # shape (n, 2)
 
     # --- Compute bounds and ranges ---
     min_x, min_y = Y.min(axis=0)
