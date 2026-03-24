@@ -22,18 +22,6 @@ from .measures.dcscore import dcscore
 from .measures.log_determinant_diversity import log_determinant_diversity
 from .measures.bins_based_entropy import bins_based_entropy
 
-# Backward-compatible alias for bins_based_entropy (previously bins_based_entropy_pca)
-def bins_based_entropy_pca(*args, **kwargs):
-    """Deprecated alias for bins_based_entropy. Use bins_based_entropy instead."""
-    import warnings
-    warnings.warn(
-        "bins_based_entropy_pca is deprecated. Use bins_based_entropy instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    kwargs.setdefault("projection", "pca")
-    return bins_based_entropy(*args, **kwargs)
-
 #### Count Based Diversity Measures
 from .measures.dummy_diversity import dummy_diversity
 
