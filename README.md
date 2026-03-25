@@ -177,6 +177,9 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
     This function computes various diversity metrics for vector representations.
     The default method uses the Vendi Score which is based on matrix entropy.
 
+    References:
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+
     Args:
         vectors: Array of shape (n_samples, n_features) containing the vectors.
         method: Diversity calculation method. Options are "vendi", "entropy",
@@ -202,6 +205,7 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
 
 - **One-line summary**: Start with a brief summary in imperative mood ("Calculate", not "Calculates")
 - **Blank line**: After the summary, add a blank line before any detailed description
+- **References**: Add related papers
 - **Args**: Document each parameter with type information
 - **Returns**: Describe what the function returns
 - **Raises**: Document exceptions that might be raised
@@ -211,6 +215,7 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
 #### Section Headers
 
 Use these section headers in docstrings:
+- `References:` Related papers
 - `Args:` — Function/method parameters
 - `Returns:` — Return value description
 - `Raises:` — Exceptions that may be raised
