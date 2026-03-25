@@ -11,8 +11,8 @@ def bottleneck(
 ) -> float:
     """Compute the minimum pairwise distance in an embedding set.
 
-    1) Computes all unique pairwise distances between datapoints 
-    2) Returns the smallest distance (the bottleneck distance)
+    1) Compute all unique pairwise distances between datapoints.
+    2) Return the smallest distance (the bottleneck distance).
 
     References:
     Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
