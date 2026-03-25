@@ -21,10 +21,10 @@ def bins_based_entropy(
 ) -> float:
     """Compute bins-based entropy diversity from a 2D projection.
 
-        1) Project embeddings to 2D with UMAP or PCA.
-        2) Bin points into a n_bins_x × n_bins_y grid.
-        3) Compute Shannon entropy over bin occupancies.
-        4) Optionally normalize.
+    1) Project embeddings to 2D with UMAP or PCA.
+    2) Bin points into a n_bins_x × n_bins_y grid.
+    3) Compute Shannon entropy over bin occupancies.
+    4) Optionally normalize.
 
     References:
         Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
