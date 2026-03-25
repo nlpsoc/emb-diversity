@@ -140,7 +140,7 @@ def bins_based_entropy(
     # Shannon entropy over occupied bins (empty bins contribute 0)
     entropy = -np.sum(f_b * np.log(f_b))
 
-    # Optional normalization 
+    # Optional normalization
     if normalize:
         if total_bins <= 1:
             # With a 1x1 grid, entropy is always 0; avoid division by zero
