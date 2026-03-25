@@ -36,14 +36,14 @@ def bins_based_entropy(
             Accepts numpy arrays and (optionally) torch tensors.
         projection:
             "umap" or "pca". Defaults to "umap".
-        umap_kwargs:
-            Extra kwargs passed to UMAP(...).
-            Defaults to None (treated as {}).
-            If random_state is not provided, random_state=42 is used.
         pca_kwargs:
             Extra kwargs passed to PCA(...).
             Defaults to None (treated as {}).
             PCA is deterministic for full SVD solver.
+        umap_kwargs:
+            Extra kwargs passed to UMAP(...).
+            Defaults to None (treated as {}).
+            If random_state is not provided, random_state=42 is used.
         n_bins_x:
             Number of bins along x-axis. Must be > 0.
         n_bins_y:
