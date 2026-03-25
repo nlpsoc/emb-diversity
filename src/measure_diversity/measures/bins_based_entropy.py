@@ -11,31 +11,39 @@ except Exception:
 
 def bins_based_entropy(
     data,
+    projection: str = "umap",
+    pca_kwargs=None,
+    umap_kwargs=None,
     n_bins_x: int = 5,
     n_bins_y: int = 5,
     normalize: bool = True,
     normalization: str = "effective",  # "effective" -> log(min(n,B)), "bins" -> log(B)
-    projection: str = "umap",
-    pca_kwargs=None,
-    umap_kwargs=None,
 ) -> float:
-    """
-    Compute bins-based entropy diversity using a 2D projection (UMAP or PCA).
+    """Compute bins-based entropy diversity from a 2D projection.
 
-    Reference: 
-    Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+        1) Project embeddings to 2D with UMAP or PCA.
+        2) Bin points into a n_bins_x × n_bins_y grid.
+        3) Compute Shannon entropy over bin occupancies.
+        4) Optionally normalize.
 
-    Steps:
-    1) Project embeddings to 2D with UMAP or PCA.
-      2) Bin points into a n_bins_x × n_bins_y grid.
-      3) Compute Shannon entropy over bin occupancies.
-      4) Optionally normalize.
+    References:
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Args:
         data:
-            Iterable/array-like of embedding vectors, shape (n, d).
+            Iterable/array-like of embedding vectors with shape (n, d).
             Must contain at least 2 samples.
             Accepts numpy arrays and (optionally) torch tensors.
+        projection:
+            "umap" or "pca". Defaults to "umap".
+        umap_kwargs:
+            Extra kwargs passed to UMAP(...).
+            Defaults to None (treated as {}).
+            If random_state is not provided, random_state=42 is used.
+        pca_kwargs:
+            Extra kwargs passed to PCA(...).
+            Defaults to None (treated as {}).
+            PCA is deterministic for full SVD solver.
         n_bins_x:
             Number of bins along x-axis. Must be > 0.
         n_bins_y:
@@ -43,29 +51,19 @@ def bins_based_entropy(
         normalize:
             If True, normalize entropy by a log factor.
         normalization:
-            - "effective": divide by log(min(n, B)) ensures result in [0,1]
+            - "effective": (default) divide by log(min(n, B)) ensures result in [0,1]
             - "bins": divide by log(B) (paper-style; when n<B max < 1)
-        projection:
-            "umap" or "pca". Defaults to "umap".
-        pca_kwargs:
-            Extra kwargs passed to PCA(...).
-            Defaults to {}. (PCA is deterministic for full SVD solver.)
-        umap_kwargs:
-            Extra kwargs passed to UMAP(...).
-            Defaults to {}.
 
     Returns:
-        float: entropy (normalized if normalize=True).
+        float: bins-based-entropy (normalized if normalize=True) as a float between 0 and 1 (if effective normalization, which is default), where larger values indicate greater diversity.
 
     Raises:
-        ImportError:
-            If scikit-learn is not installed.
-        ValueError:
-            If input shapes/bins are invalid, or if normalization is invalid.
+        ImportError: If projection is "umap" but UMAP is not installed.
+        ValueError: If input shape, bins, projection, or normalization is invalid.
     """
 
 
-    # --- Normalize input to numpy array ---
+    # Normalize input to numpy array
     X = np.asarray(data, dtype=float)
     if X.size == 0:
         raise ValueError("Cannot compute bins_based_entropy for fewer than 2 datapoints")
@@ -85,7 +83,7 @@ def bins_based_entropy(
     if projection not in {"umap", "pca"}:
         raise ValueError('projection must be either "umap" or "pca"')
 
-    # --- Projection kwargs ---
+    # Projection kwargs 
     if pca_kwargs is None:
         pca_kwargs = {}
     else:
@@ -108,13 +106,13 @@ def bins_based_entropy(
 
     Y = reducer.fit_transform(X)  # shape (n, 2)
 
-    # --- Compute bounds and ranges ---
+    # Compute bounds and ranges for binning
     min_x, min_y = Y.min(axis=0)
     max_x, max_y = Y.max(axis=0)
     range_x = max_x - min_x
     range_y = max_y - min_y
 
-    # --- Assign each point to a bin (robust to degenerate projections) ---
+    # Assign each point to a bin
     eps = 1e-10
 
     if range_x <= 0:
@@ -130,10 +128,10 @@ def bins_based_entropy(
     bin_x = np.clip(bin_x, 0, n_bins_x - 1)
     bin_y = np.clip(bin_y, 0, n_bins_y - 1)
 
-    # Map 2D bins -> 1D labels
+    # Map 2D bins to 1D labels
     bin_labels = bin_x * n_bins_y + bin_y
 
-    # --- Count occurrences in each occupied bin ---
+    # Count occurrences in each occupied bin
     _, counts = np.unique(bin_labels, return_counts=True)
 
     # Empirical distribution over occupied bins
@@ -142,7 +140,7 @@ def bins_based_entropy(
     # Shannon entropy over occupied bins (empty bins contribute 0)
     entropy = -np.sum(f_b * np.log(f_b))
 
-    # --- Optional normalization ---
+    # Optional normalization 
     if normalize:
         if total_bins <= 1:
             # With a 1x1 grid, entropy is always 0; avoid division by zero
