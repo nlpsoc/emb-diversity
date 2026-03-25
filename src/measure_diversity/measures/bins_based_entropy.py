@@ -11,13 +11,13 @@ except Exception:
 
 def bins_based_entropy(
     data,
-    projection: str = "umap",
-    pca_kwargs=None,
-    umap_kwargs=None,
     n_bins_x: int = 5,
     n_bins_y: int = 5,
     normalize: bool = True,
     normalization: str = "effective",  # "effective" -> log(min(n,B)), "bins" -> log(B)
+    projection: str = "umap",
+    pca_kwargs=None,
+    umap_kwargs=None,
 ) -> float:
     """Compute bins-based entropy diversity from a 2D projection.
 
@@ -34,6 +34,15 @@ def bins_based_entropy(
             Iterable/array-like of embedding vectors with shape (n, d).
             Must contain at least 2 samples.
             Accepts numpy arrays and (optionally) torch tensors.
+        n_bins_x:
+            Number of bins along x-axis. Must be > 0.
+        n_bins_y:
+            Number of bins along y-axis. Must be > 0.
+        normalize:
+            If True, normalize entropy by a log factor.
+        normalization:
+            - "effective": (default) divide by log(min(n, B)) ensures result in [0,1]
+            - "bins": divide by log(B) (paper-style; when n<B max < 1)
         projection:
             "umap" or "pca". Defaults to "umap".
         pca_kwargs:
@@ -44,15 +53,6 @@ def bins_based_entropy(
             Extra kwargs passed to UMAP(...).
             Defaults to None (treated as {}).
             If random_state is not provided, random_state=42 is used.
-        n_bins_x:
-            Number of bins along x-axis. Must be > 0.
-        n_bins_y:
-            Number of bins along y-axis. Must be > 0.
-        normalize:
-            If True, normalize entropy by a log factor.
-        normalization:
-            - "effective": (default) divide by log(min(n, B)) ensures result in [0,1]
-            - "bins": divide by log(B) (paper-style; when n<B max < 1)
 
     Returns:
         float: bins-based-entropy (normalized if normalize=True) as a float between 0 and 1 (if effective normalization, which is default), where larger values indicate greater diversity.
