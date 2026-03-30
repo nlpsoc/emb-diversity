@@ -10,24 +10,31 @@ def chamfer_distance_diversity(
         metric: DISTANCE_METRIC = "cosine",
         **metric_kwargs: Any
 ) -> float:
-    """
-    Chamfer-distance-based diversity: for each point, take the distance
-    to its nearest neighbour (excluding itself), then average over points.
+    """Compute the average nearest-neighbour distance across all datapoints.
 
-    This implements:
-        Chamfer(X) = (1/n) * sum_i min_{j != i} d_ij
+    1) Compute all unique pairwise distances between datapoints.
+    2) For each point, find the minimum distance to any other point (excluding itself).
+    3) Return the mean of those nearest-neighbour distances.
+
+    References:
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+        Zhang, Tianhui, Bei Peng, and Danushka Bollegala. “Evaluating the Evaluation of Diversity in Commonsense Generation.” In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), edited by Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar. Association for Computational Linguistics, 2025. https://aclanthology.org/2025.acl-long.1181/.
 
     Args:
-        data: Iterable of vectors, shape (n, d).
-        metric: Distance metric as in scipy.spatial.distance.pdist.
-        **metric_kwargs: Extra keyword arguments passed to pdist.
+        data:
+            Iterable/array-like of embedding vectors with shape (n, d).
+            Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist. Defaults to "cosine".
+        **metric_kwargs:
+            Extra keyword arguments forwarded to pdist for the selected metric.
 
     Returns:
-        The average nearest-neighbour distance. Higher values indicate
-        more dispersed datasets.
+        float: Mean nearest-neighbour distance. Higher values indicate more dispersed datasets.
 
     Raises:
-        ValueError: If there are fewer than 2 datapoints.
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
     X = np.asarray(data, dtype=float)
     n = X.shape[0]
