@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 [project]
 name = "embediver"
 version = "0.1.0"
-description = "20 embedding-based diversity measures for text and vector data"
+description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
