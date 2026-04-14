@@ -85,4 +85,3 @@ log_determinant(texts, diversity_axis="multilingual")
 ```
 
 Custom axes are available for the duration of the Python process.
-To make them permanent, add the `register_axis` call to your project's setup code or a config module.
