@@ -25,4 +25,5 @@ a reasonable alternative.
 ## TODOs
 
 - **TODO:** Check that the default embedding model for the semantic axis makes sense with Tao (see `_axes.py`).
-- **TODO:** Check that the core measures set (`CORE_MEASURES` in `_registry.py`) makes sense with Tao.
+- **TODO:** Check that the core measures set (`CORE_MEASURES` in `measures_registry.py`) makes sense with Tao.
+- **TODO:** Support SimCSE encoder (`embeddings/SimCSE.py`) in `embed.py` alongside SBERT.
