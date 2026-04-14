@@ -1,6 +1,7 @@
 import torch
-from typing import List, Sequence
-from ._cache import cached_encode
+from pathlib import Path
+from typing import List, Optional, Sequence
+from ._cache import cached_encode, DEFAULT_CACHE_DIR
 
 
 # Models that require the HuggingFace Transformers backend
@@ -44,7 +45,11 @@ def _raw_encode_hf(texts: List[str], model_name: str) -> List[List[float]]:
     return embeddings.cpu().numpy().tolist()
 
 
-def encode(texts: Sequence[str], model_name: str = "all-MiniLM-L6-v2") -> List[List[float]]:
+def encode(
+    texts: Sequence[str],
+    model_name: str = "all-MiniLM-L6-v2",
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+) -> List[List[float]]:
     """
     Encode texts into embeddings using the appropriate backend, with disk caching.
 
@@ -53,6 +58,7 @@ def encode(texts: Sequence[str], model_name: str = "all-MiniLM-L6-v2") -> List[L
     Args:
         texts: Input texts to encode.
         model_name: Pretrained model name. Defaults to "all-MiniLM-L6-v2".
+        cache_dir: Root directory for the disk cache.
 
     Returns:
         List of embedding vectors as lists of floats.
@@ -62,4 +68,4 @@ def encode(texts: Sequence[str], model_name: str = "all-MiniLM-L6-v2") -> List[L
     else:
         encode_fn = lambda t: _raw_encode_st(t, model_name)
 
-    return cached_encode(texts, encode_fn=encode_fn, model_name=model_name)
+    return cached_encode(texts, encode_fn=encode_fn, model_name=model_name, cache_dir=cache_dir)
