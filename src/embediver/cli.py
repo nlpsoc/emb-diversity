@@ -153,26 +153,22 @@ def list_axes_cmd() -> None:
 
 def _read_texts(path: Path, column: str) -> list[str]:
     """Read texts from .txt, .csv, or .tsv file."""
+    import pandas as pd
+
     suffix = path.suffix.lower()
     if suffix == ".txt":
         return [line.strip() for line in path.read_text().splitlines() if line.strip()]
     elif suffix in (".csv", ".tsv"):
-        delimiter = "\t" if suffix == ".tsv" else ","
-        texts = []
-        with path.open(newline="") as f:
-            reader = csv.DictReader(f, delimiter=delimiter)
-            if column not in (reader.fieldnames or []):
-                typer.echo(
-                    f"Error: column {column!r} not found. "
-                    f"Available: {reader.fieldnames}",
-                    err=True,
-                )
-                raise typer.Exit(code=1)
-            for row in reader:
-                val = row[column]
-                if val and val.strip():
-                    texts.append(val.strip())
-        return texts
+        separator = "\t" if suffix == ".tsv" else ","
+        df = pd.read_csv(path, sep=separator)
+        if column not in df.columns:
+            typer.echo(
+                f"Error: column {column!r} not found. "
+                f"Available: {list(df.columns)}",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        return df[column].dropna().astype(str).str.strip().tolist()
     else:
         typer.echo(f"Error: unsupported file extension {suffix!r}. Use .txt, .csv, or .tsv.", err=True)
         raise typer.Exit(code=1)
