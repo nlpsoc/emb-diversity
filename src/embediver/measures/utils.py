@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Sequence, Union
+from typing import Any, Sequence
 
 import numpy as np
 from scipy.spatial.distance import pdist
 
-DISTANCE_METRIC = Union[str, Callable]
+from .._types import DISTANCE_METRIC
 
 
 def _compute_pairwise_distances(

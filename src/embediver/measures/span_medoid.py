@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .._accepts_text import accepts_text
+from .._types import DISTANCE_METRIC
 
 ### Volume-Based Diversity Measure
 
