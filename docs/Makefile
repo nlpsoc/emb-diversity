@@ -7,7 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
-APIDOCDIR     = ../src/measure_diversity
+APIDOCDIR     = ../src/embediver
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -29,7 +29,7 @@ clean:
 # Clean build artifacts and generated RST files
 cleanall: clean
 	@echo "Removing generated API documentation files..."
-	@rm -f $(SOURCEDIR)/measure_diversity*.rst
+	@rm -f $(SOURCEDIR)/embediver*.rst
 	@rm -f $(SOURCEDIR)/modules.rst
 	@echo "All clean!"
 

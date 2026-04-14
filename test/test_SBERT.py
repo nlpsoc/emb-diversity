@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import numpy as np
 from typing import List
-from measure_diversity.embeddings.SBERT import encode_sentences, encode_style_sentences, _get_model, encode_semantic_sentences
+from embediver.embeddings.SBERT import encode_sentences, encode_style_sentences, _get_model, encode_semantic_sentences
 
 
 class TestSentenceEncoder:
@@ -25,14 +25,14 @@ class TestSentenceEncoder:
 
     def test_encode_sentences_empty_input(self, mock_sentence_transformer):
         """Test behavior with empty sentence list."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
             mock_sentence_transformer.encode.return_value = np.array([])
             result = encode_sentences([])
             assert result == []
 
     def test_encode_sentences_custom_model(self, mock_sentence_transformer):
         """Test using a custom model name."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
             sentences = ["Test sentence"]
             custom_model = "custom-model-name"
             encode_sentences(sentences, model_name=custom_model)
@@ -41,13 +41,13 @@ class TestSentenceEncoder:
 
     def test_encode_sentences_default_model(self, mock_sentence_transformer):
         """Test that default model is used when not specified."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
             encode_sentences(["Test"])
             mock_constructor.assert_called_with("all-MiniLM-L6-v2")
 
     def test_model_caching_different_models(self, mock_sentence_transformer):
         """Test caching behavior with different models."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
             # Call with different models
             encode_sentences(["Test"], "model-1")
             encode_sentences(["Test"], "model-2")
@@ -58,7 +58,7 @@ class TestSentenceEncoder:
 
     def test_encode_style_sentences(self, mock_sentence_transformer):
         """Test the style-specific encoding function."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer) as mock_constructor:
             sentences = ["Style test sentence"]
             result = encode_style_sentences(sentences)
             # Should use the AnnaWegmann/Style-Embedding model
@@ -86,7 +86,7 @@ class TestCacheManagement:
 
     def test_cache_clear_functionality(self, mock_sentence_transformer):
         """Test that cache can be cleared."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
             # Load a model
             encode_sentences(["Test"], "test-model")
 
@@ -105,7 +105,7 @@ class TestCacheManagement:
 
     def test_cache_size_limit(self, mock_sentence_transformer):
         """Test that cache respects maxsize limit."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
 
             # Load more than 10 models (maxsize=10)
             for i in range(15):
@@ -117,7 +117,7 @@ class TestCacheManagement:
 
     def test_cache_info_functionality(self, mock_sentence_transformer):
         """Test that cache info is accessible."""
-        with patch('measure_diversity.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
+        with patch('embediver.embeddings.SBERT.SentenceTransformer', return_value=mock_sentence_transformer):
             # Clear cache and check initial state
             _get_model.cache_clear()
             initial_info = _get_model.cache_info()
