@@ -46,7 +46,7 @@ def measure(
     ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
-    from ._registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
+    from ._convenience import measure_diversity
 
     # ── Read texts ───────────────────────────────────────────────
     texts = _read_texts(input_file, column)
@@ -54,31 +54,24 @@ def measure(
         typer.echo("Error: need at least 2 texts to measure diversity.", err=True)
         raise typer.Exit(code=1)
 
-    # ── Resolve measure set ──────────────────────────────────────
+    # ── Resolve measure shortcut ─────────────────────────────────
+    # CLI passes None (default), ["all"], ["core"], or a list of names
     if measures is None:
-        measure_names = [DEFAULT_MEASURE]
-    elif measures == ["all"]:
-        measure_names = list(MEASURES)
-    elif measures == ["core"]:
-        measure_names = CORE_MEASURES
+        measure_arg = None
+    elif len(measures) == 1 and measures[0] in ("all", "core"):
+        measure_arg = measures[0]
     else:
-        measure_names = measures
-
-    for name in measure_names:
-        if name not in MEASURES:
-            typer.echo(f"Error: unknown measure {name!r}. Use 'embediver list-measures' to see options.", err=True)
-            raise typer.Exit(code=1)
-
-    # ── Embed ────────────────────────────────────────────────────
-    from .embed import embed_texts
-
-    typer.echo(f"Embedding {len(texts)} texts...", err=True)
-    vectors = embed_texts(texts, diversity_axis=axis, embedding_model=model)
+        measure_arg = measures
 
     # ── Compute ──────────────────────────────────────────────────
-    from ._convenience import _measure_multiple
-
-    results = _measure_multiple(vectors, measures=measure_names)
+    typer.echo(f"Embedding {len(texts)} texts...", err=True)
+    try:
+        results = measure_diversity(
+            texts, measure=measure_arg, diversity_axis=axis, embedding_model=model,
+        )
+    except KeyError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1)
 
     # ── Output ───────────────────────────────────────────────────
     _print_results(results, output_format)

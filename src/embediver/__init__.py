@@ -36,15 +36,20 @@ from ._axes import register_axis, get_axis, list_axes
 ### Embedding helper
 from .embed import embed_texts
 
+### Main entry point
+from ._convenience import measure_diversity
+
 
 __all__ = [
-    # Measures
+    # Main entry point
+    "measure_diversity",
+    # Individual measures
     "mean_pw_dist", "dist_dispersion", "hamdiv", "diameter", "bottleneck",
     "sum_diameter", "energy", "cluster_inertia", "span_centroid", "chamfer_dist",
     "convex_hull_volume", "radius", "span_medoid", "vendi_score",
     "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
     "graph_entropy", "mst_dispersion",
-    # Convenience
+    # Helpers
     "embed_texts",
     # Axes
     "register_axis", "get_axis", "list_axes",

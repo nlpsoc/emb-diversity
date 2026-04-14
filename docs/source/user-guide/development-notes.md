@@ -17,3 +17,7 @@ used by scikit-learn (see e.g.
 for how they validate and convert input types). If the decorator becomes
 hard to maintain or debug, switching to explicit checks per function is
 a reasonable alternative.
+
+## TODOs
+
+- **TODO:** Check that the core measures set (`CORE_MEASURES` in `_registry.py`) makes sense with Tao.
