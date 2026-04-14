@@ -62,24 +62,3 @@ for axis in list_axes():
     if axis.alternative_models:
         print(f"  alternatives: {axis.alternative_models}")
 ```
-
-## Registering Custom Axes
-
-You can register your own axes for repeated use:
-
-```python
-from embediver import register_axis
-
-register_axis(
-    "multilingual",
-    default_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    alternative_models=["sentence-transformers/paraphrase-multilingual-mpnet-base-v2"],
-    description="Cross-lingual semantic diversity",
-)
-
-# Now use it like any built-in axis
-from embediver import log_determinant
-log_determinant(texts, diversity_axis="multilingual")
-```
-
-Custom axes are available for the duration of the Python process.
