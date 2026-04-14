@@ -28,8 +28,8 @@ autodoc_mock_imports = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'embediver'
-copyright = '2026, Anna Wegmann, Cantao Su, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
-author = 'Anna Wegmann, Cantao Su, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
+copyright = '2026, Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
+author = 'Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
 
 version = '0.1.0'
 release = '0.1.0'
