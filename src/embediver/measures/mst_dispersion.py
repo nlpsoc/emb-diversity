@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .._embed import accepts_text
+from .._accepts_text import accepts_text
 
 ### Graph-Based Diversity Measure
 
