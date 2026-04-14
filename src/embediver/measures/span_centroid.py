@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distance-Based Diversity Measure
 
 import numpy as np
 from scipy.spatial.distance import cdist
 
 
-def span_with_centroid(
+
+@accepts_text
+def span_centroid(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",
         percentile: float = 90.0,

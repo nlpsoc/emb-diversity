@@ -19,13 +19,16 @@ autodoc_mock_imports = [
     'pandas',
     'transformers',
     'torch',
+    'typer',
+    'networkx',
+    'umap',
 ]
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Diversity Measurement'
-copyright = '2025, Anna Wegmann, Cantao Su, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
+project = 'embediver'
+copyright = '2025-2026, Anna Wegmann, Cantao Su, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
 author = 'Anna Wegmann, Cantao Su, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
 
 version = '0.1.0'

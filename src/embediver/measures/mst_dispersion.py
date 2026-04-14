@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Graph-Based Diversity Measure
 
 import numpy as np
@@ -7,6 +11,8 @@ from scipy.spatial.distance import squareform
 import torch
 
 
+
+@accepts_text
 def mst_dispersion(data: TensorLike,
                    metric: DISTANCE_METRIC = "cosine"
                    ) -> float:

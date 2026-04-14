@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distance-Based Diversity Measure
 
 import numpy as np
 from .utils import _compute_pairwise_distances
 
 
+
+@accepts_text
 def diameter(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",

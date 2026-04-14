@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distance-Based Diversity Measure
 
 from .utils import _compute_pairwise_distances
@@ -6,6 +10,8 @@ import networkx as nx
 from networkx.algorithms.approximation import greedy_tsp, christofides
 
 
+
+@accepts_text
 def hamdiv(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",
@@ -46,7 +52,7 @@ def hamdiv(
     Examples:
         Basic usage with default settings (christofides, cosine distance):
 
-        >>> from measure_diversity.measure import hamdiv
+        >>> from embediver import hamdiv
         >>> embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
         >>> diversity = hamdiv(embeddings)
         >>> print(f"Diversity: {diversity:.4f}")

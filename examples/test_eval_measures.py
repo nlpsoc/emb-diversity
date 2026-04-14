@@ -1,8 +1,8 @@
-from measure_diversity import evaluate_measures
-from measure_diversity import (mean_pairwise_distance, distance_dispersion, cluster_inertia_diversity,
+from embediver import evaluate_measures
+from embediver import (mean_pw_dist, dist_dispersion, cluster_inertia,
                                        convex_hull_volume)
 import numpy as np
-from measure_diversity import two_d
+from embediver import two_d
 
 def test_eval_measures_not_normed():
     """
@@ -22,17 +22,17 @@ def test_eval_measures_not_normed():
     two_d.plot_points(medium, title="Medium Spread Points", xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
 
     measures = [
-        lambda data: mean_pairwise_distance(data, metric="euclidean"),
-        lambda data: mean_pairwise_distance(data, metric="cosine"),
-        lambda data: distance_dispersion(data, metric="cosine"),
+        lambda data: mean_pw_dist(data, metric="euclidean"),
+        lambda data: mean_pw_dist(data, metric="cosine"),
+        lambda data: dist_dispersion(data, metric="cosine"),
         convex_hull_volume,
-        cluster_inertia_diversity
+        cluster_inertia
     ]
 
     # Add names to lambda functions for better display
     measures[0].__name__ = "mean_pairwise_euclidean"
     measures[1].__name__ = "mean_pairwise_cosine"
-    measures[2].__name__ = "distance_dispersion_cosine"
+    measures[2].__name__ = "dist_dispersion_cosine"
 
     evaluate_measures.evaluate_monotone_order([clustered, medium], measures,
                                               dataset_names=["Clustered Spread", "Medium Spread"])
@@ -55,16 +55,16 @@ def test_normed():
                       xlim=(x_min-0.1, x_max+0.1), ylim=(y_min-0.1, y_max+0.1))
 
     measures = [
-        lambda data: mean_pairwise_distance(data, metric="euclidean"),
-        lambda data: mean_pairwise_distance(data, metric="cosine"),
-        lambda data: distance_dispersion(data, metric="cosine"),
+        lambda data: mean_pw_dist(data, metric="euclidean"),
+        lambda data: mean_pw_dist(data, metric="cosine"),
+        lambda data: dist_dispersion(data, metric="cosine"),
         convex_hull_volume,
-        cluster_inertia_diversity
+        cluster_inertia
     ]
     # Add names to lambda functions for better display
     measures[0].__name__ = "mean_pairwise_euclidean"
     measures[1].__name__ = "mean_pairwise_cosine"
-    measures[2].__name__ = "distance_dispersion_cosine"
+    measures[2].__name__ = "dist_dispersion_cosine"
     evaluate_measures.evaluate_monotone_order(
         [points_first_quad, points_first_and_third_quad, points_equi],
         measures, dataset_names=["first_quad", "first_and_third_quad", "equi"],

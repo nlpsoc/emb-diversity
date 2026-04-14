@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distribution-Based Diversity Measure
 
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
 
-def renyi_kernel_entropy(
+
+@accepts_text
+def renyi_entropy(
         data: Sequence[Sequence[float]],
         alpha: float = 2.0,
         kernel_type: str = "cs",

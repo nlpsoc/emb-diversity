@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools>=61.0"] # Ensure setuptools is at least version 61.0, which supports pyproject.toml
-build-backend = "setuptools.build_meta" # Use setuptools as the build backend
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "diversity-measurement"
+name = "embediver"
 version = "0.1.0"
-description = "A tiny package with a simple diversity function"
+description = "20 embedding-based diversity measures for text and vector data"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["diversity", "nlp", "embeddings", "text-diversity", "metrics"]
 authors = [
     {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
     {name = "Cantao Su", email = "c.su@uu.nl"},
@@ -15,18 +17,44 @@ authors = [
     {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
     {name = "Esther Ploeger", email = "e.ploeger@uu.nl"},
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+]
 dependencies = [
-    "datasets~=3.3.2",
-    "matplotlib~=3.10.0",
-    "networkx>=2.8.8",
-    "numpy~=2.3.5",
-    "pandas~=2.3.1",
-    "scikit-learn~=1.7.1",
-    "scipy~=1.16.0",
+    "networkx>=2.8",
+    "numpy>=1.24",
+    "scikit-learn>=1.2",
+    "scipy>=1.10",
     "sentence-transformers>=2.7.0",
-    "umap-learn>=0.5.9",
+    "typer>=0.9.0",
     "vendi-score>=0.0.3",
 ]
+
+[project.optional-dependencies]
+eval = ["datasets>=2.14", "pandas>=1.5"]
+viz = ["matplotlib>=3.6", "umap-learn>=0.5.9"]
+
+[project.urls]
+Homepage = "https://github.com/nlpsoc/Diversity-Measurement"
+Documentation = "https://nlpsoc.github.io/Diversity-Measurement/"
+Repository = "https://github.com/nlpsoc/Diversity-Measurement"
+"Bug Tracker" = "https://github.com/nlpsoc/Diversity-Measurement/issues"
+
+[project.scripts]
+embediver = "embediver.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 docs = [
@@ -36,28 +64,21 @@ docs = [
     "myst-parser>=5.0.0",
 ]
 dev = [
-    "datasets~=3.3.2",
+    "pytest>=8.0",
     "notebook>=7.0.0",
-    "matplotlib~=3.10.0",
-    "numpy~=2.3.5",
-    "pandas~=2.3.1",
-    "pytest~=8.4.1",
-    "scikit-learn~=1.7.1",
-    "scipy~=1.16.0",
-    "sentence-transformers>=2.7.0",
+    "datasets>=2.14",
+    "matplotlib>=3.6",
+    "pandas>=1.5",
+    "umap-learn>=0.5.9",
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "sphinx-autodoc-typehints>=3.0.0",
     "myst-parser>=5.0.0",
-    "umap-learn>=0.5.9",
 ]
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
-norecursedirs = ["examples", "build", "dist"] 
+norecursedirs = ["examples", "build", "dist"]
 pythonpath = ["src"]
 markers = [
     "integration: marks tests as integration tests (slow, requires internet)"

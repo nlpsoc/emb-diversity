@@ -4,7 +4,7 @@
 import re
 import pandas as pd
 import numpy as np
-from measure_diversity.utility import project_root
+from embediver.utility import project_root
 
 
 STEL_path = (project_root.find() / "pilot_datasets" / "style_diversity" / "original_data" /

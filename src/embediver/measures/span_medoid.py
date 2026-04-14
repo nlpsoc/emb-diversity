@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Volume-Based Diversity Measure
 
 import numpy as np
 from scipy.spatial.distance import squareform, pdist
 
 
-def span_with_medoid(
+
+@accepts_text
+def span_medoid(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",
         **metric_kwargs: Any,

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Volume-Based Diversity Measure
 
 import numpy as np
 
 
-def radius_diversity(
+
+@accepts_text
+def radius(
         data: Sequence[Sequence[float]]
 ) -> float:
     """

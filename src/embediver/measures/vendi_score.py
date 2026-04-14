@@ -1,17 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distribution-Based Diversity Measure
 
 import numpy as np
 from vendi_score import vendi
 
-# TODO: this check could be removed right, since we separate the measures now?
-#try:
-#    from vendi_score import vendi
-#    _HAS_VENDI = True
-#except ImportError:
-#    _HAS_VENDI = False
 
 
-def vendi_score_diversity(
+@accepts_text
+def vendi_score(
         data: Sequence[Sequence[float]],
         q: float = 1.0,
         normalize: bool = True,
@@ -49,12 +48,6 @@ def vendi_score_diversity(
         ValueError:
             If there are fewer than 2 datapoints.
     """
-    #if not _HAS_VENDI:
-    #    raise ImportError(
-    #        "vendi_score is not installed. Please `pip install vendi_score` "
-    #        "to use vendi_score_diversity."
-    #    )
-
     X = np.asarray(data, dtype=float)
     if X.ndim != 2:
         raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")

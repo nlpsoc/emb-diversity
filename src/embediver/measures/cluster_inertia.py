@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distance-Based Diversity Measure
 
 import numpy as np
 from sklearn.cluster import KMeans
 
 
-def cluster_inertia_diversity(
+
+@accepts_text
+def cluster_inertia(
         data: Sequence[Sequence[float]],
         n_clusters: int = 200 
 ) -> float:

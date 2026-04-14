@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distribution-Based Diversity Measure
 
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
 
-def log_determinant_diversity(
+
+@accepts_text
+def log_determinant(
         data: Sequence[Sequence[float]],
         kernel_type: str = "cs",
         tau: float = 1.0,

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distribution-Based Diversity Measure
 
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
 
+
+@accepts_text
 def dcscore(
         data: Sequence[Sequence[float]],
         kernel_type: str = "cs",

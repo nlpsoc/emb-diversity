@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Volume-Based Diversity Measure
 
 import numpy as np
 from scipy.spatial import ConvexHull
 
 
+
+@accepts_text
 def convex_hull_volume(
         data: Sequence[Sequence[float]]
 ) -> float:

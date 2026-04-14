@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from .._embed import accepts_text
+
 ### Distribution-Based Diversity Measure
 
 import numpy as np
@@ -9,7 +13,9 @@ except Exception:
     UMAP = None
 
 
-def bins_based_entropy(
+
+@accepts_text
+def bins_entropy(
     data,
     n_bins_x: int = 5,
     n_bins_y: int = 5,
