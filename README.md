@@ -230,7 +230,7 @@ When you add a new measure to `src/embediver/measures/`:
 
 1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
 2. Export it from `src/embediver/__init__.py` if it should be part of the public API.
-3. Add it to the `MEASURES` dict in `src/embediver/_registry.py`.
+3. Register it in `src/embediver/measures_registry.py` with `measures.register("name", func)`.
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
 ### Adding New Diversity Axes
