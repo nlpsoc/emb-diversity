@@ -12,13 +12,13 @@ import typer
 
 app = typer.Typer(
     name="embediver",
-    help="Measure embedding-based diversity of text data.",
+    help="Measure embedding-based diversity of text data.\n\nRun directly: embediver texts.txt",
     no_args_is_help=True,
 )
 
 
-@app.command()
-def measure(
+@app.command(hidden=True)
+def default(
     input_file: Path = typer.Argument(
         ..., help="Path to input file (.txt, .csv, or .tsv)"
     ),
@@ -46,7 +46,44 @@ def measure(
     ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
-    from ._convenience import measure_diversity
+    _run_measure(input_file, measures, axis, model, column, output_format)
+
+
+@app.command("measure")
+def measure_cmd(
+    input_file: Path = typer.Argument(
+        ..., help="Path to input file (.txt, .csv, or .tsv)"
+    ),
+    measures: Optional[list[str]] = typer.Option(
+        None,
+        "--measure",
+        "-m",
+        help=(
+            "Measure(s) to run. Repeat for multiple: -m mean_pw_dist -m diameter. "
+            "Special values: 'core' (curated set), 'all' (all 20). "
+            "Omit for the default measure (log_determinant)."
+        ),
+    ),
+    axis: str = typer.Option(
+        "semantic", "--axis", "-a", help="Diversity axis (e.g. semantic, style)."
+    ),
+    model: Optional[str] = typer.Option(
+        None, "--model", help="Explicit embedding model; overrides --axis."
+    ),
+    column: str = typer.Option(
+        "text", "--column", "-c", help="Column name containing text (for CSV/TSV)."
+    ),
+    output_format: str = typer.Option(
+        "table", "--format", "-f", help="Output format: table, json, csv."
+    ),
+) -> None:
+    """Measure diversity from a text file or CSV/TSV."""
+    _run_measure(input_file, measures, axis, model, column, output_format)
+
+
+def _run_measure(input_file, measures, axis, model, column, output_format):
+    """Shared logic for the measure command."""
+    from .convenience import measure_diversity
 
     # ── Read texts ───────────────────────────────────────────────
     texts = _read_texts(input_file, column)
@@ -55,7 +92,6 @@ def measure(
         raise typer.Exit(code=1)
 
     # ── Resolve measure shortcut ─────────────────────────────────
-    # CLI passes None (default), ["all"], ["core"], or a list of names
     if measures is None:
         measure_arg = None
     elif len(measures) == 1 and measures[0] in ("all", "core"):

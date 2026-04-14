@@ -37,7 +37,7 @@ from .axes_registry import register_axis, get_axis, list_axes
 from .embed import embed_texts
 
 ### Main entry point
-from ._convenience import measure_diversity
+from .convenience import measure_diversity
 
 
 __all__ = [
