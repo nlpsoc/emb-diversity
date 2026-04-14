@@ -1,9 +1,7 @@
 # embediver
 
 <!-- docs-intro-start -->
-A Python package with 20 embedding-based diversity measures for text and vector data.
-All measures calculate diversity based on embeddings (vector representations).
-Depending on the embedding model, you can measure semantic, stylistic, or other types of diversity.
+A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
 
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
