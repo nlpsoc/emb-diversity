@@ -110,7 +110,8 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
             texts, measure=measure_arg, diversity_axis=axis, embedding_model=model,
         )
     except KeyError as exc:
-        typer.echo(f"Error: {exc}", err=True)
+        # measure_diversity() raises KeyError for unknown measure names
+        typer.echo(f"Error: {exc}. Run 'embediver list-measures' to see available measures.", err=True)
         raise typer.Exit(code=1)
 
     # ── Output ───────────────────────────────────────────────────
