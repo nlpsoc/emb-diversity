@@ -12,13 +12,9 @@ from .embed import embed_texts
 # ── Input detection ──────────────────────────────────────────────────
 
 
-def _is_text_input(data: object) -> bool:
+def _is_text_input(data):
     """Return True if *data* looks like a list of strings."""
-    if not isinstance(data, (list, tuple)):
-        return False
-    if len(data) == 0:
-        return False
-    return isinstance(data[0], str)
+    return len(data) > 0 and isinstance(data[0], str)
 
 
 # ── Decorator ────────────────────────────────────────────────────────
