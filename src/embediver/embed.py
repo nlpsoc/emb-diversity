@@ -8,6 +8,7 @@ from ._axes import get_axis
 from .embeddings.SBERT import encode_sentences
 
 
+# TODO: will be replaced by Menan's code
 def embed_texts(
     texts: list[str],
     diversity_axis: str | None = "semantic",
