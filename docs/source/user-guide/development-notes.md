@@ -18,6 +18,10 @@ for how they validate and convert input types). If the decorator becomes
 hard to maintain or debug, switching to explicit checks per function is
 a reasonable alternative.
 
+## Known limitations
+
+- The CLI currently loads all texts into memory at once. This is fine for small- to medium-sized datasets but will not scale to very large files.
+
 ## TODOs
 
 - **TODO:** Check that the default embedding model for the semantic axis makes sense with Tao (see `_axes.py`).
