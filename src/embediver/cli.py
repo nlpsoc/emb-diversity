@@ -27,9 +27,10 @@ def default(
         "--measure",
         "-m",
         help=(
-            "Measure(s) to run. Repeat for multiple: -m mean_pw_dist -m diameter. "
-            "Special values: 'core' (curated set), 'all' (all 20). "
-            "Omit for the default measure (log_determinant)."
+            "Measure to run. Use -m name for one, repeat for several: "
+            "-m mean_pw_dist -m diameter. "
+            "Use -m core for a curated set, -m all for all 20. "
+            "Default: log_determinant."
         ),
     ),
     axis: str = typer.Option(
@@ -59,9 +60,10 @@ def measure_cmd(
         "--measure",
         "-m",
         help=(
-            "Measure(s) to run. Repeat for multiple: -m mean_pw_dist -m diameter. "
-            "Special values: 'core' (curated set), 'all' (all 20). "
-            "Omit for the default measure (log_determinant)."
+            "Measure to run. Use -m name for one, repeat for several: "
+            "-m mean_pw_dist -m diameter. "
+            "Use -m core for a curated set, -m all for all 20. "
+            "Default: log_determinant."
         ),
     ),
     axis: str = typer.Option(
