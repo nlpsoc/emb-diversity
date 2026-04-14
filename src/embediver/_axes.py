@@ -91,5 +91,6 @@ register_axis(
 register_axis(
     "style",
     default_model="AnnaWegmann/Style-Embedding",
+    alternative_models=["rrivera1849/LUAR-MUD"],
     description="Writing style diversity",
 )
