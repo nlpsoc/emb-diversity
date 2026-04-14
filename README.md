@@ -6,15 +6,22 @@ A Python package for measuring data diversity on small- to medium-sized text dat
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
 
-## Install
+📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
 
-<!-- docs-install-start -->
-```bash
-pip install embediver
-```
-<!-- docs-install-end -->
+## Table of Contents
 
-## Quickstart
+- [Usage](#usage)
+- [Install](#install)
+- [Available Measures](#available-measures)
+- [Development](#development)
+  - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
+  - [Working with uv](#working-with-uv)
+  - [Docstring Style Guide](#docstring-style-guide)
+  - [Adding New Measures](#adding-new-measures)
+  - [Adding New Diversity Axes](#adding-new-diversity-axes)
+- [Funding](#funding)
+
+## Usage
 
 <!-- docs-quickstart-start -->
 ```python
@@ -60,71 +67,158 @@ embediver list-measures
 embediver list-axes
 ```
 
-**Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
+## Install
 
-## Contributing
-
-### Setup
-
-Clone the repo, then install development dependencies:
-
+<!-- docs-install-start -->
 ```bash
-uv sync --group dev
-source .venv/bin/activate
+pip install embediver
 ```
+<!-- docs-install-end -->
 
-### Workflow
+## Available Measures
 
-1. Create a branch: `git checkout -b feature/my-feature`
-2. Make your changes
-3. Run tests: `pytest`
-4. Commit and push
-5. Open a pull request
+For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
+
+## Development
+
+### Suggested Workflow for Collaboration
+
+1. **Create a new branch** for your feature or bug fix:
+   ```bash
+   git checkout -b feature/my-feature
+   ```
+2. **Make your changes** in the codebase.
+3. **Run tests** to ensure everything works as expected:
+   ```bash
+   pytest
+   ```
+4. **Commit your changes** with a descriptive message:
+   ```bash
+   git add .
+   git commit -m "Add feature X"
+   ```
+5. **Push your branch** to the remote repository:
+   ```bash
+   git push origin feature/my-feature
+   ```
+6. **Create a pull request** on GitHub to merge your changes into the main branch and request a review from your team members.
+7. **Address any feedback** from the review process.
+8. Once approved, **merge your pull request** into the main branch.
+9. **Delete your branch** after merging to keep the repository clean:
+   ```bash
+   git branch -d feature/my-feature
+   git push origin --delete feature/my-feature
+   ```
 
 ### Working with uv
 
+#### Adding Packages with `uv add`
+
+To add packages to your project, always use `uv add` rather than `uv pip install`. This ensures that your dependencies are properly managed and recorded in your `pyproject.toml`. For example:
+
 ```bash
-uv add <package-name>              # add a dependency
-uv add --group dev <package-name>  # add a dev dependency
-uv sync --no-group dev             # switch back to standard mode
-uv lock -U                         # update lock file after version changes
+uv add <package-name>
 ```
+
+#### Adding Packages to a Dev Group
+
+If you need to add a package specifically to your development environment, you can add it to the `dev` group like this:
+
+```bash
+uv add --group dev <package-name>
+```
+
+#### Switching Between Dev and Standard Mode
+
+After you are done with testing and want to go back to standard mode, run:
+
+```bash
+uv sync --no-group dev
+```
+
+This will disable all additional groups and just load your main project dependencies.
+
+#### Best Practice: Run `uv lock -U`
+
+Whenever you upgrade, downgrade, or change versions of packages, it's a good practice to run:
+
+```bash
+uv lock -U
+```
+
+This updates your `uv.lock` file to ensure all versions are consistent and everything is in sync.
 
 ### Docstring Style Guide
 
-This project uses **Google-style docstrings** parsed by Sphinx Napoleon.
+This project uses **Google-style docstrings** which are automatically parsed by the Sphinx Napoleon extension.
+
+#### Functions and Methods
 
 ```python
 def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
     """Calculate diversity score for a set of vectors.
 
+    This function computes various diversity metrics for vector representations.
+    The default method uses the Vendi Score which is based on matrix entropy.
+
     References:
-        Cox et al. "Directed Diversity." CHI 2021.
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Args:
-        vectors: Array of shape (n_samples, n_features).
-        method: Calculation method. Defaults to "vendi".
+        vectors: Array of shape (n_samples, n_features) containing the vectors.
+        method: Diversity calculation method. Options are "vendi", "entropy",
+            or "distinctness". Defaults to "vendi".
 
     Returns:
-        Diversity score as a float.
+        Diversity score as a float between 0 and 1, where higher values
+        indicate greater diversity.
 
     Raises:
-        ValueError: If vectors array is empty.
+        ValueError: If vectors array is empty or method is not recognized.
 
     Example:
         >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
         >>> score = calculate_diversity(vectors)
+        >>> print(f"Diversity: {score:.2f}")
+        Diversity: 0.87
     """
+    pass
 ```
 
-**Key points:** imperative mood summary, blank line before details, document Args/Returns/Raises/References.
+#### Key Points
+
+- **One-line summary**: Start with a brief summary in imperative mood ("Calculate", not "Calculates")
+- **Blank line**: After the summary, add a blank line before any detailed description
+- **References**: Add related papers
+- **Args**: Document each parameter with type information
+- **Returns**: Describe what the function returns
+- **Raises**: Document exceptions that might be raised
+- **Example**: Include usage examples when helpful
+- **Type hints**: Use type hints in function signatures AND document them in docstrings
+
+#### Section Headers
+
+Use these section headers in docstrings:
+- `References:` Related papers
+- `Args:` — Function/method parameters
+- `Returns:` — Return value description
+- `Raises:` — Exceptions that may be raised
+- `Yields:` — For generators
+- `Attributes:` — For class attributes
+- `Example:` or `Examples:` — Usage examples
+- `Note:` — Important notes
+- `Warning:` — Warnings about usage
+
+Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) · [Sphinx Napoleon docs](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
 
 ### Adding New Measures
 
-1. Create a new file in `src/embediver/measures/` with the function decorated with `@accepts_text`.
-2. Export it from `src/embediver/__init__.py`.
+When you add a new measure to `src/embediver/measures/`:
+
+1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
+2. Export it from `src/embediver/__init__.py` if it should be part of the public API.
 3. Add it to the `MEASURES` dict in `src/embediver/_registry.py`.
-4. Update `docs/source/user-guide/measures.md` with a new row in the appropriate table.
+4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
 ### Adding New Diversity Axes
 
