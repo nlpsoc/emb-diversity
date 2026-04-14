@@ -24,7 +24,7 @@
 ```{toctree}
 :maxdepth: 2
 
-user-guide/embeddings
+user-guide/vectors
 user-guide/measures
 user-guide/axes
 user-guide/cli

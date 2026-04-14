@@ -1,8 +1,9 @@
-# Using Pre-computed Embeddings
+# Using Vectors Directly
 
-All measure functions and `measure_diversity()` accept pre-computed embedding vectors
-in addition to raw text. This is useful when you have your own embeddings or want
-to avoid re-embedding the same texts multiple times.
+All measure functions and `measure_diversity()` accept vectors
+in addition to raw text. This is useful when you already have
+vector representations or want to avoid re-embedding the same
+texts multiple times.
 
 ## With `measure_diversity()`
 
