@@ -76,13 +76,9 @@ def measure(
     vectors = embed_texts(texts, diversity_axis=axis, embedding_model=model)
 
     # ── Compute ──────────────────────────────────────────────────
-    results: dict[str, float] = {}
-    for name in measure_names:
-        fn = MEASURES[name]
-        try:
-            results[name] = fn(vectors)
-        except Exception as exc:
-            results[name] = float("nan")
+    from ._convenience import _measure_multiple
+
+    results = _measure_multiple(vectors, measures=measure_names)
 
     # ── Output ───────────────────────────────────────────────────
     _print_results(results, output_format)

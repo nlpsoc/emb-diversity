@@ -36,9 +36,6 @@ from ._axes import register_axis, get_axis, list_axes
 ### Embedding helper
 from .embed import embed_texts
 
-### Convenience functions
-from ._convenience import _measure_multiple
-
 
 __all__ = [
     # Measures
