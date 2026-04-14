@@ -1,9 +1,8 @@
 # Using Vectors Directly
 
 All measure functions and `measure_diversity()` accept vectors
-in addition to raw text. This is useful when you already have
-vector representations or want to avoid re-embedding the same
-texts multiple times.
+in addition to raw text. This is useful when you have
+vector representations of non-textual data.
 
 ## With `measure_diversity()`
 
