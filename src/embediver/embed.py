@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ._axes import get_axis
+from .axes_registry import get_axis
 from .embeddings.SBERT import encode_sentences
 
 

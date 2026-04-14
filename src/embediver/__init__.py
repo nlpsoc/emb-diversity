@@ -31,7 +31,7 @@ from .measures.graph_entropy import graph_entropy
 from .measures.mst_dispersion import mst_dispersion
 
 ### Axes API
-from ._axes import register_axis, get_axis, list_axes
+from .axes_registry import register_axis, get_axis, list_axes
 
 ### Embedding helper
 from .embed import embed_texts

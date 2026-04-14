@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
+from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
 from .embed import embed_texts
 
 

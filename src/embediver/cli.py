@@ -80,7 +80,7 @@ def measure(
 @app.command("list-measures")
 def list_measures_cmd() -> None:
     """List all available diversity measures."""
-    from ._registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
+    from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
 
     for name in sorted(MEASURES):
         tags = []
@@ -95,7 +95,7 @@ def list_measures_cmd() -> None:
 @app.command("list-axes")
 def list_axes_cmd() -> None:
     """List registered diversity axes and their models."""
-    from ._axes import list_axes
+    from .axes_registry import list_axes
 
     for ax in list_axes():
         typer.echo(f"  {ax.name}")
