@@ -184,7 +184,7 @@ def _read_texts(path: Path, column: str) -> list[str]:
                 err=True,
             )
             raise typer.Exit(code=1)
-        return df[column].astype(str).str.strip().tolist()
+        return df[column].astype(str).tolist()
     else:
         typer.echo(f"Error: unsupported file extension {suffix!r}. Use .txt, .csv, or .tsv.", err=True)
         raise typer.Exit(code=1)
