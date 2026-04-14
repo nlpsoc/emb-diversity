@@ -47,6 +47,11 @@ measure_diversity(texts, measure="core")
 
 # Run specific measures
 measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
+
+# You can also call individual measures directly
+from embediver import log_determinant
+log_determinant(texts)
+log_determinant(texts, diversity_axis="style")
 ```
 <!-- docs-quickstart-end -->
 
