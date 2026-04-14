@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .axes_registry import get_axis
+from .axes_registry import axes
 from .embeddings.SBERT import encode_sentences
 
 
@@ -31,7 +31,7 @@ def embed_texts(
     if embedding_model is not None:
         model_name = embedding_model
     elif diversity_axis is not None:
-        axis = get_axis(diversity_axis)
+        axis = axes.get(diversity_axis)
         model_name = axis.default_model
     else:
         raise ValueError(

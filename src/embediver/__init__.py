@@ -30,8 +30,9 @@ from .measures.bins_entropy import bins_entropy
 from .measures.graph_entropy import graph_entropy
 from .measures.mst_dispersion import mst_dispersion
 
-### Axes API
-from .axes_registry import register_axis, get_axis, list_axes
+### Registries
+from .axes_registry import axes
+from .measures_registry import measures
 
 ### Embedding helper
 from .embed import embed_texts
@@ -51,6 +52,6 @@ __all__ = [
     "graph_entropy", "mst_dispersion",
     # Helpers
     "embed_texts",
-    # Axes
-    "register_axis", "get_axis", "list_axes",
+    # Registries
+    "axes", "measures",
 ]

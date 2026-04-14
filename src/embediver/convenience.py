@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
+from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, measures
 from .embed import embed_texts
 
 
@@ -44,9 +44,9 @@ def measure_diversity(
 
     # ── Validate ─────────────────────────────────────────────────
     for name in measure_names:
-        if name not in MEASURES:
+        if name not in measures:
             raise KeyError(
-                f"Unknown measure {name!r}. Available: {sorted(MEASURES)}"
+                f"Unknown measure {name!r}. Available: {sorted(measures)}"
             )
 
     # ── Embed once if text, then pass vectors to all measures ────
@@ -59,7 +59,7 @@ def measure_diversity(
     results: dict[str, float] = {}
     for name in measure_names:
         try:
-            results[name] = MEASURES[name](data)
+            results[name] = measures[name](data)
         except Exception:
             results[name] = float("nan")
     return results
@@ -78,7 +78,7 @@ def _resolve_measure_names(measure: str | list[str] | None) -> list[str]:
         return [DEFAULT_MEASURE]
     if isinstance(measure, str):
         if measure == "all":
-            return list(MEASURES)
+            return list(measures)
         if measure == "core":
             return list(CORE_MEASURES)
         return [measure]

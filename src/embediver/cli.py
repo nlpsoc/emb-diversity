@@ -121,9 +121,9 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
 @app.command("list-measures")
 def list_measures_cmd() -> None:
     """List all available diversity measures."""
-    from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, MEASURES
+    from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, measures
 
-    for name in sorted(MEASURES):
+    for name in sorted(measures):
         tags = []
         if name == DEFAULT_MEASURE:
             tags.append("default")
@@ -136,9 +136,9 @@ def list_measures_cmd() -> None:
 @app.command("list-axes")
 def list_axes_cmd() -> None:
     """List registered diversity axes and their models."""
-    from .axes_registry import list_axes
+    from .axes_registry import axes
 
-    for ax in list_axes():
+    for ax in axes.list_all():
         typer.echo(f"  {ax.name}")
         typer.echo(f"    default model: {ax.default_model}")
         if ax.alternative_models:

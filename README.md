@@ -52,44 +52,44 @@ measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
 from embediver import log_determinant
 log_determinant(texts)
 log_determinant(texts, diversity_axis="style")
-
-# Works on pre-computed embeddings too
-import numpy as np
-vectors = np.random.randn(100, 384)
-measure_diversity(vectors)
-log_determinant(vectors)
 ```
 <!-- docs-quickstart-end -->
 
-### CLI
-
-```bash
-# Default measure (log_determinant) on a text file
-embediver measure texts.txt
-
-# Core set of measures
-embediver measure texts.txt -m core
-
-# All 20 measures
-embediver measure texts.txt -m all
-
-# CSV/TSV input (default column: "text")
-embediver measure data.csv --column review_text
-
-# JSON output
-embediver measure texts.txt -m core --format json
-
-# List available measures and axes
-embediver list-measures
-embediver list-axes
-```
-
 ## Install
 
+> [!NOTE]
+> You must have **uv** installed before running `uv sync`.
+> Full installation guide: <https://docs.astral.sh/uv/getting-started/installation/>
+
 <!-- docs-install-start -->
-```bash
-pip install embediver
-```
+After installing `uv` on your system, you can now follow either **development mode** or **standard installation mode** depending on your use case.
+
+### Development mode
+
+Follow these steps to set up the project for development.
+- Clone the repo
+- Install all dependencies required for development mode:
+   ```bash
+   uv sync --group dev
+   ```
+- Activate the Python environment created by `uv`
+   ```bash
+   source .venv/bin/activate
+   ```
+
+### Standard installation
+
+To use the library directly do the following,
+
+- Clone the repo
+- Install all dependencies required for standard mode
+   ```bash
+   uv sync --no-group dev
+   ```
+- Activate the Python environment created by `uv`
+   ```bash
+   source .venv/bin/activate
+   ```
 <!-- docs-install-end -->
 
 ## Available Measures

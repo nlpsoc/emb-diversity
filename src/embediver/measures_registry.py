@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._registry import Registry
+
 from .measures.mean_pw_dist import mean_pw_dist
 from .measures.dist_dispersion import dist_dispersion
 from .measures.hamdiv import hamdiv
@@ -23,29 +25,29 @@ from .measures.bins_entropy import bins_entropy
 from .measures.graph_entropy import graph_entropy
 from .measures.mst_dispersion import mst_dispersion
 
-# All 20 measures keyed by their public name
-MEASURES: dict[str, callable] = {
-    "mean_pw_dist": mean_pw_dist,
-    "dist_dispersion": dist_dispersion,
-    "hamdiv": hamdiv,
-    "diameter": diameter,
-    "bottleneck": bottleneck,
-    "sum_diameter": sum_diameter,
-    "energy": energy,
-    "cluster_inertia": cluster_inertia,
-    "span_centroid": span_centroid,
-    "chamfer_dist": chamfer_dist,
-    "convex_hull_volume": convex_hull_volume,
-    "radius": radius,
-    "span_medoid": span_medoid,
-    "vendi_score": vendi_score,
-    "renyi_entropy": renyi_entropy,
-    "dcscore": dcscore,
-    "log_determinant": log_determinant,
-    "bins_entropy": bins_entropy,
-    "graph_entropy": graph_entropy,
-    "mst_dispersion": mst_dispersion,
-}
+# All 20 measures
+measures = Registry()
+
+measures.register("mean_pw_dist", mean_pw_dist)
+measures.register("dist_dispersion", dist_dispersion)
+measures.register("hamdiv", hamdiv)
+measures.register("diameter", diameter)
+measures.register("bottleneck", bottleneck)
+measures.register("sum_diameter", sum_diameter)
+measures.register("energy", energy)
+measures.register("cluster_inertia", cluster_inertia)
+measures.register("span_centroid", span_centroid)
+measures.register("chamfer_dist", chamfer_dist)
+measures.register("convex_hull_volume", convex_hull_volume)
+measures.register("radius", radius)
+measures.register("span_medoid", span_medoid)
+measures.register("vendi_score", vendi_score)
+measures.register("renyi_entropy", renyi_entropy)
+measures.register("dcscore", dcscore)
+measures.register("log_determinant", log_determinant)
+measures.register("bins_entropy", bins_entropy)
+measures.register("graph_entropy", graph_entropy)
+measures.register("mst_dispersion", mst_dispersion)
 
 # The single default measure
 DEFAULT_MEASURE = "log_determinant"
