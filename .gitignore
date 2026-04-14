@@ -18,3 +18,7 @@ local_misc/
 # Sphinx auto-generated documentation files
 docs/source/modules.rst
 docs/source/measure_diversity*.rst
+
+# ignore tokens
+.env
+.mcp.json
