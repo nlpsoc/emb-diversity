@@ -185,7 +185,12 @@ def _read_texts(path: Path, column: str) -> list[str]:
             )
             raise typer.Exit(code=1)
         # Drop empty cells, ensure strings, strip whitespace
-        return df[column].dropna().astype(str).str.strip().tolist()
+        texts_raw = df[column]
+        texts_clean = texts_raw.dropna()
+        n_dropped = len(texts_raw) - len(texts_clean)
+        if n_dropped > 0:
+            typer.echo(f"Warning: dropped {n_dropped} empty row(s) from column {column!r}.", err=True)
+        return texts_clean.astype(str).str.strip().tolist()
     else:
         typer.echo(f"Error: unsupported file extension {suffix!r}. Use .txt, .csv, or .tsv.", err=True)
         raise typer.Exit(code=1)
