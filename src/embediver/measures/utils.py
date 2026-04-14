@@ -5,7 +5,7 @@ from typing import Any, Sequence
 import numpy as np
 from scipy.spatial.distance import pdist
 
-from .._types import DISTANCE_METRIC
+from ._types import DISTANCE_METRIC
 
 
 def _compute_pairwise_distances(
