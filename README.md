@@ -235,13 +235,18 @@ When you add a new measure to `src/embediver/measures/`:
 
 ### Adding New Diversity Axes
 
-Register a new axis in `src/embediver/_axes.py`:
+Register a new axis in `src/embediver/axes_registry.py`:
 
 ```python
-register_axis(
+from embediver.axes_registry import DiversityAxis, axes
+
+axes.register(
     "multilingual",
-    default_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    description="Cross-lingual semantic diversity",
+    DiversityAxis(
+        name="multilingual",
+        default_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        description="Cross-lingual semantic diversity",
+    ),
 )
 ```
 

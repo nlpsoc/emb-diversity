@@ -55,9 +55,9 @@ log_determinant(texts, embedding_model="all-MiniLM-L6-v2")
 Discover available alternatives programmatically:
 
 ```python
-from embediver import list_axes
+from embediver import axes
 
-for axis in list_axes():
+for axis in axes.list_all():
     print(f"{axis.name}: default={axis.default_model}")
     if axis.alternative_models:
         print(f"  alternatives: {axis.alternative_models}")
