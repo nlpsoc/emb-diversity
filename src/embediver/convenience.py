@@ -49,7 +49,9 @@ def measure_diversity(
                 f"Unknown measure {name!r}. Available: {sorted(MEASURES)}"
             )
 
-    # ── Embed if needed ──────────────────────────────────────────
+    # ── Embed once if text, then pass vectors to all measures ────
+    # We embed here rather than letting each measure's @accepts_text
+    # decorator do it, to avoid re-embedding for every measure.
     if len(data) > 0 and isinstance(data[0], str):
         data = embed_texts(data, diversity_axis=diversity_axis, embedding_model=embedding_model)
 
