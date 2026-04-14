@@ -34,7 +34,7 @@ def _is_text_input(data):
 # ── Decorator ────────────────────────────────────────────────────────
 
 
-def accepts_text(fn):
+def accepts_text(func):
     """Wrap a measure function so it can receive raw text.
 
     The decorated function gains two optional keyword arguments:
@@ -47,7 +47,7 @@ def accepts_text(fn):
     is already numeric the decorator passes it through unchanged.
     """
 
-    @functools.wraps(fn)
+    @functools.wraps(func)
     def wrapper(data, *args, diversity_axis="semantic", embedding_model=None, **kwargs):
         if _is_text_input(data):
             data = embed_texts(
@@ -55,16 +55,16 @@ def accepts_text(fn):
                 diversity_axis=diversity_axis,
                 embedding_model=embedding_model,
             )
-        return fn(data, *args, **kwargs)
+        return func(data, *args, **kwargs)
 
     # Preserve the original signature but add the new params for docs/IDE
-    _patch_signature(wrapper, fn)
+    _patch_signature(wrapper, func)
     return wrapper
 
 
-def _patch_signature(wrapper, fn):
+def _patch_signature(wrapper, func):
     """Add diversity_axis / embedding_model to the wrapper's signature."""
-    sig = inspect.signature(fn)
+    sig = inspect.signature(func)
     extra = [
         inspect.Parameter(
             "diversity_axis",
