@@ -2,9 +2,10 @@
 
 A diversity axis maps a concept (e.g. "semantic", "style") to a default
 embedding model and optional alternatives.  Users and developers can
-register custom axes via the module-level functions.
+register custom axes via :func:`register_axis`.
 
-Uses the Registry pattern (see https://dev.to/dentedlogic/stop-writing-giant-if-else-chains-master-the-python-registry-pattern-ldm).
+Uses the registry pattern for O(1) lookup
+(see https://dev.to/dentedlogic/stop-writing-giant-if-else-chains-master-the-python-registry-pattern-ldm).
 """
 
 from __future__ import annotations
@@ -29,43 +30,9 @@ class DiversityAxis:
     description: str = ""
 
 
-class Registry:
-    """Generic key-value registry with O(1) lookup.
+# Registry: dict mapping axis name -> DiversityAxis
+_axes: dict[str, DiversityAxis] = {}
 
-    Provides register, get, list, and contains operations on a
-    dictionary-backed store.
-    """
-
-    def __init__(self):
-        self._store: dict[str, DiversityAxis] = {}
-
-    def register(self, key: str, value: DiversityAxis) -> None:
-        """Add an entry. Overwrites if key already exists."""
-        self._store[key] = value
-
-    def get(self, key: str) -> DiversityAxis:
-        """Look up by key. Raises KeyError if not found."""
-        if key not in self._store:
-            registered = ", ".join(sorted(self._store)) or "(none)"
-            raise KeyError(
-                f"Unknown diversity axis {key!r}. Registered axes: {registered}"
-            )
-        return self._store[key]
-
-    def list_all(self) -> list[DiversityAxis]:
-        """Return all entries sorted by key."""
-        return [self._store[k] for k in sorted(self._store)]
-
-    def __contains__(self, key: str) -> bool:
-        return key in self._store
-
-
-# ── Module-level registry instance ───────────────────────────────
-
-_registry = Registry()
-
-
-# ── Public API (convenience functions that delegate to the registry) ──
 
 def register_axis(
     name: str,
@@ -89,14 +56,11 @@ def register_axis(
         ...     description="Cross-lingual semantic diversity",
         ... )
     """
-    _registry.register(
-        name,
-        DiversityAxis(
-            name=name,
-            default_model=default_model,
-            alternative_models=alternative_models or [],
-            description=description,
-        ),
+    _axes[name] = DiversityAxis(
+        name=name,
+        default_model=default_model,
+        alternative_models=alternative_models or [],
+        description=description,
     )
 
 
@@ -106,15 +70,20 @@ def get_axis(name: str) -> DiversityAxis:
     Raises:
         KeyError: If the axis has not been registered.
     """
-    return _registry.get(name)
+    if name not in _axes:
+        registered = ", ".join(sorted(_axes)) or "(none)"
+        raise KeyError(
+            f"Unknown diversity axis {name!r}. Registered axes: {registered}"
+        )
+    return _axes[name]
 
 
 def list_axes() -> list[DiversityAxis]:
     """Return all registered axes (sorted by name)."""
-    return _registry.list_all()
+    return [_axes[k] for k in sorted(_axes)]
 
 
-# ── Built-in axes ────────────────────────────────────────────────
+# ── Built-in axes ────────────────────────────────────────────────────
 
 register_axis(
     "semantic",

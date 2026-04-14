@@ -64,16 +64,20 @@ docs = [
     "myst-parser>=5.0.0",
 ]
 dev = [
-    "pytest>=8.0",
+    "datasets~=3.3.2",
     "notebook>=7.0.0",
-    "datasets>=2.14",
-    "matplotlib>=3.6",
-    "pandas>=1.5",
-    "umap-learn>=0.5.9",
+    "matplotlib~=3.10.0",
+    "numpy~=2.3.5",
+    "pandas~=2.3.1",
+    "pytest~=8.4.1",
+    "scikit-learn~=1.7.1",
+    "scipy~=1.16.0",
+    "sentence-transformers>=2.7.0",
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "sphinx-autodoc-typehints>=3.0.0",
     "myst-parser>=5.0.0",
+    "umap-learn>=0.5.9",
 ]
 
 [tool.pytest.ini_options]
