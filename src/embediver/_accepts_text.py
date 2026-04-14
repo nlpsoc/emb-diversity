@@ -63,8 +63,25 @@ def accepts_text(func):
 
 
 def _patch_signature(wrapper, func):
-    """Add diversity_axis / embedding_model to the wrapper's signature."""
+    """Fix the wrapper's signature so help() and IDEs show useful parameter names.
+
+    Problem: the wrapper function has a generic signature:
+        wrapper(data, *args, diversity_axis="semantic", embedding_model=None, **kwargs)
+
+    But the original function (e.g. mean_pw_dist) has a specific signature:
+        mean_pw_dist(data, metric="cosine", **metric_kwargs)
+
+    This function combines them so help(mean_pw_dist) shows:
+        mean_pw_dist(data, metric="cosine", diversity_axis="semantic", embedding_model=None, **metric_kwargs)
+
+    This is purely cosmetic — it only affects what help() and IDEs display,
+    not how the function actually runs.
+    """
+    # Get the original function's parameter list
+    # e.g. [data, metric, **metric_kwargs]
     sig = inspect.signature(func)
+
+    # Define the two new parameters we want to add
     extra = [
         inspect.Parameter(
             "diversity_axis",
@@ -77,12 +94,16 @@ def _patch_signature(wrapper, func):
             default=None,
         ),
     ]
+
+    # Insert diversity_axis and embedding_model before **kwargs
+    # so the signature reads: (data, metric, diversity_axis, embedding_model, **metric_kwargs)
     params = list(sig.parameters.values())
-    # Insert before **kwargs if present, else append
     kw_var = [p for p in params if p.kind == inspect.Parameter.VAR_KEYWORD]
     if kw_var:
         idx = params.index(kw_var[0])
         params = params[:idx] + extra + params[idx:]
     else:
         params = params + extra
+
+    # Assign the new signature to the wrapper
     wrapper.__signature__ = sig.replace(parameters=params)
