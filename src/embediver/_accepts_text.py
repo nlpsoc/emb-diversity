@@ -65,45 +65,40 @@ def accepts_text(func):
 def _patch_signature(wrapper, func):
     """Fix the wrapper's signature so help() and IDEs show useful parameter names.
 
-    Problem: the wrapper function has a generic signature:
-        wrapper(data, *args, diversity_axis="semantic", embedding_model=None, **kwargs)
-
-    But the original function (e.g. mean_pw_dist) has a specific signature:
-        mean_pw_dist(data, metric="cosine", **metric_kwargs)
-
-    This function combines them so help(mean_pw_dist) shows:
-        mean_pw_dist(data, metric="cosine", diversity_axis="semantic", embedding_model=None, **metric_kwargs)
-
     This is purely cosmetic — it only affects what help() and IDEs display,
     not how the function actually runs.
+
+    Example for mean_pw_dist:
+        Before: mean_pw_dist(data, *args, diversity_axis="semantic", embedding_model=None, **kwargs)
+        After:  mean_pw_dist(data, metric="cosine", diversity_axis="semantic", embedding_model=None, **metric_kwargs)
     """
-    # Get the original function's parameter list
-    # e.g. [data, metric, **metric_kwargs]
-    sig = inspect.signature(func)
+    # The two parameters that the decorator adds
+    diversity_axis_param = inspect.Parameter(
+        "diversity_axis", inspect.Parameter.KEYWORD_ONLY, default="semantic",
+    )
+    embedding_model_param = inspect.Parameter(
+        "embedding_model", inspect.Parameter.KEYWORD_ONLY, default=None,
+    )
+    new_params = [diversity_axis_param, embedding_model_param]
 
-    # Define the two new parameters we want to add
-    extra = [
-        inspect.Parameter(
-            "diversity_axis",
-            inspect.Parameter.KEYWORD_ONLY,
-            default="semantic",
-        ),
-        inspect.Parameter(
-            "embedding_model",
-            inspect.Parameter.KEYWORD_ONLY,
-            default=None,
-        ),
-    ]
+    # Read the original function's parameters
+    # e.g. for mean_pw_dist: [data, metric="cosine", **metric_kwargs]
+    original_sig = inspect.signature(func)
+    original_params = list(original_sig.parameters.values())
 
-    # Insert diversity_axis and embedding_model before **kwargs
-    # so the signature reads: (data, metric, diversity_axis, embedding_model, **metric_kwargs)
-    params = list(sig.parameters.values())
-    kw_var = [p for p in params if p.kind == inspect.Parameter.VAR_KEYWORD]
-    if kw_var:
-        idx = params.index(kw_var[0])
-        params = params[:idx] + extra + params[idx:]
+    # Find the **kwargs parameter if it exists (e.g. **metric_kwargs)
+    kwargs_params = [p for p in original_params if p.kind == inspect.Parameter.VAR_KEYWORD]
+    has_kwargs = len(kwargs_params) > 0
+
+    # Build the combined parameter list:
+    #   original params + new params + **kwargs at the end
+    # We insert before **kwargs so the signature reads naturally:
+    #   (data, metric, diversity_axis, embedding_model, **metric_kwargs)
+    if has_kwargs:
+        kwargs_position = original_params.index(kwargs_params[0])
+        params_before_kwargs = original_params[:kwargs_position]
+        combined = params_before_kwargs + new_params + [kwargs_params[0]]
     else:
-        params = params + extra
+        combined = original_params + new_params
 
-    # Assign the new signature to the wrapper
-    wrapper.__signature__ = sig.replace(parameters=params)
+    wrapper.__signature__ = original_sig.replace(parameters=combined)
