@@ -7,8 +7,6 @@ Different embedding models capture different aspects of text, so the same set of
 
 ### semantic (default)
 
-> **TODO:** Check that the default embedding model makes sense with Tao.
-
 Measures meaning-based diversity. Texts about different topics will score high; paraphrases will score low.
 
 - **Default model:** `all-mpnet-base-v2`
