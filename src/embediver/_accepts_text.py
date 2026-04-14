@@ -1,4 +1,18 @@
-"""Text detection and the ``@accepts_text`` decorator."""
+"""Decorator that lets measure functions accept raw text.
+
+When a measure function is decorated with ``@accepts_text``, it gains
+the ability to receive a list of strings instead of embeddings.  The
+decorator detects text input, embeds it via :func:`embediver.embed.embed_texts`,
+and passes the resulting vectors to the original measure function.
+
+Two keyword arguments are added to the decorated function:
+
+- ``diversity_axis`` (default ``"semantic"``): which axis to use for embedding
+- ``embedding_model``: explicit model name, overrides the axis
+
+If the input is already numeric (e.g. a numpy array), the decorator
+passes it through unchanged.
+"""
 
 from __future__ import annotations
 
