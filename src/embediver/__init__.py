@@ -37,7 +37,7 @@ from ._axes import register_axis, get_axis, list_axes
 from .embed import embed_texts
 
 ### Convenience functions
-from ._convenience import measure_all
+from ._convenience import _measure_multiple
 
 
 __all__ = [
@@ -48,7 +48,7 @@ __all__ = [
     "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
     "graph_entropy", "mst_dispersion",
     # Convenience
-    "measure_all", "embed_texts",
+    "embed_texts",
     # Axes
     "register_axis", "get_axis", "list_axes",
 ]

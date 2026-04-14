@@ -5,7 +5,7 @@ from __future__ import annotations
 from ._registry import MEASURES
 
 
-def measure_all(
+def _measure_multiple(
     data,
     measures: list[str] | None = None,
     **kwargs,
