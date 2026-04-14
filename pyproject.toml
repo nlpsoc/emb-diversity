@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0"] # Ensure setuptools is at least version 61.0, which supports pyproject.toml
+build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
 name = "embediver"
