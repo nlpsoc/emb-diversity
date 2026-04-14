@@ -5,11 +5,6 @@ Based on https://dev.to/dentedlogic/stop-writing-giant-if-else-chains-master-the
 
 from __future__ import annotations
 
-from typing import TypeVar
-
-V = TypeVar("V")
-
-
 class Registry:
     """A simple key-value store with register, get, and list operations.
 
