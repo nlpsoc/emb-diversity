@@ -17,18 +17,6 @@ authors = [
     {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
     {name = "Esther Ploeger", email = "e.ploeger@uu.nl"},
 ]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Text Processing :: Linguistic",
-]
 dependencies = [
     "datasets~=3.3.2",
     "matplotlib~=3.10.0",
