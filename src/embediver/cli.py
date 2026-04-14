@@ -104,7 +104,7 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
         measure_arg = measures
 
     # ── Compute ──────────────────────────────────────────────────
-    typer.echo(f"Embedding {len(texts)} texts...", err=True)
+    typer.echo(f"Measuring diversity of {len(texts)} texts...", err=True)
     try:
         results = measure_diversity(
             texts, measure=measure_arg, diversity_axis=axis, embedding_model=model,
