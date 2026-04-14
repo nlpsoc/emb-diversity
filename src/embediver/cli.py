@@ -93,10 +93,10 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
         typer.echo("Error: need at least 2 texts to measure diversity.", err=True)
         raise typer.Exit(code=1)
 
-    # ── Resolve measure shortcut ─────────────────────────────────
-    if measures is None:
-        measure_arg = None
-    elif len(measures) == 1 and measures[0] in ("all", "core"):
+    # ── Convert Typer's list format to measure_diversity()'s format ──
+    # Typer always gives a list (e.g. ["all"]), but measure_diversity()
+    # expects a plain string for "all" and "core" shortcuts.
+    if measures is not None and len(measures) == 1 and measures[0] in ("all", "core"):
         measure_arg = measures[0]
     else:
         measure_arg = measures
