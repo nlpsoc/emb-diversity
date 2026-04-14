@@ -52,6 +52,12 @@ measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
 from embediver import log_determinant
 log_determinant(texts)
 log_determinant(texts, diversity_axis="style")
+
+# Works on pre-computed embeddings too
+import numpy as np
+vectors = np.random.randn(100, 384)
+measure_diversity(vectors)
+log_determinant(vectors)
 ```
 <!-- docs-quickstart-end -->
 
