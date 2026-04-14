@@ -3,10 +3,17 @@ from typing import List, Sequence
 from ._cache import cached_encode
 
 
+# Models that require the HuggingFace Transformers backend
+_HF_MODELS = {
+    "princeton-nlp/sup-simcse-roberta-large",
+}
+
+
 # private functions to load models
 def _load_st(model_name: str):
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer(model_name)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return SentenceTransformer(model_name, device=device)
 
 def _load_hf(model_name: str):
     import torch
@@ -37,35 +44,22 @@ def _raw_encode_hf(texts: List[str], model_name: str) -> List[List[float]]:
     return embeddings.cpu().numpy().tolist()
 
 
-# functions to encode using huggingface or sentence transformers
-# public to user
+def encode(texts: Sequence[str], model_name: str = "all-MiniLM-L6-v2") -> List[List[float]]:
+    """
+    Encode texts into embeddings using the appropriate backend, with disk caching.
 
-def encode_st(texts: Sequence[str], model_name: str) -> List[List[float]]:
-    """Encode texts using a SentenceTransformers model. Results are cached on disk."""
-    return cached_encode(
-        texts,
-        encode_fn=lambda t: _raw_encode_st(t, model_name),
-        model_name=model_name,
-    )
+    Uses HuggingFace Transformers for known HF-only models, SentenceTransformers otherwise.
 
+    Args:
+        texts: Input texts to encode.
+        model_name: Pretrained model name. Defaults to "all-MiniLM-L6-v2".
 
-def encode_hf(texts: Sequence[str], model_name: str) -> List[List[float]]:
-    """Encode texts using a HuggingFace Transformers model. Results are cached on disk."""
-    return cached_encode(
-        texts,
-        encode_fn=lambda t: _raw_encode_hf(t, model_name),
-        model_name=model_name,
-    )
+    Returns:
+        List of embedding vectors as lists of floats.
+    """
+    if model_name in _HF_MODELS:
+        encode_fn = lambda t: _raw_encode_hf(t, model_name)
+    else:
+        encode_fn = lambda t: _raw_encode_st(t, model_name)
 
-
-#special functions to load particular models
-def encode_style(texts: Sequence[str]) -> List[List[float]]:
-    return encode_st(texts, "AnnaWegmann/Style-Embedding")
-
-
-def encode_semantic(texts: Sequence[str]) -> List[List[float]]:
-    return encode_st(texts, "all-mpnet-base-v2")
-
-
-def encode_simcse(texts: Sequence[str]) -> List[List[float]]:
-    return encode_hf(texts, "princeton-nlp/sup-simcse-roberta-large")
+    return cached_encode(texts, encode_fn=encode_fn, model_name=model_name)
