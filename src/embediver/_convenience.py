@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from ._registry import MEASURES
-from .embed import embed_texts
 
 
 def measure_all(
@@ -33,26 +32,3 @@ def measure_all(
         except Exception as exc:
             results[name] = float("nan")
     return results
-
-
-def measure_text(
-    texts: list[str],
-    measures: list[str] | None = None,
-    diversity_axis: str = "semantic",
-    embedding_model: str | None = None,
-    **kwargs,
-) -> dict[str, float]:
-    """Embed texts and measure diversity in one call.
-
-    Args:
-        texts: List of text strings.
-        measures: Measure names to run (default: all).
-        diversity_axis: Registered axis name (default ``"semantic"``).
-        embedding_model: Explicit model id; overrides *diversity_axis*.
-        **kwargs: Extra arguments forwarded to each measure.
-
-    Returns:
-        Dict mapping measure name to score.
-    """
-    vectors = embed_texts(texts, diversity_axis=diversity_axis, embedding_model=embedding_model)
-    return measure_all(vectors, measures=measures, **kwargs)
