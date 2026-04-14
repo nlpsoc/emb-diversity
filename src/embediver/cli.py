@@ -152,11 +152,27 @@ def list_axes_cmd() -> None:
 
 
 def _read_texts(path: Path, column: str) -> list[str]:
-    """Read texts from .txt, .csv, or .tsv file."""
+    """Read texts from a file, returning a list of non-empty strings.
+
+    Supported formats:
+        - .txt: one text per line, empty lines are skipped
+        - .csv: comma-separated, reads the column specified by `column`
+        - .tsv: tab-separated, reads the column specified by `column`
+
+    For CSV/TSV, rows with empty values in the text column are dropped.
+
+    Args:
+        path: Path to the input file.
+        column: Column name to read from CSV/TSV files (default "text").
+
+    Returns:
+        List of text strings, stripped of leading/trailing whitespace.
+    """
     import pandas as pd
 
     suffix = path.suffix.lower()
     if suffix == ".txt":
+        # Read each line as one text, skip empty lines
         return [line.strip() for line in path.read_text().splitlines() if line.strip()]
     elif suffix in (".csv", ".tsv"):
         separator = "\t" if suffix == ".tsv" else ","
@@ -168,6 +184,7 @@ def _read_texts(path: Path, column: str) -> list[str]:
                 err=True,
             )
             raise typer.Exit(code=1)
+        # Drop empty cells, ensure strings, strip whitespace
         return df[column].dropna().astype(str).str.strip().tolist()
     else:
         typer.echo(f"Error: unsupported file extension {suffix!r}. Use .txt, .csv, or .tsv.", err=True)
