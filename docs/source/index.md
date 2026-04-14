@@ -27,6 +27,7 @@
 user-guide/measures
 user-guide/axes
 user-guide/cli
+user-guide/development-notes
 ```
 
 ## API Reference
