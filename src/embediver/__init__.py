@@ -34,7 +34,7 @@ from .measures.mst_dispersion import mst_dispersion
 from ._axes import register_axis, get_axis, list_axes
 
 ### Embedding helper
-from ._embed import embed_texts
+from .embed import embed_texts
 
 ### Convenience functions
 from ._registry import MEASURES, DEFAULT_MEASURE, CORE_MEASURES

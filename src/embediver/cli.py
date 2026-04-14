@@ -70,7 +70,7 @@ def measure(
             raise typer.Exit(code=1)
 
     # ── Embed ────────────────────────────────────────────────────
-    from ._embed import embed_texts
+    from .embed import embed_texts
 
     typer.echo(f"Embedding {len(texts)} texts...", err=True)
     vectors = embed_texts(texts, diversity_axis=axis, embedding_model=model)
