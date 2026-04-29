@@ -53,18 +53,31 @@ def _store_memory(key: str, obj_id: int, result: np.ndarray) -> None:
 
 # user API
 
+def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
+    """Stable, filesystem-safe key for metric + kwargs."""
+    if not metric_kwargs and isinstance(metric, str):
+        return metric
+    parts = [str(metric)]
+    for k in sorted(metric_kwargs):
+        parts.append(f"{k}={metric_kwargs[k]!r}")
+    return xxhash.xxh64("|".join(parts).encode()).hexdigest()
+
+
 def compute_pairwise_distances(
     data: Sequence[Sequence[float]],
     metric: DISTANCE_METRIC = "cosine",
     cache_dir: Path = DEFAULT_CACHE_DIR,
+    **metric_kwargs: Any,
 ) -> np.ndarray:
     """
     Compute pairwise distances with two-level caching.
 
     Args:
         data: 2D array-like of shape (n_samples, n_features).
-        metric: Distance metric name (e.g. "cosine", "euclidean").
+        metric: Distance metric name (e.g. "cosine", "euclidean") or callable.
         cache_dir: Root directory for disk cache.
+        **metric_kwargs: Extra keyword arguments forwarded to scipy.pdist.
+            Included in the cache key so different kwargs do not collide.
 
     Returns:
         Condensed distance array (upper triangle from scipy.pdist).
@@ -79,15 +92,16 @@ def compute_pairwise_distances(
     if n == 1:
         raise ValueError("Cannot compute distances for single data point")
 
+    metric_id = _metric_key(metric, metric_kwargs)
     obj_id = id(X)
 
     # Level 1: id() fast path
     for k, cached_id in _memory_ids.items():
-        if cached_id == obj_id and k.endswith(f"|{metric}"):
+        if cached_id == obj_id and k.endswith(f"|{metric_id}"):
             return _memory[k]
 
     fp = _fingerprint(X)
-    key = f"{fp}|{metric}"
+    key = f"{fp}|{metric_id}"
 
     # Level 1b: fingerprint match in memory
     if key in _memory:
@@ -96,7 +110,7 @@ def compute_pairwise_distances(
 
     # Level 2: disk
     cache_dir.mkdir(parents=True, exist_ok=True)
-    path = cache_dir / f"{fp}_{metric}.safetensors"
+    path = cache_dir / f"{fp}_{metric_id}.safetensors"
 
     if path.exists():
         result = load_file(path)["distances"]
@@ -104,7 +118,7 @@ def compute_pairwise_distances(
         return result
 
     # Level 3: compute
-    result = pdist(X, metric=metric)
+    result = pdist(X, metric=metric, **metric_kwargs)
 
     _store_memory(key, obj_id, result)
     save_file({"distances": result}, path)
