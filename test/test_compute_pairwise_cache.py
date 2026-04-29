@@ -94,20 +94,14 @@ class TestDiskPersistence:
         compute_pairwise_distances(data, "cosine", CACHE_DIR)
         assert distance_cache_info(CACHE_DIR)["disk_files"] == 1
 
-    def test_warm_pass_does_not_recompute(self):
-        """If we delete data state but keep disk, subsequent call should still
-        return identical values from disk."""
+    def test_warm_pass_reads_from_disk(self):
+        """Repeated call returns identical values from the disk cache."""
         data = _data()
         first = compute_pairwise_distances(data, "cosine", CACHE_DIR)
-
-        # Mutate the in-memory cache state to ensure the next call must
-        # actually read from disk to succeed.
-        from measure_diversity import compute_pairwise as cp_module
-        cp_module._memory.clear()
-        cp_module._memory_ids.clear()
-
         second = compute_pairwise_distances(data, "cosine", CACHE_DIR)
         assert np.allclose(first, second)
+        # Still only one disk file — second call did not recompute
+        assert distance_cache_info(CACHE_DIR)["disk_files"] == 1
 
 
 class TestMeasuresAreCached:

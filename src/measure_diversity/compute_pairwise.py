@@ -1,10 +1,20 @@
 """
-We designed this module to efficiently compute pairwise distances.
-It uses a two-level caching strategy:
-1. It checks whether the same embedding matrix is used again, then it will just use the previously calculated pairwise distance in Memory.
-2. It also saves the most recenlty calculated pairwise distance to disk, so that if the same embedding matrix is used again in the future, it can load the pairwise distance from disk instead of recomputing it.
+Disk-cached pairwise distance computation.
 
-Yayy!
+scipy.pdist is the bottleneck when several measures are run on the same
+embedding matrix. This module wraps it with a content-addressed disk
+cache: the matrix is fingerprinted with xxhash, and the resulting
+condensed distance array is stored under .cache/pdist/. Subsequent calls
+on the same data load the precomputed array from disk instead of
+re-running pdist.
+
+The cache is persistent across processes — a SLURM job that finished
+yesterday leaves a cache that today's job can pick up. It is keyed by
+both the matrix contents and the (metric, kwargs) pair, so different
+metrics on the same data do not collide.
+
+There is no in-memory layer: per-process speedup beyond the first call
+comes from the OS file cache, which is fast enough for typical workloads.
 """
 from pathlib import Path
 from typing import Any, Callable, Sequence, Union
@@ -16,10 +26,9 @@ from safetensors.numpy import save_file, load_file
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 DEFAULT_CACHE_DIR = Path(".cache/pdist")
-#how many chunks we feed into the hash function at a time, to keep memory usage constant regardless of input size
+# how many chunks we feed into the hash function at a time, to keep memory
+# usage constant regardless of input size
 _HASH_CHUNK = 1_000_000
-#how many distance matrices to keep in memory before evicting the oldest one (LRU)
-_MEMORY_MAX = 0
 
 
 def _fingerprint(X: np.ndarray) -> str:
@@ -32,26 +41,6 @@ def _fingerprint(X: np.ndarray) -> str:
         h.update(flat[i:i + _HASH_CHUNK].tobytes())
     return h.hexdigest()
 
-
-
-# in memory cache
-
-_memory: dict[str, np.ndarray] = {}
-_memory_ids: dict[str, int] = {}
-
-
-def _store_memory(key: str, obj_id: int, result: np.ndarray) -> None:
-    if _MEMORY_MAX == 0:
-        return
-    if len(_memory) >= _MEMORY_MAX:
-        oldest = next(iter(_memory))
-        del _memory[oldest]
-        _memory_ids.pop(oldest, None)
-    _memory[key] = result
-    _memory_ids[key] = obj_id
-
-
-# user API
 
 def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
     """Stable, filesystem-safe key for metric + kwargs."""
@@ -70,7 +59,7 @@ def compute_pairwise_distances(
     **metric_kwargs: Any,
 ) -> np.ndarray:
     """
-    Compute pairwise distances with two-level caching.
+    Compute pairwise distances with disk caching.
 
     Args:
         data: 2D array-like of shape (n_samples, n_features).
@@ -93,54 +82,30 @@ def compute_pairwise_distances(
         raise ValueError("Cannot compute distances for single data point")
 
     metric_id = _metric_key(metric, metric_kwargs)
-    obj_id = id(X)
-
-    # Level 1: id() fast path
-    for k, cached_id in _memory_ids.items():
-        if cached_id == obj_id and k.endswith(f"|{metric_id}"):
-            return _memory[k]
-
     fp = _fingerprint(X)
-    key = f"{fp}|{metric_id}"
 
-    # Level 1b: fingerprint match in memory
-    if key in _memory:
-        _memory_ids[key] = obj_id
-        return _memory[key]
-
-    # Level 2: disk
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = cache_dir / f"{fp}_{metric_id}.safetensors"
 
     if path.exists():
-        result = load_file(path)["distances"]
-        _store_memory(key, obj_id, result)
-        return result
+        return load_file(path)["distances"]
 
-    # Level 3: compute
     result = pdist(X, metric=metric, **metric_kwargs)
-
-    _store_memory(key, obj_id, result)
     save_file({"distances": result}, path)
-
     return result
 
 
 def clear_distance_cache(cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
-    """Clear both memory and disk caches."""
+    """Remove the disk cache directory."""
     import shutil
-    _memory.clear()
-    _memory_ids.clear()
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
 
 
 def distance_cache_info(cache_dir: Path = DEFAULT_CACHE_DIR) -> dict:
-    """Return cache statistics."""
+    """Return disk cache statistics."""
     disk_files = list(cache_dir.glob("*.safetensors")) if cache_dir.exists() else []
     return {
-        "memory_entries": len(_memory),
-        "memory_mb": round(sum(v.nbytes for v in _memory.values()) / 1024 / 1024, 2),
         "disk_files": len(disk_files),
         "disk_mb": round(sum(f.stat().st_size for f in disk_files) / 1024 / 1024, 2),
     }
