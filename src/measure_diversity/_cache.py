@@ -1,18 +1,18 @@
 """Internal caching layer. Not part of the public API."""
 
-import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, List, Sequence
 
 import numpy as np
+import xxhash
 from safetensors.numpy import save_file, load_file
 
 DEFAULT_CACHE_DIR = Path(".cache/embeddings")
 
 
 def _hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return xxhash.xxh128(text.encode("utf-8")).hexdigest()
 
 
 def _load(path: Path) -> np.ndarray | None:

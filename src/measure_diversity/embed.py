@@ -45,7 +45,7 @@ def _raw_encode_hf(texts: List[str], model_name: str) -> List[List[float]]:
     return embeddings.cpu().numpy().tolist()
 
 
-def encode(
+def embed(
     texts: Sequence[str],
     model_name: str = "all-MiniLM-L6-v2",
     cache_dir: Path = DEFAULT_CACHE_DIR,
