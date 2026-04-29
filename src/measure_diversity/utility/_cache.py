@@ -80,6 +80,6 @@ def cached_encode(
 def clear_cache(model_name: str = None, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
     """Clear cached embeddings. If model_name given, only that model."""
     import shutil
-    target = cache_dir / model_name.replace("/", "_") if model_name else cache_dir
+    target = cache_dir / model_name.replace("/", "_") if model_name is not None else cache_dir
     if target.exists():
         shutil.rmtree(target)
