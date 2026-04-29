@@ -1,7 +1,7 @@
 import torch
 from pathlib import Path
 from typing import List, Optional, Sequence
-from ._cache import cached_encode, DEFAULT_CACHE_DIR
+from utility._cache import cached_encode, DEFAULT_CACHE_DIR
 
 
 # Models that require the HuggingFace Transformers backend
