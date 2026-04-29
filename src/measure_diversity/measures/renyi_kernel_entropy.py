@@ -1,7 +1,8 @@
 ### Distribution-Based Diversity Measure
 
 import numpy as np
-from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
+
+from ..compute_kernel import compute_kernel_matrix
 
 
 def renyi_kernel_entropy(
@@ -55,41 +56,10 @@ def renyi_kernel_entropy(
     """
     if len(data) < 2:
         raise ValueError("RKE requires at least 2 datapoints")
-    if tau <= 0:
-        raise ValueError("tau must be positive")
     if alpha <= 0:
         raise ValueError("alpha must be > 0")
 
-    X = np.asarray(data, dtype=float)
-    if X.ndim != 2:
-        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
-    n, d = X.shape
-
-    # ---- 1) Build kernel/similarity matrix K ----
-    if kernel_type == "cs":
-        if normalize:
-            norms = np.linalg.norm(X, axis=1, keepdims=True)
-            norms = np.clip(norms, 1e-12, None)
-            Xn = X / norms
-        else:
-            Xn = X
-        K = (Xn @ Xn.T) / tau  # linear kernel (PSD); scaling doesn't break PSD
-
-    elif kernel_type == "rbf":
-        K = rbf_kernel(X, X, gamma=tau)
-
-    elif kernel_type == "lap":
-        K = laplacian_kernel(X, X, gamma=tau)
-
-    elif kernel_type == "poly":
-        if not float(tau).is_integer():
-            raise ValueError("For 'poly' kernel, tau must be an integer (degree).")
-        K = polynomial_kernel(X, X, degree=int(tau))
-
-    else:
-        raise NotImplementedError(
-            f"Unknown kernel_type '{kernel_type}'. Use one of: 'cs', 'rbf', 'lap', 'poly'."
-        )
+    K = compute_kernel_matrix(data, kernel_type=kernel_type, tau=tau, normalize=normalize)
 
     # Symmetrize (numerical safety)
     K = 0.5 * (K + K.T)

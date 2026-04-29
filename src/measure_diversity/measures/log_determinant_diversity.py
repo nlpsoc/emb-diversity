@@ -1,7 +1,8 @@
 ### Distribution-Based Diversity Measure
 
 import numpy as np
-from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
+
+from ..compute_kernel import compute_kernel_matrix
 
 
 def log_determinant_diversity(
@@ -59,51 +60,17 @@ def log_determinant_diversity(
             If the matrix determinant is not positive (sign <= 0) after adding eps.
             Try increasing eps or re-checking kernel choice.
     """
-    # Check data length first (before converting to numpy array)
-    # This ensures consistent error messages and API behavior with other metrics
     if len(data) < 2:
         raise ValueError("LDD requires at least 2 datapoints")
-
     if eps <= 0:
         raise ValueError("eps must be positive")
-    if tau <= 0:
-        raise ValueError("tau must be positive")
 
-    X = np.asarray(data, dtype=float)
-    if X.ndim != 2:
-        raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
-    n, d = X.shape
-
-    # ---- Build similarity/kernel matrix K ----
-    if kernel_type == "cs":
-        if normalize:
-            norms = np.linalg.norm(X, axis=1, keepdims=True)
-            norms = np.clip(norms, 1e-12, None)
-            X_norm = X / norms
-        else:
-            X_norm = X
-        K = (X_norm @ X_norm.T) / tau
-
-    elif kernel_type == "rbf":
-        K = rbf_kernel(X, X, gamma=tau)
-
-    elif kernel_type == "lap":
-        K = laplacian_kernel(X, X, gamma=tau)
-
-    elif kernel_type == "poly":
-        if not float(tau).is_integer():
-            raise ValueError("For 'poly' kernel, tau must be an integer (degree of the polynomial).")
-        K = polynomial_kernel(X, X, degree=int(tau))
-
-    else:
-        raise NotImplementedError(
-            f"Unknown kernel_type '{kernel_type}'. "
-            "Use one of: 'cs', 'rbf', 'lap', 'poly'."
-        )
+    K = compute_kernel_matrix(data, kernel_type=kernel_type, tau=tau, normalize=normalize)
 
     # Symmetrize for safety (numerical noise)
     K = 0.5 * (K + K.T)
 
+    n = K.shape[0]
     A = K + eps * np.eye(n, dtype=K.dtype)
 
     # ---- Compute logdet ----
