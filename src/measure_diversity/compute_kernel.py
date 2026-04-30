@@ -1,14 +1,22 @@
 """
-Disk-cached kernel / similarity matrix computation.
+Two-level cached kernel / similarity matrix computation.
 
 Several diversity measures (DCScore, log-determinant diversity,
 Renyi kernel entropy, ...) build the same n x n kernel matrix from an
 embedding matrix before applying their own post-processing. Computing
 this kernel is O(n^2 d), which for 10k embeddings dominates the rest of
-the measure cost. This module wraps the kernel construction step in the
-same content-addressed disk cache used by compute_pairwise: matrix
-fingerprint plus kernel parameters become the cache key, and the n x n
-result is stored as safetensors under .cache/kernel/.
+the measure cost. This module wraps the kernel construction step in
+the same two-level cache used by compute_pairwise:
+
+  Level 1 — in-process memory: a small bounded LRU dict keyed by full
+    content fingerprint of the matrix plus the kernel parameters. Up to
+    _MEMORY_MAX entries are kept; oldest is evicted on overflow.
+
+  Level 2 — disk: kernel matrix stored under .cache/kernel/ as
+    safetensors, keyed the same way. Survives across processes.
+
+  Level 3 — compute the kernel via sklearn (or matmul for "cs") and
+    populate both layers.
 
 Supported kernel_type values: "cs" (linear kernel on optionally
 L2-normalized rows, scaled by 1/tau), "rbf", "lap", "poly" (sklearn
@@ -16,6 +24,7 @@ gaussian / laplacian / polynomial kernels). The cached matrix is the
 raw kernel; callers that need a symmetrized version do that themselves
 (it is cheap relative to building the kernel).
 """
+from collections import OrderedDict
 from pathlib import Path
 from typing import Sequence
 
@@ -26,8 +35,13 @@ from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_ke
 
 DEFAULT_CACHE_DIR = Path(".cache/kernel")
 _HASH_CHUNK = 1_000_000
+# how many kernel matrices to keep in memory before evicting the oldest one (LRU)
+_MEMORY_MAX = 4
 
 _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
+
+# in-memory cache (LRU)
+_memory: "OrderedDict[str, np.ndarray]" = OrderedDict()
 
 
 def _fingerprint(X: np.ndarray) -> str:
@@ -49,6 +63,17 @@ def _kernel_key(kernel_type: str, tau: float, normalize: bool) -> str:
     return xxhash.xxh64("|".join(parts).encode()).hexdigest()
 
 
+def _store_memory(key: str, result: np.ndarray) -> None:
+    if _MEMORY_MAX <= 0:
+        return
+    if key in _memory:
+        _memory.move_to_end(key)
+        return
+    if len(_memory) >= _MEMORY_MAX:
+        _memory.popitem(last=False)
+    _memory[key] = result
+
+
 def compute_kernel_matrix(
     data: Sequence[Sequence[float]],
     kernel_type: str = "cs",
@@ -57,7 +82,7 @@ def compute_kernel_matrix(
     cache_dir: Path = DEFAULT_CACHE_DIR,
 ) -> np.ndarray:
     """
-    Compute an n x n kernel / similarity matrix with disk caching.
+    Compute an n x n kernel / similarity matrix with two-level caching.
 
     Args:
         data: 2D array-like of shape (n, d), n >= 2.
@@ -96,16 +121,26 @@ def compute_kernel_matrix(
     if kernel_type == "poly" and not float(tau).is_integer():
         raise ValueError("For 'poly' kernel, tau must be an integer (degree).")
 
+    kernel_id = _kernel_key(kernel_type, tau, normalize)
     fp = _fingerprint(X)
-    key = _kernel_key(kernel_type, tau, normalize)
+    key = f"{fp}|{kernel_id}"
 
+    # Level 1: in-memory match by content fingerprint
+    if key in _memory:
+        _memory.move_to_end(key)
+        return _memory[key]
+
+    # Level 2: disk
     cache_dir.mkdir(parents=True, exist_ok=True)
-    path = cache_dir / f"{fp}_{key}.safetensors"
-
+    path = cache_dir / f"{fp}_{kernel_id}.safetensors"
     if path.exists():
-        return load_file(path)["kernel"]
+        result = load_file(path)["kernel"]
+        _store_memory(key, result)
+        return result
 
+    # Level 3: compute, populate both layers
     K = _raw_kernel(X, kernel_type, tau, normalize)
+    _store_memory(key, K)
     save_file({"kernel": K}, path)
     return K
 
@@ -131,16 +166,20 @@ def _raw_kernel(X: np.ndarray, kernel_type: str, tau: float, normalize: bool) ->
 
 
 def clear_kernel_cache(cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
-    """Remove the kernel disk cache directory."""
+    """Clear both memory and disk caches."""
     import shutil
+    _memory.clear()
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
 
 
 def kernel_cache_info(cache_dir: Path = DEFAULT_CACHE_DIR) -> dict:
-    """Return disk cache statistics."""
+    """Return memory and disk cache statistics."""
     disk_files = list(cache_dir.glob("*.safetensors")) if cache_dir.exists() else []
     return {
+        "memory_entries": len(_memory),
+        "memory_mb": round(sum(v.nbytes for v in _memory.values()) / 1024 / 1024, 2),
+        "memory_max": _MEMORY_MAX,
         "disk_files": len(disk_files),
         "disk_mb": round(sum(f.stat().st_size for f in disk_files) / 1024 / 1024, 2),
     }

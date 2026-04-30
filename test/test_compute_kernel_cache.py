@@ -130,6 +130,40 @@ class TestDiskPersistence:
         assert kernel_cache_info(CACHE_DIR)["disk_files"] == 1
 
 
+class TestMemoryLayer:
+    def test_first_call_populates_memory(self):
+        data = _data()
+        compute_kernel_matrix(data, "cs", 1.0, cache_dir=CACHE_DIR)
+        assert kernel_cache_info(CACHE_DIR)["memory_entries"] == 1
+
+    def test_warm_pass_serves_from_memory_when_disk_is_gone(self):
+        data = _data()
+        first = compute_kernel_matrix(data, "rbf", 1.0, cache_dir=CACHE_DIR)
+
+        import shutil
+        if CACHE_DIR.exists():
+            shutil.rmtree(CACHE_DIR)
+
+        second = compute_kernel_matrix(data, "rbf", 1.0, cache_dir=CACHE_DIR)
+        assert np.allclose(first, second)
+        assert not CACHE_DIR.exists()
+
+    def test_lru_eviction_respects_memory_max(self):
+        from measure_diversity import compute_kernel as ck_module
+        max_entries = ck_module._MEMORY_MAX
+        for seed in range(max_entries + 1):
+            compute_kernel_matrix(_data(seed=seed), "cs", 1.0, cache_dir=CACHE_DIR)
+        info = kernel_cache_info(CACHE_DIR)
+        assert info["memory_entries"] == max_entries
+        assert info["disk_files"] == max_entries + 1
+
+    def test_clear_kernel_cache_drops_memory(self):
+        compute_kernel_matrix(_data(), "cs", 1.0, cache_dir=CACHE_DIR)
+        assert kernel_cache_info(CACHE_DIR)["memory_entries"] == 1
+        clear_kernel_cache(CACHE_DIR)
+        assert kernel_cache_info(CACHE_DIR)["memory_entries"] == 0
+
+
 class TestMeasuresShareKernel:
     """Integration: dcscore, log_determinant_diversity, and renyi_kernel_entropy
     use the same compute_kernel_matrix under the hood, so calling all three

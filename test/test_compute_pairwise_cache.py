@@ -104,6 +104,51 @@ class TestDiskPersistence:
         assert distance_cache_info(CACHE_DIR)["disk_files"] == 1
 
 
+class TestMemoryLayer:
+    """The in-memory layer caches computed results inside a single Python
+    process so a second call on the same data does not even hit disk."""
+
+    def test_first_call_populates_memory(self):
+        data = _data()
+        compute_pairwise_distances(data, "cosine", CACHE_DIR)
+        assert distance_cache_info(CACHE_DIR)["memory_entries"] == 1
+
+    def test_warm_pass_serves_from_memory_when_disk_is_gone(self):
+        """If the disk file is deleted between two calls but the memory
+        entry survives, the second call must still return the cached value."""
+        data = _data()
+        first = compute_pairwise_distances(data, "cosine", CACHE_DIR)
+
+        # Wipe disk but keep memory state intact
+        import shutil
+        if CACHE_DIR.exists():
+            shutil.rmtree(CACHE_DIR)
+
+        second = compute_pairwise_distances(data, "cosine", CACHE_DIR)
+        assert np.allclose(first, second)
+        # Disk was wiped and never recreated — memory served the call
+        assert not CACHE_DIR.exists()
+
+    def test_lru_eviction_respects_memory_max(self):
+        """More distinct entries than _MEMORY_MAX are computed; the dict
+        must stay bounded and contain only the most recent entries."""
+        from measure_diversity import compute_pairwise as cp_module
+        max_entries = cp_module._MEMORY_MAX
+        # Generate one more dataset than the cap, so we know eviction must happen
+        for seed in range(max_entries + 1):
+            compute_pairwise_distances(_data(seed=seed), "cosine", CACHE_DIR)
+        info = distance_cache_info(CACHE_DIR)
+        assert info["memory_entries"] == max_entries
+        # Disk keeps everything though
+        assert info["disk_files"] == max_entries + 1
+
+    def test_clear_distance_cache_drops_memory(self):
+        compute_pairwise_distances(_data(), "cosine", CACHE_DIR)
+        assert distance_cache_info(CACHE_DIR)["memory_entries"] == 1
+        clear_distance_cache(CACHE_DIR)
+        assert distance_cache_info(CACHE_DIR)["memory_entries"] == 0
+
+
 class TestMeasuresAreCached:
     """Integration: measures/utils._compute_pairwise_distances now routes
     through the cache, so multiple measures on the same data share one

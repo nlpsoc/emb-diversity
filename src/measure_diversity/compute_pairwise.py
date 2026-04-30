@@ -1,21 +1,24 @@
 """
-Disk-cached pairwise distance computation.
+Two-level cached pairwise distance computation.
 
 scipy.pdist is the bottleneck when several measures are run on the same
-embedding matrix. This module wraps it with a content-addressed disk
-cache: the matrix is fingerprinted with xxhash, and the resulting
-condensed distance array is stored under .cache/pdist/. Subsequent calls
-on the same data load the precomputed array from disk instead of
-re-running pdist.
+embedding matrix. This module wraps it with:
 
-The cache is persistent across processes — a SLURM job that finished
-yesterday leaves a cache that today's job can pick up. It is keyed by
-both the matrix contents and the (metric, kwargs) pair, so different
+  Level 1 — in-process memory: a small bounded LRU dict keyed by full
+    content fingerprint of the matrix plus the metric / kwargs. Up to
+    _MEMORY_MAX entries are kept; oldest is evicted on overflow.
+
+  Level 2 — disk: condensed distance array stored under .cache/pdist/
+    as safetensors, keyed the same way. Survives across processes — a
+    SLURM job that finished yesterday leaves a cache that today's job
+    can pick up.
+
+  Level 3 — compute: scipy.pdist + write through both layers.
+
+The cache key folds in the metric and any metric_kwargs, so different
 metrics on the same data do not collide.
-
-There is no in-memory layer: per-process speedup beyond the first call
-comes from the OS file cache, which is fast enough for typical workloads.
 """
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Sequence, Union
 
@@ -29,6 +32,11 @@ DEFAULT_CACHE_DIR = Path(".cache/pdist")
 # how many chunks we feed into the hash function at a time, to keep memory
 # usage constant regardless of input size
 _HASH_CHUNK = 1_000_000
+# how many distance matrices to keep in memory before evicting the oldest one (LRU)
+_MEMORY_MAX = 4
+
+# in-memory cache (LRU)
+_memory: "OrderedDict[str, np.ndarray]" = OrderedDict()
 
 
 def _fingerprint(X: np.ndarray) -> str:
@@ -52,6 +60,17 @@ def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
     return xxhash.xxh64("|".join(parts).encode()).hexdigest()
 
 
+def _store_memory(key: str, result: np.ndarray) -> None:
+    if _MEMORY_MAX <= 0:
+        return
+    if key in _memory:
+        _memory.move_to_end(key)
+        return
+    if len(_memory) >= _MEMORY_MAX:
+        _memory.popitem(last=False)
+    _memory[key] = result
+
+
 def compute_pairwise_distances(
     data: Sequence[Sequence[float]],
     metric: DISTANCE_METRIC = "cosine",
@@ -59,12 +78,12 @@ def compute_pairwise_distances(
     **metric_kwargs: Any,
 ) -> np.ndarray:
     """
-    Compute pairwise distances with disk caching.
+    Compute pairwise distances with two-level (memory + disk) caching.
 
     Args:
         data: 2D array-like of shape (n_samples, n_features).
         metric: Distance metric name (e.g. "cosine", "euclidean") or callable.
-        cache_dir: Root directory for disk cache.
+        cache_dir: Root directory for the disk cache.
         **metric_kwargs: Extra keyword arguments forwarded to scipy.pdist.
             Included in the cache key so different kwargs do not collide.
 
@@ -83,29 +102,43 @@ def compute_pairwise_distances(
 
     metric_id = _metric_key(metric, metric_kwargs)
     fp = _fingerprint(X)
+    key = f"{fp}|{metric_id}"
 
+    # Level 1: in-memory match by content fingerprint
+    if key in _memory:
+        _memory.move_to_end(key)
+        return _memory[key]
+
+    # Level 2: disk
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = cache_dir / f"{fp}_{metric_id}.safetensors"
-
     if path.exists():
-        return load_file(path)["distances"]
+        result = load_file(path)["distances"]
+        _store_memory(key, result)
+        return result
 
+    # Level 3: compute, populate both layers
     result = pdist(X, metric=metric, **metric_kwargs)
+    _store_memory(key, result)
     save_file({"distances": result}, path)
     return result
 
 
 def clear_distance_cache(cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
-    """Remove the disk cache directory."""
+    """Clear both memory and disk caches."""
     import shutil
+    _memory.clear()
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
 
 
 def distance_cache_info(cache_dir: Path = DEFAULT_CACHE_DIR) -> dict:
-    """Return disk cache statistics."""
+    """Return memory and disk cache statistics."""
     disk_files = list(cache_dir.glob("*.safetensors")) if cache_dir.exists() else []
     return {
+        "memory_entries": len(_memory),
+        "memory_mb": round(sum(v.nbytes for v in _memory.values()) / 1024 / 1024, 2),
+        "memory_max": _MEMORY_MAX,
         "disk_files": len(disk_files),
         "disk_mb": round(sum(f.stat().st_size for f in disk_files) / 1024 / 1024, 2),
     }
