@@ -7,8 +7,8 @@ import time
 import torch
 from pathlib import Path
 
-from measure_diversity.embeddings.embed import encode
-from measure_diversity.utility import clear_cache
+from embediver.embeddings.embed import encode
+from embediver.utility import clear_cache
 
 CACHE_DIR = Path(".cache/test_embeddings")
 MODEL_NAME = "all-MiniLM-L6-v2"

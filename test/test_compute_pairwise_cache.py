@@ -13,15 +13,15 @@ import numpy as np
 import pytest
 from scipy.spatial.distance import pdist
 
-from measure_diversity import (
+from embediver import (
     compute_pairwise_distances,
     clear_distance_cache,
     distance_cache_info,
-    mean_pairwise_distance,
+    mean_pw_dist,
     diameter,
     energy,
 )
-from measure_diversity.measures.utils import _compute_pairwise_distances
+from embediver.measures.utils import _compute_pairwise_distances
 
 CACHE_DIR = Path(".cache/pdist_test")
 
@@ -132,7 +132,7 @@ class TestMemoryLayer:
     def test_lru_eviction_respects_memory_max(self):
         """More distinct entries than _MEMORY_MAX are computed; the dict
         must stay bounded and contain only the most recent entries."""
-        from measure_diversity import compute_pairwise as cp_module
+        from embediver import compute_pairwise as cp_module
         max_entries = cp_module._MEMORY_MAX
         # Generate one more dataset than the cap, so we know eviction must happen
         for seed in range(max_entries + 1):
@@ -155,22 +155,27 @@ class TestMeasuresAreCached:
     cached pdist computation."""
 
     def test_multiple_measures_share_one_cache_entry(self, monkeypatch):
-        # Force the helper to use our isolated cache dir
-        from measure_diversity.measures import utils as measures_utils
+        # Force the helper to use our isolated cache dir.
+        # Note: `embediver.__init__` re-exports the registry as `measures`,
+        # which shadows the submodule attribute lookup, so we use importlib
+        # to reach the actual submodules.
+        import importlib
+
+        measures_utils = importlib.import_module("embediver.measures.utils")
 
         def _patched(data, metric="cosine", **kwargs):
             return compute_pairwise_distances(data, metric=metric, cache_dir=CACHE_DIR, **kwargs)
 
         monkeypatch.setattr(measures_utils, "_compute_pairwise_distances", _patched)
         # Re-bind in each measure module that imported it
-        import measure_diversity.measures.mean_pairwise_distance as mpd
-        import measure_diversity.measures.diameter as dia
-        import measure_diversity.measures.energy as ene
+        mpd = importlib.import_module("embediver.measures.mean_pw_dist")
+        dia = importlib.import_module("embediver.measures.diameter")
+        ene = importlib.import_module("embediver.measures.energy")
         for mod in (mpd, dia, ene):
             monkeypatch.setattr(mod, "_compute_pairwise_distances", _patched)
 
         data = _data(n=30, d=8)
-        v1 = mpd.mean_pairwise_distance(data, metric="cosine")
+        v1 = mpd.mean_pw_dist(data, metric="cosine")
         v2 = dia.diameter(data, metric="cosine")
         v3 = ene.energy(data, metric="cosine")
 

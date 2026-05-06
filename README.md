@@ -1,4 +1,4 @@
-# Diversity Measurement Package
+# embediver
 
 <!-- docs-intro-start -->
 A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
@@ -12,51 +12,44 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 - [Usage](#usage)
 - [Install](#install)
-  - [Development mode](#development-mode)
-  - [Standard installation](#standard-installation)
+- [Available Measures](#available-measures)
 - [Development](#development)
   - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
   - [Working with uv](#working-with-uv)
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
+  - [Adding New Diversity Axes](#adding-new-diversity-axes)
 - [Funding](#funding)
 
 ## Usage
 
-<!-- docs-usage-start -->
-**Starting from text** (embed first, then measure):
-
+<!-- docs-quickstart-start -->
 ```python
-from measure_diversity.embeddings.SBERT import encode_semantic_sentences
-from measure_diversity import mean_pairwise_distance
+from embediver import measure_diversity
 
 texts = [
     "The cat sat on the mat.",
     "Dogs love to play fetch.",
     "It was a sunny afternoon.",
 ]
-embeddings = encode_semantic_sentences(texts)
-score = mean_pairwise_distance(embeddings)
-print(f"Diversity score: {score:.4f}")
+
+# Default measure (log_determinant), semantic embeddings
+measure_diversity(texts)
+# Use a different diversity axis
+measure_diversity(texts, diversity_axis="style")
+# Use a specific embedding model
+measure_diversity(texts, embedding_model="Qwen/Qwen3-8B")
+# Run the core set of measures
+measure_diversity(texts, measure="core")
+# Run specific measures
+measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
+
+# You can also call individual measures directly
+from embediver import log_determinant
+log_determinant(texts)
+log_determinant(texts, diversity_axis="style")
 ```
-
-**Starting from vectors** (pass embeddings directly):
-
-```python
-import numpy as np
-from measure_diversity import mean_pairwise_distance
-
-vectors = np.array([
-    [1.0, 0.0, 0.0],
-    [0.0, 1.0, 0.0],
-    [0.0, 0.0, 1.0],
-])
-score = mean_pairwise_distance(vectors)
-print(f"Diversity score: {score:.4f}")
-```
-<!-- docs-usage-end -->
-
-For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
+<!-- docs-quickstart-end -->
 
 ## Install
 
@@ -94,6 +87,10 @@ To use the library directly do the following,
    source .venv/bin/activate
    ```
 <!-- docs-install-end -->
+
+## Available Measures
+
+For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
 
 ## Development
 
@@ -178,7 +175,7 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
     The default method uses the Vendi Score which is based on matrix entropy.
 
     References:
-        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Args:
         vectors: Array of shape (n_samples, n_features) containing the vectors.
@@ -229,20 +226,32 @@ Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguid
 
 ### Adding New Measures
 
-When you add a new measure to `src/measure_diversity/measure.py`:
+When you add a new measure to `src/embediver/measures/`:
 
-1. Add the function with a complete docstring following the style guide above.
-2. Export it from `src/measure_diversity/__init__.py` if it should be part of the public API.
-3. **Update `docs/source/index.md`** — add a row for the new measure in the appropriate table under "Available Measures". If it doesn't fit an existing category, add a new table.
+1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
+2. Export it from `src/embediver/__init__.py` if it should be part of the public API.
+3. Register it in `src/embediver/measures_registry.py` with `measures.register("name", func)`.
+4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
-   Each row uses the following format so the function name links directly to its API documentation:
-   ```
-   | {func}`function_name <measure_diversity.measure.function_name>` | Short description |
-   ```
-   For example:
-   ```
-   | {func}`mean_pairwise_distance <measure_diversity.measure.mean_pairwise_distance>` | Average pairwise distance between all datapoints |
-   ```
+### Adding New Diversity Axes
 
-# Funding
+Register a new axis in `src/embediver/axes_registry.py`:
+
+```python
+from embediver.axes_registry import DiversityAxis, axes
+
+axes.register(
+    "multilingual",
+    DiversityAxis(
+        name="multilingual",
+        default_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        description="Cross-lingual semantic diversity",
+    ),
+)
+```
+
+Update `docs/source/user-guide/axes.md` with the new axis.
+
+## Funding
+
 This work is supported by the ERC Starting Grant **DataDivers** (101162980).

@@ -37,14 +37,14 @@ The generated HTML files will be in `docs/build/html/`. Open `docs/build/html/in
 
 ## Workflow: Documentation Generation from Code
 
-This project uses `sphinx-apidoc` to generate documentation from source code. You should NOT manually edit `modules.rst` or any generated `measure_diversity*.rst` files - they are auto-generated.
+This project uses `sphinx-apidoc` to generate documentation from source code. You should NOT manually edit `modules.rst` or any generated `embediver*.rst` files - they are auto-generated.
 
 ### How It Works
 
-1. **Run `make apidoc`** to scan your source code in `../src/measure_diversity/`
+1. **Run `make apidoc`** to scan your source code in `../src/embediver/`
 2. `sphinx-apidoc` discovers all Python modules and submodules (measure, two_d, utility, eval, embeddings, etc.)
 3. It generates RST files with a **flat structure** using the `--no-headings` flag
-   - All modules appear as `measure_diversity.module_name`
+   - All modules appear as `embediver.module_name`
    - No hierarchical "Submodules" or "Subpackages" sections
 4. **Run `make html`** to build the HTML documentation
 5. Sphinx reads the RST files and extracts docstrings from your Python code
@@ -74,7 +74,7 @@ This project uses `sphinx-apidoc` to generate documentation from source code. Yo
 - `source/conf.py` - Sphinx configuration file
 - `source/index.rst` - Main documentation page (manually maintained)
 - `source/modules.rst` - Auto-generated API reference (DO NOT EDIT MANUALLY)
-- `source/measure_diversity*.rst` - Auto-generated module docs (DO NOT EDIT MANUALLY)
+- `source/embediver*.rst` - Auto-generated module docs (DO NOT EDIT MANUALLY)
 - `build/` - Generated documentation (gitignored)
 
 ## Writing Docstrings

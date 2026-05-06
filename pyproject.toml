@@ -3,14 +3,16 @@ requires = ["setuptools>=61.0"] # Ensure setuptools is at least version 61.0, wh
 build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
-name = "diversity-measurement"
+name = "embediver"
 version = "0.1.0"
-description = "A tiny package with a simple diversity function"
+description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["diversity", "nlp", "embeddings", "text-diversity", "metrics"]
 authors = [
-    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
     {name = "Cantao Su", email = "c.su@uu.nl"},
+    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
     {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
     {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
     {name = "Esther Ploeger", email = "e.ploeger@uu.nl"},
@@ -24,9 +26,22 @@ dependencies = [
     "scikit-learn~=1.7.1",
     "scipy~=1.16.0",
     "sentence-transformers>=2.7.0",
+    "typer>=0.9.0",
     "umap-learn>=0.5.9",
     "vendi-score>=0.0.3",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nlpsoc/Diversity-Measurement"
+Documentation = "https://nlpsoc.github.io/Diversity-Measurement/"
+Repository = "https://github.com/nlpsoc/Diversity-Measurement"
+"Bug Tracker" = "https://github.com/nlpsoc/Diversity-Measurement/issues"
+
+[project.scripts]
+embediver = "embediver.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 docs = [
@@ -52,12 +67,9 @@ dev = [
     "umap-learn>=0.5.9",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
 [tool.pytest.ini_options]
 testpaths = ["test"]
-norecursedirs = ["examples", "build", "dist"] 
+norecursedirs = ["examples", "build", "dist"]
 pythonpath = ["src"]
 markers = [
     "integration: marks tests as integration tests (slow, requires internet)"

@@ -1,5 +1,5 @@
-from measure_diversity import distance_dispersion, mean_pairwise_distance, cluster_inertia_diversity, \
-    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant_diversity, dcscore, bins_based_entropy, renyi_kernel_entropy
+from embediver import dist_dispersion, mean_pw_dist, cluster_inertia, \
+    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy
 import pytest
 import numpy as np
 
@@ -9,24 +9,24 @@ class TestMeanPairwiseDistance:
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            mean_pairwise_distance([])
+            mean_pw_dist([])
 
     def test_single_datapoint_raises_error(self):
         """Test that single datapoint raises ValueError."""
         single_point = [[1, 2, 3]]
         with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            mean_pairwise_distance(single_point)
+            mean_pw_dist(single_point)
 
     def test_return_type(self):
         """Test that function returns Python float."""
         data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = mean_pairwise_distance(data)
+        result = mean_pw_dist(data)
         assert isinstance(result, float)
 
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
         data = [[0, 0], [1, 1]]
-        mean_dist = mean_pairwise_distance(data, metric="euclidean")
+        mean_dist = mean_pw_dist(data, metric="euclidean")
         expected = np.sqrt(2)  # sqrt((1-0)^2 + (1-0)^2)
         assert np.isclose(mean_dist, expected)
 
@@ -37,16 +37,16 @@ class TestMeanPairwiseDistance:
         expected_distances = [1.0, 1.0, np.sqrt(2)]
         expected_mean = np.mean(expected_distances)
 
-        mean_dist = mean_pairwise_distance(data, metric="euclidean")
+        mean_dist = mean_pw_dist(data, metric="euclidean")
         assert np.isclose(mean_dist, expected_mean)
 
     def test_different_metrics(self):
         """Test that different metrics produce different results."""
         data = [[1, 2], [3, 4], [5, 6]]
 
-        euclidean_mean = mean_pairwise_distance(data, metric="euclidean")
-        cosine_mean = mean_pairwise_distance(data, metric="cosine")
-        manhattan_mean = mean_pairwise_distance(data, metric="cityblock")  # cityblock is Manhattan distance
+        euclidean_mean = mean_pw_dist(data, metric="euclidean")
+        cosine_mean = mean_pw_dist(data, metric="cosine")
+        manhattan_mean = mean_pw_dist(data, metric="cityblock")  # cityblock is Manhattan distance
 
         # Results should be different for different metrics
         assert not np.isclose(euclidean_mean, cosine_mean)
@@ -62,8 +62,8 @@ class TestMeanPairwiseDistance:
 
         data = [[0, 0], [1, 1], [2, 2]]
 
-        custom_mean = mean_pairwise_distance(data, metric=custom_metric)
-        manhattan_mean = mean_pairwise_distance(data, metric="cityblock")
+        custom_mean = mean_pw_dist(data, metric=custom_metric)
+        manhattan_mean = mean_pw_dist(data, metric="cityblock")
 
         # Should be the same since our custom metric is Manhattan distance
         assert np.isclose(custom_mean, manhattan_mean)
@@ -71,17 +71,17 @@ class TestMeanPairwiseDistance:
     def test_known_mathematical_values(self):
         """Test specific cases with known expected values."""
         # Two orthogonal unit vectors in cosine space
-        assert np.isclose(mean_pairwise_distance([[1, 0], [0, 1]], metric="cosine"), 1.0)
+        assert np.isclose(mean_pw_dist([[1, 0], [0, 1]], metric="cosine"), 1.0)
 
         # Three points: two identical, one different - Distances: (1,1,0) -> mean = 2/3
-        assert np.isclose(mean_pairwise_distance([[1, 0], [1, 0], [0, 1]], metric="cosine"), 2 / 3)
+        assert np.isclose(mean_pw_dist([[1, 0], [1, 0], [0, 1]], metric="cosine"), 2 / 3)
 
         # Scale invariance for cosine distance
         small_vectors = [[0.5, 0.5], [-0.5, -0.5]]
         large_vectors = [[1, 1], [-1, -1]]
         assert np.isclose(
-            mean_pairwise_distance(small_vectors, metric="cosine"),
-            mean_pairwise_distance(large_vectors, metric="cosine")
+            mean_pw_dist(small_vectors, metric="cosine"),
+            mean_pw_dist(large_vectors, metric="cosine")
         )
 
 
@@ -338,24 +338,24 @@ class TestDistanceDispersion:
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            distance_dispersion([])
+            dist_dispersion([])
 
     def test_single_datapoint_raises_error(self):
         """Test that single datapoint raises ValueError."""
         single_point = [[1, 2, 3]]
         with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            distance_dispersion(single_point)
+            dist_dispersion(single_point)
 
     def test_return_type(self):
         """Test that function returns Python float."""
         data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = distance_dispersion(data)
+        result = dist_dispersion(data)
         assert isinstance(result, float)
 
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
         data = [[0, 0], [1, 1]]
-        sum_dist = distance_dispersion(data, metric="euclidean")
+        sum_dist = dist_dispersion(data, metric="euclidean")
         expected = np.sqrt(2)  # sqrt((1-0)^2 + (1-0)^2)
         assert np.isclose(sum_dist, expected)
 
@@ -366,7 +366,7 @@ class TestDistanceDispersion:
         expected_distances = [1.0, 1.0, np.sqrt(2)]
         expected_sum = np.sum(expected_distances)
 
-        sum_dist = distance_dispersion(data, metric="euclidean")
+        sum_dist = dist_dispersion(data, metric="euclidean")
         assert np.isclose(sum_dist, expected_sum)
 
     def test_relationship_with_mean(self):
@@ -374,8 +374,8 @@ class TestDistanceDispersion:
         np.random.seed(123)
         data = np.random.rand(4, 2)  # 4 points = 6 pairwise distances
 
-        mean_dist = mean_pairwise_distance(data)
-        sum_dist = distance_dispersion(data)
+        mean_dist = mean_pw_dist(data)
+        sum_dist = dist_dispersion(data)
 
         # sum = mean * number_of_pairs
         n = len(data)
@@ -439,23 +439,23 @@ class TestClusterInertiaDiversity:
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute cluster inertia for empty data"):
-            cluster_inertia_diversity([])
+            cluster_inertia([])
 
     def test_single_datapoint_returns_zero(self):
         """Test that single datapoint raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute cluster centers and thus inertia for fewer than 2 datapoints"):
-            cluster_inertia_diversity([[1, 2, 3]])
+            cluster_inertia([[1, 2, 3]])
 
     def test_two_points_positive_inertia(self):
         """Test that two points produce positive inertia."""
         data = [[0, 0], [1, 1]]
-        inertia = cluster_inertia_diversity(data, n_clusters=1)
+        inertia = cluster_inertia(data, n_clusters=1)
         assert inertia > 0
 
     def test_return_type(self):
         """Test that function returns Python float."""
         data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = cluster_inertia_diversity(data)
+        result = cluster_inertia(data)
         assert isinstance(result, float)
 
     def test_spread_vs_clustered_points(self):
@@ -463,15 +463,15 @@ class TestClusterInertiaDiversity:
         spread_points = [[0, 0], [10, 0], [0, 10], [10, 10]]
         clustered_points = [[0, 0], [0.1, 0], [0, 0.1], [0.1, 0.1]]
 
-        spread_inertia = cluster_inertia_diversity(spread_points, n_clusters=2)
-        clustered_inertia = cluster_inertia_diversity(clustered_points, n_clusters=2)
+        spread_inertia = cluster_inertia(spread_points, n_clusters=2)
+        clustered_inertia = cluster_inertia(clustered_points, n_clusters=2)
 
         assert spread_inertia > clustered_inertia
 
     def test_single_cluster_equals_centroid_distance(self):
         """Test that single cluster (k=1) equals distance to overall centroid."""
         data = [[1, 1], [2, 2], [3, 3]]
-        inertia_k1 = cluster_inertia_diversity(data, n_clusters=1)
+        inertia_k1 = cluster_inertia(data, n_clusters=1)
 
         # Manual calculation: centroid = [2, 2], inertia = sum of squared distances
         centroid = np.array([2, 2])
@@ -482,15 +482,15 @@ class TestClusterInertiaDiversity:
     def test_cluster_count_adjustment(self):
         """Test that function handles more clusters than points."""
         few_points = [[0, 0], [1, 1]]
-        inertia = cluster_inertia_diversity(few_points, n_clusters=10)  # Should auto-adjust to 1
+        inertia = cluster_inertia(few_points, n_clusters=10)  # Should auto-adjust to 1
         assert inertia > 0
 
     def test_reproducibility(self):
         """Test that results are reproducible due to random_state."""
         data = [[1, 2], [3, 4], [5, 6], [7, 8]]
 
-        result1 = cluster_inertia_diversity(data, n_clusters=2)
-        result2 = cluster_inertia_diversity(data, n_clusters=2)
+        result1 = cluster_inertia(data, n_clusters=2)
+        result2 = cluster_inertia(data, n_clusters=2)
 
         assert result1 == result2  # Should be exactly equal due to random_state
 
@@ -634,18 +634,18 @@ class TestLogDeterminantDiversity:
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
         with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
-            log_determinant_diversity([])
+            log_determinant([])
 
     def test_single_datapoint_raises_error(self):
         """Test that single datapoint raises ValueError."""
         single_point = [[1.0, 2.0, 3.0]]
         with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
-            log_determinant_diversity(single_point)
+            log_determinant(single_point)
 
     def test_return_type(self):
         """Test that function returns Python float."""
         data = [[1.0, 0.0], [0.0, 1.0]]
-        result = log_determinant_diversity(data)
+        result = log_determinant(data)
         assert isinstance(result, float)
         assert not isinstance(result, np.floating)
 
@@ -653,37 +653,37 @@ class TestLogDeterminantDiversity:
         """Test that negative eps raises ValueError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="eps must be positive"):
-            log_determinant_diversity(data, eps=-1.0)
+            log_determinant(data, eps=-1.0)
 
     def test_zero_eps_raises_error(self):
         """Test that zero eps raises ValueError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="eps must be positive"):
-            log_determinant_diversity(data, eps=0.0)
+            log_determinant(data, eps=0.0)
 
     def test_negative_tau_raises_error(self):
         """Test that negative tau raises ValueError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="tau must be positive"):
-            log_determinant_diversity(data, tau=-1.0)
+            log_determinant(data, tau=-1.0)
 
     def test_zero_tau_raises_error(self):
         """Test that zero tau raises ValueError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="tau must be positive"):
-            log_determinant_diversity(data, tau=0.0)
+            log_determinant(data, tau=0.0)
 
     def test_unknown_kernel_type_raises_error(self):
         """Test that unknown kernel_type raises NotImplementedError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(NotImplementedError, match="Unknown kernel_type"):
-            log_determinant_diversity(data, kernel_type="unknown")
+            log_determinant(data, kernel_type="unknown")
 
     def test_poly_kernel_non_integer_tau_raises_error(self):
         """Test that poly kernel with non-integer tau raises ValueError."""
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="For 'poly' kernel, tau must be an integer"):
-            log_determinant_diversity(data, kernel_type="poly", tau=2.5)
+            log_determinant(data, kernel_type="poly", tau=2.5)
 
     def test_two_orthogonal_vectors_cs_kernel(self):
         """
@@ -700,7 +700,7 @@ class TestLogDeterminantDiversity:
         """
         data = [[1.0, 0.0], [0.0, 1.0]]
         eps = 1e-6
-        result = log_determinant_diversity(data, kernel_type="cs", tau=1.0, normalize=True, eps=eps)
+        result = log_determinant(data, kernel_type="cs", tau=1.0, normalize=True, eps=eps)
         expected = 2.0 * np.log(1.0 + eps)
         assert np.isclose(result, expected, rtol=1e-5)
 
@@ -712,7 +712,7 @@ class TestLogDeterminantDiversity:
         With eps*I added, logdet should be finite but can be negative and small.
         """
         data = [[1.0, 0.0], [1.0, 0.0]]
-        result = log_determinant_diversity(data, kernel_type="cs", normalize=True, eps=1e-6)
+        result = log_determinant(data, kernel_type="cs", normalize=True, eps=1e-6)
         # For identical vectors, the matrix is near-singular, so logdet can be negative
         # With eps=1e-6, the matrix becomes [[1+eps, 1], [1, 1+eps]]
         # det = (1+eps)^2 - 1 = 2*eps + eps^2, so logdet = log(2*eps + eps^2) ≈ log(2e-6) ≈ -13.1
@@ -724,9 +724,9 @@ class TestLogDeterminantDiversity:
         """Test that different kernel types produce different logdet values."""
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result_cs = log_determinant_diversity(data, kernel_type="cs", tau=1.0)
-        result_rbf = log_determinant_diversity(data, kernel_type="rbf", tau=1.0)
-        result_lap = log_determinant_diversity(data, kernel_type="lap", tau=1.0)
+        result_cs = log_determinant(data, kernel_type="cs", tau=1.0)
+        result_rbf = log_determinant(data, kernel_type="rbf", tau=1.0)
+        result_lap = log_determinant(data, kernel_type="lap", tau=1.0)
         
         # Results should be different for different kernels
         assert not np.isclose(result_cs, result_rbf)
@@ -741,8 +741,8 @@ class TestLogDeterminantDiversity:
         small = [[0.5, 0.5], [-0.5, -0.5]]
         large = [[1.0, 1.0], [-1.0, -1.0]]
         
-        score_small = log_determinant_diversity(small, kernel_type="cs", normalize=True, tau=1.0)
-        score_large = log_determinant_diversity(large, kernel_type="cs", normalize=True, tau=1.0)
+        score_small = log_determinant(small, kernel_type="cs", normalize=True, tau=1.0)
+        score_large = log_determinant(large, kernel_type="cs", normalize=True, tau=1.0)
         
         assert np.isclose(score_small, score_large, rtol=1e-5)
 
@@ -753,8 +753,8 @@ class TestLogDeterminantDiversity:
         """
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result_tau_small = log_determinant_diversity(data, kernel_type="cs", tau=0.5, normalize=True)
-        result_tau_large = log_determinant_diversity(data, kernel_type="cs", tau=5.0, normalize=True)
+        result_tau_small = log_determinant(data, kernel_type="cs", tau=0.5, normalize=True)
+        result_tau_large = log_determinant(data, kernel_type="cs", tau=5.0, normalize=True)
         
         # Results should be different
         assert not np.isclose(result_tau_small, result_tau_large)
@@ -766,8 +766,8 @@ class TestLogDeterminantDiversity:
         """
         data = [[1.0, 0.0], [0.0, 1.0]]
         
-        result_eps_small = log_determinant_diversity(data, kernel_type="cs", eps=1e-8)
-        result_eps_large = log_determinant_diversity(data, kernel_type="cs", eps=1e-4)
+        result_eps_small = log_determinant(data, kernel_type="cs", eps=1e-8)
+        result_eps_large = log_determinant(data, kernel_type="cs", eps=1e-4)
         
         # Results should be different
         assert not np.isclose(result_eps_small, result_eps_large)
@@ -779,8 +779,8 @@ class TestLogDeterminantDiversity:
         """
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result_cholesky = log_determinant_diversity(data, kernel_type="cs", use_cholesky=True)
-        result_slogdet = log_determinant_diversity(data, kernel_type="cs", use_cholesky=False)
+        result_cholesky = log_determinant(data, kernel_type="cs", use_cholesky=True)
+        result_slogdet = log_determinant(data, kernel_type="cs", use_cholesky=False)
         
         # Should be very close (within numerical precision)
         assert np.isclose(result_cholesky, result_slogdet, rtol=1e-5)
@@ -789,7 +789,7 @@ class TestLogDeterminantDiversity:
         """Test polynomial kernel with valid integer tau."""
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result = log_determinant_diversity(data, kernel_type="poly", tau=2, eps=1e-6)
+        result = log_determinant(data, kernel_type="poly", tau=2, eps=1e-6)
         
         assert isinstance(result, float)
         assert np.isfinite(result)
@@ -798,7 +798,7 @@ class TestLogDeterminantDiversity:
         """Test RBF kernel produces valid results."""
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result = log_determinant_diversity(data, kernel_type="rbf", tau=1.0, eps=1e-6)
+        result = log_determinant(data, kernel_type="rbf", tau=1.0, eps=1e-6)
         
         assert isinstance(result, float)
         assert np.isfinite(result)
@@ -807,7 +807,7 @@ class TestLogDeterminantDiversity:
         """Test Laplacian kernel produces valid results."""
         data = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
         
-        result = log_determinant_diversity(data, kernel_type="lap", tau=1.0, eps=1e-6)
+        result = log_determinant(data, kernel_type="lap", tau=1.0, eps=1e-6)
         
         assert isinstance(result, float)
         assert np.isfinite(result)
@@ -823,8 +823,8 @@ class TestLogDeterminantDiversity:
         # Less diverse: similar vectors
         clustered_data = [[1.0, 0.0], [0.99, 0.01], [0.98, 0.02], [0.97, 0.03]]
         
-        diverse_ldd = log_determinant_diversity(diverse_data, kernel_type="cs", normalize=True)
-        clustered_ldd = log_determinant_diversity(clustered_data, kernel_type="cs", normalize=True)
+        diverse_ldd = log_determinant(diverse_data, kernel_type="cs", normalize=True)
+        clustered_ldd = log_determinant(clustered_data, kernel_type="cs", normalize=True)
         
         # More diverse data should have higher logdet (more volume in feature space)
         assert diverse_ldd > clustered_ldd
@@ -833,41 +833,41 @@ class TestLogDeterminantDiversity:
 class TestBinsBasedEntropyPCA:
     def test_empty_data_raises_error(self):
         with pytest.raises(ValueError, match="fewer than 2 datapoints"):
-            bins_based_entropy([])
+            bins_entropy([])
 
     def test_single_datapoint_raises_error(self):
         with pytest.raises(ValueError, match="fewer than 2 datapoints"):
-            bins_based_entropy([[1, 2, 3]])
+            bins_entropy([[1, 2, 3]])
     def test_invalid_shape_raises_error(self):
         with pytest.raises(ValueError, match="Expected 2D array"):
-            bins_based_entropy([1, 2, 3])  # 1D input
+            bins_entropy([1, 2, 3])  # 1D input
 
     def test_invalid_bins_raises_error(self):
         data = [[0, 1], [1, 0], [0.5, 0.5]]
 
         with pytest.raises(ValueError, match="must be positive integers"):
-            bins_based_entropy(data, n_bins_x=0, n_bins_y=5)
+            bins_entropy(data, n_bins_x=0, n_bins_y=5)
         with pytest.raises(ValueError, match="must be positive integers"):
-            bins_based_entropy(data, n_bins_x=5, n_bins_y=-1)
+            bins_entropy(data, n_bins_x=5, n_bins_y=-1)
 
     def test_return_type_is_python_float(self):
         data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = bins_based_entropy(data)
+        result = bins_entropy(data)
         assert isinstance(result, float)
         assert not isinstance(result, np.floating)
 
     def test_normalized_entropy_in_range(self):
         np.random.seed(42)
         data = np.random.randn(50, 8)
-        entropy = bins_based_entropy(data, n_bins_x=5, n_bins_y=5, normalize=True)
+        entropy = bins_entropy(data, n_bins_x=5, n_bins_y=5, normalize=True)
         assert 0.0 <= entropy <= 1.0
 
     def test_unnormalized_vs_normalized(self):
         np.random.seed(42)
         data = np.random.randn(50, 8)
 
-        normalized = bins_based_entropy(data, n_bins_x=5, n_bins_y=5, normalize=True)
-        unnormalized = bins_based_entropy(data, n_bins_x=5, n_bins_y=5, normalize=False)
+        normalized = bins_entropy(data, n_bins_x=5, n_bins_y=5, normalize=True)
+        unnormalized = bins_entropy(data, n_bins_x=5, n_bins_y=5, normalize=False)
 
         # Unnormalized entropy should be >= normalized entropy (since normalization divides by log factor > 1)
         assert unnormalized >= normalized
@@ -875,8 +875,8 @@ class TestBinsBasedEntropyPCA:
     def test_deterministic_results(self):
         # PCA is deterministic, so results should match exactly (or extremely close numerically).
         data = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [0.5, 1.5, 2.5]], dtype=float)
-        r1 = bins_based_entropy(data, n_bins_x=3, n_bins_y=3, normalize=True)
-        r2 = bins_based_entropy(data, n_bins_x=3, n_bins_y=3, normalize=True)
+        r1 = bins_entropy(data, n_bins_x=3, n_bins_y=3, normalize=True)
+        r2 = bins_entropy(data, n_bins_x=3, n_bins_y=3, normalize=True)
         assert np.isclose(r1, r2, atol=1e-12)
 
     def test_all_points_in_same_bin_entropy_zero(self):
@@ -884,7 +884,7 @@ class TestBinsBasedEntropyPCA:
         data = np.array([[1,1,1],[1,1,1+1e-12],[1,1,1+2e-12]], dtype=float)
 
 
-        entropy = bins_based_entropy(data, n_bins_x=2, n_bins_y=2, normalize=True)
+        entropy = bins_entropy(data, n_bins_x=2, n_bins_y=2, normalize=True)
         assert np.isclose(entropy, 0.0, atol=1e-12)
 
     def test_uniform_vs_clustered_relative(self):
@@ -897,8 +897,8 @@ class TestBinsBasedEntropyPCA:
         # clustered in 2D
         clustered = np.random.normal(0, 0.05, size=(400, 2))
 
-        e_uniform = bins_based_entropy(uniform, n_bins_x=6, n_bins_y=6, normalize=True)
-        e_clustered = bins_based_entropy(clustered, n_bins_x=6, n_bins_y=6, normalize=True)
+        e_uniform = bins_entropy(uniform, n_bins_x=6, n_bins_y=6, normalize=True)
+        e_clustered = bins_entropy(clustered, n_bins_x=6, n_bins_y=6, normalize=True)
         assert e_uniform > e_clustered
 
 
@@ -906,8 +906,8 @@ class TestBinsBasedEntropyPCA:
         np.random.seed(42)
         data = np.random.randn(60, 6)
 
-        e_5x10 = bins_based_entropy(data, n_bins_x=5, n_bins_y=10, normalize=True)
-        e_10x5 = bins_based_entropy(data, n_bins_x=10, n_bins_y=5, normalize=True)
+        e_5x10 = bins_entropy(data, n_bins_x=5, n_bins_y=10, normalize=True)
+        e_10x5 = bins_entropy(data, n_bins_x=10, n_bins_y=5, normalize=True)
         assert isinstance(e_5x10, float)
         assert isinstance(e_10x5, float)
         assert 0.0 <= e_5x10 <= 1.0
@@ -916,7 +916,7 @@ class TestBinsBasedEntropyPCA:
     def test_large_dataset_smoke(self):
         np.random.seed(42)
         data = np.random.randn(500, 32)
-        entropy = bins_based_entropy(data, n_bins_x=10, n_bins_y=10, normalize=True)
+        entropy = bins_entropy(data, n_bins_x=10, n_bins_y=10, normalize=True)
         assert isinstance(entropy, float)
         assert 0.0 <= entropy <= 1.0
         assert entropy > 0.0
@@ -925,11 +925,11 @@ class TestRenyiKernelEntropy:
 
     def test_requires_at_least_2_datapoints(self):
         with pytest.raises(ValueError, match="requires at least 2 datapoints"):
-            renyi_kernel_entropy([[1.0, 2.0, 3.0]])
+            renyi_entropy([[1.0, 2.0, 3.0]])
 
     def test_return_type_is_python_float(self):
         data = [[1.0, 0.0], [0.0, 1.0]]
-        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        score = renyi_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
         assert isinstance(score, float)
         assert not isinstance(score, np.floating)
 
@@ -943,7 +943,7 @@ class TestRenyiKernelEntropy:
           RKE_2 = -log(0.5) = log(2)
         """
         data = [[1.0, 0.0], [0.0, 1.0]]
-        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        score = renyi_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
         assert np.isclose(score, np.log(2.0), atol=1e-12)
 
     def test_cs_identical_vectors_alpha2_equals_zero(self):
@@ -956,7 +956,7 @@ class TestRenyiKernelEntropy:
           RKE_2 = -log(1)=0
         """
         data = [[1.0, 0.0], [1.0, 0.0]]
-        score = renyi_kernel_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        score = renyi_entropy(data, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
         assert np.isclose(score, 0.0, atol=1e-12)
 
     def test_cs_scale_invariance_when_normalize_true(self):
@@ -967,8 +967,8 @@ class TestRenyiKernelEntropy:
         small = [[0.5, 0.5], [-0.5, -0.5]]
         large = [[1.0, 1.0], [-1.0, -1.0]]
 
-        s1 = renyi_kernel_entropy(small, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
-        s2 = renyi_kernel_entropy(large, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        s1 = renyi_entropy(small, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
+        s2 = renyi_entropy(large, alpha=2.0, kernel_type="cs", tau=1.0, normalize=True)
         assert np.isclose(s1, s2, atol=1e-12)
 
     def test_alpha1_von_neumann_entropy_orthogonal_equals_log2(self):
@@ -977,7 +977,7 @@ class TestRenyiKernelEntropy:
         so von Neumann entropy = -sum p log p = log(2).
         """
         data = [[1.0, 0.0], [0.0, 1.0]]
-        score = renyi_kernel_entropy(data, alpha=1.0, kernel_type="cs", tau=1.0, normalize=True)
+        score = renyi_entropy(data, alpha=1.0, kernel_type="cs", tau=1.0, normalize=True)
         assert np.isclose(score, np.log(2.0), atol=1e-12)
 
     def test_general_alpha_uniform_eigs_equals_log2(self):
@@ -987,20 +987,20 @@ class TestRenyiKernelEntropy:
         We'll test alpha=3.
         """
         data = [[1.0, 0.0], [0.0, 1.0]]
-        score = renyi_kernel_entropy(data, alpha=3.0, kernel_type="cs", tau=1.0, normalize=True)
+        score = renyi_entropy(data, alpha=3.0, kernel_type="cs", tau=1.0, normalize=True)
         assert np.isclose(score, np.log(2.0), atol=1e-12)
 
     def test_invalid_kernel_type_raises(self):
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(NotImplementedError, match="Unknown kernel_type"):
-            renyi_kernel_entropy(data, kernel_type="wat")
+            renyi_entropy(data, kernel_type="wat")
 
     def test_invalid_tau_raises(self):
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="tau must be positive"):
-            renyi_kernel_entropy(data, kernel_type="cs", tau=0.0)
+            renyi_entropy(data, kernel_type="cs", tau=0.0)
 
     def test_invalid_alpha_raises(self):
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="alpha must be > 0"):
-            renyi_kernel_entropy(data, alpha=0.0)
+            renyi_entropy(data, alpha=0.0)
