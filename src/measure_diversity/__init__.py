@@ -31,7 +31,6 @@ from .measures.mst_dispersion import mst_dispersion
 
 ### Caching utilities
 from .compute_pairwise import compute_pairwise_distances, clear_distance_cache, distance_cache_info
-from .compute_kernel import compute_kernel_matrix, clear_kernel_cache, kernel_cache_info
 
 
 __all__ = ["mean_pairwise_distance", "distance_dispersion", "hamdiv", "diameter", "bottleneck", "sum_diameter",
@@ -39,5 +38,4 @@ __all__ = ["mean_pairwise_distance", "distance_dispersion", "hamdiv", "diameter"
            "convex_hull_volume", "radius_diversity", "span_with_medoid", "vendi_score_diversity",
            "renyi_kernel_entropy", "dcscore", "log_determinant_diversity", "bins_based_entropy", "dummy_diversity",
            "graph_entropy", "mst_dispersion",
-           "compute_pairwise_distances", "clear_distance_cache", "distance_cache_info",
-           "compute_kernel_matrix", "clear_kernel_cache", "kernel_cache_info"]
+           "compute_pairwise_distances", "clear_distance_cache", "distance_cache_info"]
