@@ -11,6 +11,8 @@ build/
 *.egg-info/
 __pycache__/
 *.pyc
+.cache
+.python-version
 
 # Local test artifacts (Tao)
 local_misc/

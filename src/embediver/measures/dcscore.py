@@ -7,6 +7,8 @@ from .._accepts_text import accepts_text
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
+_KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
+
 
 
 @accepts_text
@@ -51,50 +53,37 @@ def dcscore(
         ValueError: If there are fewer than 2 datapoints or tau <= 0.
         NotImplementedError: For unknown kernel_type.
     """
-    n = len(data)
-    if n < 2:
+    # ---- Validate inputs ----
+    if kernel_type not in _KERNEL_TYPES:
+        raise NotImplementedError(
+            f"Unknown kernel_type '{kernel_type}'. Use one of: {_KERNEL_TYPES}."
+        )
+    if tau <= 0:
+        raise ValueError("tau must be positive")
+    if len(data) < 2:
         raise ValueError("DCScore requires at least 2 datapoints")
+    if kernel_type == "poly" and not float(tau).is_integer():
+        raise ValueError("For 'poly' kernel, tau must be an integer (degree).")
 
     X = np.asarray(data, dtype=float)
     if X.ndim != 2:
         raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
 
-    n, d = X.shape
-    if tau <= 0:
-        raise ValueError("tau must be positive")
-
-    # ---- 1) Build similarity matrix K ----
+    # ---- 1) Build kernel matrix K ----
     if kernel_type == "cs":
-        # Optional L2-normalization, like in calculate_dcscore_by_texts
         if normalize:
             norms = np.linalg.norm(X, axis=1, keepdims=True)
             norms = np.clip(norms, 1e-12, None)
-            X_norm = X / norms
+            X_use = X / norms
         else:
-            X_norm = X
-
-        # cosine-like similarity, scaled by tau
-        K = (X_norm @ X_norm.T) / tau
-
+            X_use = X
+        K = (X_use @ X_use.T) / tau
     elif kernel_type == "rbf":
-        # sklearn: rbf_kernel(X, Y, gamma)
         K = rbf_kernel(X, X, gamma=tau)
-
     elif kernel_type == "lap":
-        # sklearn: laplacian_kernel(X, Y, gamma)
         K = laplacian_kernel(X, X, gamma=tau)
-
-    elif kernel_type == "poly":
-        # sklearn: polynomial_kernel(X, Y, degree, gamma=None, coef0=1)
-        if not float(tau).is_integer():
-            raise ValueError("For 'poly' kernel, tau must be an integer (degree of the polynomial).")
+    else:  # poly
         K = polynomial_kernel(X, X, degree=int(tau))
-
-    else:
-        raise NotImplementedError(
-            f"Unknown kernel_type '{kernel_type}'. "
-            "Use one of: 'cs', 'rbf', 'lap', 'poly'."
-        )
 
     # ---- 2) Row-wise softmax over K ----
     # numerical stability: subtract row max

@@ -6,7 +6,9 @@ from ._types import DISTANCE_METRIC
 ### Volume-Based Diversity Measure
 
 import numpy as np
-from scipy.spatial.distance import squareform, pdist
+from scipy.spatial.distance import squareform
+
+from .utils import _compute_pairwise_distances
 
 
 
@@ -23,16 +25,8 @@ def span_medoid(
         ValueError:
             If data is empty or contains only one datapoint.
     """
-    X = np.asarray(data, dtype=float)
-    n = X.shape[0]
-
-    if n == 0:
-        raise ValueError("Cannot compute span_with_medoid for empty data")
-    if n == 1:
-        raise ValueError("Cannot compute span_with_medoid for a single datapoint")
-
     # 1) pairwise distances (condensed) -> full matrix (n, n)
-    dist_vec = pdist(X, metric=metric, **metric_kwargs)
+    dist_vec = _compute_pairwise_distances(data, metric, **metric_kwargs)
     dist_mat = squareform(dist_vec)  # symmetric, zeros on diagonal
 
     # sum of distances for each row

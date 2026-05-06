@@ -40,6 +40,9 @@ from .embed import embed_texts
 ### Main entry point
 from .convenience import measure_diversity
 
+### Caching utilities
+from .compute_pairwise import compute_pairwise_distances, clear_distance_cache, distance_cache_info
+
 
 __all__ = [
     # Main entry point
@@ -54,4 +57,6 @@ __all__ = [
     "embed_texts",
     # Registries
     "axes", "measures",
+    # Pairwise distance caching
+    "compute_pairwise_distances", "clear_distance_cache", "distance_cache_info",
 ]
