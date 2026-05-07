@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, Literal, Sequence
+
 from .._accepts_text import accepts_text
 from ._types import DISTANCE_METRIC
 
