@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Sequence
+
 from .._accepts_text import accepts_text
 
 ### Volume-Based Diversity Measure
