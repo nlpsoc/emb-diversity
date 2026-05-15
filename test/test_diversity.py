@@ -1,5 +1,5 @@
 from embediver import dist_dispersion, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, mag_areas
+    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, mag_areas
 import pytest
 import numpy as np
 
@@ -387,50 +387,70 @@ class TestDistanceDispersion:
 
 
 
-class TestConvexHullVolume:
+class TestConvexHullVolume2D:
 
     def test_empty_data_raises_error(self):
         """Test that empty data raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute convex hull for empty data"):
-            convex_hull_volume([])
+            convex_hull_volume_2d([])
 
     def test_few_points_raises_error(self):
-        """Test behavior when there are insufficient points for the dimension."""
-        with pytest.raises(ValueError, match=rf"Cannot compute convex hull for fewer than dimension\+1 {4} points \(got {2}\)"):
-
-            convex_hull_volume([[0, 0, 0], [1, 1, 1]])
+        """Test behavior when there are fewer than 3 points (cannot form 2D hull)."""
+        with pytest.raises(ValueError, match=r"Cannot compute 2D convex hull for fewer than 3 points \(got 2\)"):
+            convex_hull_volume_2d([[0, 0], [1, 1]])
 
     def test_return_type(self):
         """Test that function returns Python float."""
         data = [[0, 0], [1, 0], [0, 1]]
-        result = convex_hull_volume(data)
+        result = convex_hull_volume_2d(data)
         assert isinstance(result, float)
         assert not isinstance(result, np.floating)
 
     def test_collinear_points_zero_volume(self):
         """Test that collinear points have zero area."""
+        # Input is already 2D, so reduction is a no-op and points stay collinear.
         line = [[0, 0], [1, 0], [2, 0]]
-        assert convex_hull_volume(line) == 0.0
+        assert convex_hull_volume_2d(line) == 0.0
 
-    def test_known_geometric_shapes(self):
-        """Test convex hull volume for known geometric shapes."""
+    def test_known_2d_shapes(self):
+        """For inputs already in 2D, reduction is a no-op and areas are exact."""
         # Triangle with known area
         triangle = [[0, 0], [1, 0], [0, 1]]
-        area = convex_hull_volume(triangle)
+        area = convex_hull_volume_2d(triangle)
         expected_area = 0.5  # Area of right triangle with legs 1,1
         assert np.isclose(area, expected_area)
 
         # Square with known area
         square = [[0, 0], [1, 0], [1, 1], [0, 1]]
-        area = convex_hull_volume(square)
+        area = convex_hull_volume_2d(square)
         expected_area = 1.0  # Unit square
         assert np.isclose(area, expected_area)
 
-        # 3D tetrahedron
-        tetrahedron = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
-        volume = convex_hull_volume(tetrahedron)
-        expected_volume = 1 / 6  # Volume of unit tetrahedron
-        assert np.isclose(volume, expected_volume, rtol=1e-10)
+    def test_numpy_array_input(self):
+        """Accept a numpy array without raising the ambiguous-truth-value ValueError."""
+        triangle = np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
+        area = convex_hull_volume_2d(triangle)
+        assert np.isclose(area, 0.5)
+
+    def test_high_dim_input_uses_umap_projection(self):
+        """For >2D input, UMAP projection is invoked and yields a positive area."""
+        rng = np.random.default_rng(42)
+        data = rng.normal(size=(50, 10))
+        area = convex_hull_volume_2d(data, random_state=42)
+        assert isinstance(area, float)
+        assert area > 0
+        assert np.isfinite(area)
+
+    def test_umap_failure_falls_back_to_first_two_columns(self, monkeypatch):
+        """If umap-learn cannot be imported, fall back to the first 2 columns with a warning."""
+        import sys
+        # Force `import umap` to raise ImportError inside _reduce_to_2d.
+        monkeypatch.setitem(sys.modules, "umap", None)
+        # First 2 columns form a known triangle; the third column is ignored.
+        data = [[0.0, 0.0, 99.0], [1.0, 0.0, 99.0], [0.0, 1.0, 99.0]]
+        with pytest.warns(UserWarning, match="UMAP reduction to 2D failed"):
+            area = convex_hull_volume_2d(data)
+        assert np.isclose(area, 0.5)
 
 
 

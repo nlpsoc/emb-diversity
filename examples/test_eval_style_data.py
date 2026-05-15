@@ -1,6 +1,6 @@
 from embediver import evaluate_measures
 from embediver import (mean_pw_dist, dist_dispersion, cluster_inertia,
-                                       convex_hull_volume)
+                                       convex_hull_volume_2d)
 import numpy as np
 
 class TestOnSTEL:
@@ -19,7 +19,7 @@ class TestOnSTEL:
             lambda data: mean_pw_dist(data, metric="euclidean"),
             lambda data: mean_pw_dist(data, metric="cosine"),
             lambda data: dist_dispersion(data, metric="cosine"),
-            # convex_hull_volume, --> this takes too long
+            # convex_hull_volume_2d, --> this takes too long (UMAP fit on high-dim embeddings)
             cluster_inertia
         ]
 
