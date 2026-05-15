@@ -29,6 +29,15 @@ dependencies = [
     "typer>=0.9.0",
     "umap-learn>=0.5.9",
     "vendi-score>=0.0.3",
+    # Backend for the `mag_areas` measure. magnipy pins scipy==1.13.0 in its
+    # own metadata which conflicts with our scipy~=1.16.0; we install it via
+    # git + `--no-deps` and pull its actual runtime deps in by name below.
+    # `mag_areas` also monkey-patches `scipy.integrate.trapz = trapezoid` to
+    # keep magnipy importable on scipy >= 1.14.
+    "magnipy @ git+https://github.com/aidos-lab/magnipy.git",
+    "numexpr>=2.10",
+    "seaborn>=0.13",
+    "krypy>=2.2",
 ]
 
 [project.urls]
