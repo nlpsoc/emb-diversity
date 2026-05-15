@@ -30,6 +30,9 @@ from .measures.bins_entropy import bins_entropy
 from .measures.graph_entropy import graph_entropy
 from .measures.mst_dispersion import mst_dispersion
 
+### Geometry-Based Diversity Measures (multi-dataset)
+from .measures.mag_areas import mag_areas
+
 ### Registries
 from .axes_registry import axes
 from .measures_registry import measures
@@ -53,6 +56,7 @@ __all__ = [
     "convex_hull_volume", "radius", "span_medoid", "vendi_score",
     "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
     "graph_entropy", "mst_dispersion",
+    "mag_areas",
     # Helpers
     "embed_texts",
     # Registries
