@@ -63,10 +63,12 @@ def convex_hull_volume_2d(
     Raises:
         ValueError: If data is empty or has fewer than 3 points.
     """
-    if not data:
+    # Convert first, so numpy-array inputs don't trigger the ambiguous-truth-value
+    # error of `if not data:` when data is an ndarray with >1 element.
+    X = np.asarray(data, dtype=float)
+    if X.size == 0:
         raise ValueError("Cannot compute convex hull for empty data")
 
-    X = np.asarray(data, dtype=float)
     n = X.shape[0]
     if n < 3:
         raise ValueError(

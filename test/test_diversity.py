@@ -426,6 +426,32 @@ class TestConvexHullVolume2D:
         expected_area = 1.0  # Unit square
         assert np.isclose(area, expected_area)
 
+    def test_numpy_array_input(self):
+        """Accept a numpy array without raising the ambiguous-truth-value ValueError."""
+        triangle = np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
+        area = convex_hull_volume_2d(triangle)
+        assert np.isclose(area, 0.5)
+
+    def test_high_dim_input_uses_umap_projection(self):
+        """For >2D input, UMAP projection is invoked and yields a positive area."""
+        rng = np.random.default_rng(42)
+        data = rng.normal(size=(50, 10))
+        area = convex_hull_volume_2d(data, random_state=42)
+        assert isinstance(area, float)
+        assert area > 0
+        assert np.isfinite(area)
+
+    def test_umap_failure_falls_back_to_first_two_columns(self, monkeypatch):
+        """If umap-learn cannot be imported, fall back to the first 2 columns with a warning."""
+        import sys
+        # Force `import umap` to raise ImportError inside _reduce_to_2d.
+        monkeypatch.setitem(sys.modules, "umap", None)
+        # First 2 columns form a known triangle; the third column is ignored.
+        data = [[0.0, 0.0, 99.0], [1.0, 0.0, 99.0], [0.0, 1.0, 99.0]]
+        with pytest.warns(UserWarning, match="UMAP reduction to 2D failed"):
+            area = convex_hull_volume_2d(data)
+        assert np.isclose(area, 0.5)
+
 
 
 class TestClusterInertiaDiversity:
