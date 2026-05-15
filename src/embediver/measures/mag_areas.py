@@ -1,23 +1,42 @@
 from __future__ import annotations
 
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 ### Geometry-Based Diversity Measure (multi-dataset)
 
-# magnipy still imports ``scipy.integrate.trapz`` which was removed in
-# scipy 1.14. We rebind it to ``trapezoid`` so ``from magnipy import ...``
-# succeeds in environments with scipy >= 1.14.
-import scipy.integrate as _scipy_integrate
-if not hasattr(_scipy_integrate, "trapz"):
-    _scipy_integrate.trapz = _scipy_integrate.trapezoid  # type: ignore[attr-defined]
 
-from magnipy import Diversipy  # noqa: E402
+def _load_magnipy():
+    """Import ``magnipy.Diversipy`` lazily.
+
+    The import is deferred so that ``import embediver`` (and any measure
+    that doesn't use ``mag_areas``) doesn't pull in magnipy, doesn't trip
+    the scipy 1.16 incompatibility, and doesn't apply a global monkey-
+    patch as a side effect of importing the package.
+
+    Also rebinds ``scipy.integrate.trapz`` to ``trapezoid`` first;
+    magnipy still imports the former, which scipy 1.14+ removed. Doing
+    the rebind inside this helper keeps the patch local to the moment
+    ``mag_areas`` is actually called.
+    """
+    import scipy.integrate as _si
+    if not hasattr(_si, "trapz"):
+        _si.trapz = _si.trapezoid  # type: ignore[attr-defined]
+    try:
+        from magnipy import Diversipy
+    except ImportError as e:
+        raise ImportError(
+            "mag_areas needs the 'magarea' optional dependency. "
+            "Install it with: pip install -e \".[magarea]\" --no-deps  "
+            "(--no-deps is required because magnipy's own pyproject pins "
+            "scipy==1.13.0, which conflicts with embediver's scipy~=1.16.0)."
+        ) from e
+    return Diversipy
 
 
 def mag_areas(
-    data_list: Sequence[Sequence[Sequence[float]]],
+    data_list: Union[List[Sequence[Sequence[float]]], Tuple[Sequence[Sequence[float]], ...]],
     metric: str = "cosine",
     n_ts: int = 30,
     names: Optional[Sequence[str]] = None,
@@ -44,10 +63,13 @@ def mag_areas(
 
     Args:
         data_list:
-            A sequence of datasets. Each entry is itself a 2D array-like
-            of shape ``(n_i, d)`` containing embedding vectors. All
-            datasets must share the same embedding dimension ``d``;
-            ``n_i`` may differ between datasets.
+            A **list or tuple** of datasets. Each entry is itself a 2D
+            array-like of shape ``(n_i, d)`` containing embedding
+            vectors. All datasets must share the same embedding
+            dimension ``d``; ``n_i`` may differ between datasets. A
+            bare 2D ndarray is rejected at runtime to prevent the
+            common misuse ``mag_areas(X_2d)`` where ``X_2d`` is one
+            dataset rather than a list of datasets.
         metric:
             Distance metric forwarded to magnitude theory. ``"cosine"``
             (default) matches the convention used elsewhere in
@@ -67,6 +89,9 @@ def mag_areas(
         ``data_list``. Larger means more diverse.
 
     Raises:
+        ImportError:
+            If the ``magarea`` extra is not installed (see install
+            instructions in the error message).
         ValueError:
             If ``data_list`` has fewer than 2 entries, or any entry is
             not 2D, or shapes / ``names`` length disagree.
@@ -116,6 +141,7 @@ def mag_areas(
         Xs.append(Xi)
 
     # ---- Run Diversipy on the common scale axis ----
+    Diversipy = _load_magnipy()
     dp_kwargs = {"metric": metric, "n_ts": int(n_ts)}
     if names is not None:
         dp_kwargs["names"] = list(names)

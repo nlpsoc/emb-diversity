@@ -1100,7 +1100,11 @@ class TestMagAreas:
                                     metric="euclidean", n_ts=20).MagAreas())
         assert np.allclose(ours, [float(v) for v in reference])
 
-    def test_names_are_forwarded(self):
+    def test_names_argument_accepted(self):
+        # Verifies the `names` argument is accepted and does not affect
+        # output length / failure mode. magnipy stores names internally
+        # for plotting but does not surface them via MagAreas(), so we
+        # can't assert observable forwarding without poking private state.
         Xs = [self._toy(seed=i) for i in range(3)]
         result = mag_areas(Xs, metric="euclidean", n_ts=20,
                            names=["a", "b", "c"])

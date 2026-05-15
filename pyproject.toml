@@ -29,12 +29,28 @@ dependencies = [
     "typer>=0.9.0",
     "umap-learn>=0.5.9",
     "vendi-score>=0.0.3",
-    # Backend for the `mag_areas` measure. magnipy pins scipy==1.13.0 in its
-    # own metadata which conflicts with our scipy~=1.16.0; we install it via
-    # git + `--no-deps` and pull its actual runtime deps in by name below.
-    # `mag_areas` also monkey-patches `scipy.integrate.trapz = trapezoid` to
-    # keep magnipy importable on scipy >= 1.14.
-    "magnipy @ git+https://github.com/aidos-lab/magnipy.git",
+]
+
+# Optional extras
+#
+# `magarea` powers the `mag_areas` measure. We keep it OUT of the base
+# dependencies because aidos-lab/magnipy's own pyproject pins
+# scipy==1.13.0, which conflicts with our scipy~=1.16.0. pip/uv cannot
+# express `--no-deps` in package metadata, so we list magnipy's actual
+# runtime libraries by name and require users to install this extra
+# with `--no-deps` so magnipy's stale pins are ignored.
+#
+# Install:
+#     pip install -e ".[magarea]" --no-deps
+# or with uv:
+#     uv pip install -e ".[magarea]" --no-deps
+#
+# The `mag_areas` measure also runtime-shims
+# `scipy.integrate.trapz = trapezoid` (removed in scipy 1.14) so magnipy
+# imports cleanly on our scipy version.
+[project.optional-dependencies]
+magarea = [
+    "magnipy @ git+https://github.com/aidos-lab/magnipy.git@54cb6a2c64f442b339118d6922339231cdb60a82",
     "numexpr>=2.10",
     "seaborn>=0.13",
     "krypy>=2.2",
