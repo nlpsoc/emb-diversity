@@ -29,7 +29,7 @@ All measures accept either raw text (list of strings) or pre-computed embeddings
 
 | Function | Description |
 |---|---|
-| {func}`convex_hull_volume <embediver.measures.convex_hull_volume.convex_hull_volume>` | Volume (or area in 2D) of the convex hull of the embeddings |
+| {func}`convex_hull_volume_2d <embediver.measures.convex_hull_volume_2d.convex_hull_volume_2d>` | Area of the convex hull after UMAP-projecting embeddings to 2D |
 | {func}`hamdiv <embediver.measures.hamdiv.hamdiv>` | Length of the shortest Hamiltonian circuit through all points |
 | {func}`mst_dispersion <embediver.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree |
 | {func}`radius <embediver.measures.radius.radius>` | Geometric mean of per-dimension standard deviations |

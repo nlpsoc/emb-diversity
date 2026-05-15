@@ -14,7 +14,7 @@ from .measures.energy import energy
 from .measures.cluster_inertia import cluster_inertia
 from .measures.span_centroid import span_centroid
 from .measures.chamfer_dist import chamfer_dist
-from .measures.convex_hull_volume import convex_hull_volume
+from .measures.convex_hull_volume_2d import convex_hull_volume_2d
 from .measures.radius import radius
 from .measures.span_medoid import span_medoid
 from .measures.vendi_score import vendi_score
@@ -38,7 +38,7 @@ measures.register("energy", energy)
 measures.register("cluster_inertia", cluster_inertia)
 measures.register("span_centroid", span_centroid)
 measures.register("chamfer_dist", chamfer_dist)
-measures.register("convex_hull_volume", convex_hull_volume)
+measures.register("convex_hull_volume_2d", convex_hull_volume_2d)
 measures.register("radius", radius)
 measures.register("span_medoid", span_medoid)
 measures.register("vendi_score", vendi_score)
@@ -57,7 +57,7 @@ CORE_MEASURES: list[str] = [
     "log_determinant",
     "mean_pw_dist",
     "vendi_score",
-    "convex_hull_volume",
+    "convex_hull_volume_2d",
     "graph_entropy",
     "energy",
 ]

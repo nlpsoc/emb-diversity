@@ -1,6 +1,6 @@
 from embediver import evaluate_measures
 from embediver import (mean_pw_dist, dist_dispersion, cluster_inertia,
-                                       convex_hull_volume)
+                                       convex_hull_volume_2d)
 import numpy as np
 from embediver import two_d
 
@@ -25,7 +25,7 @@ def test_eval_measures_not_normed():
         lambda data: mean_pw_dist(data, metric="euclidean"),
         lambda data: mean_pw_dist(data, metric="cosine"),
         lambda data: dist_dispersion(data, metric="cosine"),
-        convex_hull_volume,
+        convex_hull_volume_2d,
         cluster_inertia
     ]
 
@@ -58,7 +58,7 @@ def test_normed():
         lambda data: mean_pw_dist(data, metric="euclidean"),
         lambda data: mean_pw_dist(data, metric="cosine"),
         lambda data: dist_dispersion(data, metric="cosine"),
-        convex_hull_volume,
+        convex_hull_volume_2d,
         cluster_inertia
     ]
     # Add names to lambda functions for better display

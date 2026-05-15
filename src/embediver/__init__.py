@@ -15,7 +15,7 @@ from .measures.span_centroid import span_centroid
 from .measures.chamfer_dist import chamfer_dist
 
 ### Volume-Based Diversity Measures
-from .measures.convex_hull_volume import convex_hull_volume
+from .measures.convex_hull_volume_2d import convex_hull_volume_2d
 from .measures.radius import radius
 from .measures.span_medoid import span_medoid
 
@@ -53,7 +53,7 @@ __all__ = [
     # Individual measures
     "mean_pw_dist", "dist_dispersion", "hamdiv", "diameter", "bottleneck",
     "sum_diameter", "energy", "cluster_inertia", "span_centroid", "chamfer_dist",
-    "convex_hull_volume", "radius", "span_medoid", "vendi_score",
+    "convex_hull_volume_2d", "radius", "span_medoid", "vendi_score",
     "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
     "graph_entropy", "mst_dispersion",
     "mag_areas",
