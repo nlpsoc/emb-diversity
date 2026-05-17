@@ -9,6 +9,7 @@ from .measures.dist_dispersion import dist_dispersion
 from .measures.hamdiv import hamdiv
 from .measures.diameter import diameter
 from .measures.bottleneck import bottleneck
+from .measures.sum_bottleneck import sum_bottleneck
 from .measures.sum_diameter import sum_diameter
 from .measures.energy import energy
 from .measures.cluster_inertia import cluster_inertia
@@ -25,7 +26,7 @@ from .measures.bins_entropy import bins_entropy
 from .measures.graph_entropy import graph_entropy
 from .measures.mst_dispersion import mst_dispersion
 
-# All 20 measures
+# All 21 measures
 measures = Registry()
 
 measures.register("mean_pw_dist", mean_pw_dist)
@@ -33,6 +34,7 @@ measures.register("dist_dispersion", dist_dispersion)
 measures.register("hamdiv", hamdiv)
 measures.register("diameter", diameter)
 measures.register("bottleneck", bottleneck)
+measures.register("sum_bottleneck", sum_bottleneck)
 measures.register("sum_diameter", sum_diameter)
 measures.register("energy", energy)
 measures.register("cluster_inertia", cluster_inertia)
