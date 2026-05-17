@@ -8,6 +8,7 @@ from .measures.dist_dispersion import dist_dispersion
 from .measures.hamdiv import hamdiv
 from .measures.diameter import diameter
 from .measures.bottleneck import bottleneck
+from .measures.sum_bottleneck import sum_bottleneck
 from .measures.sum_diameter import sum_diameter
 from .measures.energy import energy
 from .measures.cluster_inertia import cluster_inertia
@@ -52,7 +53,7 @@ __all__ = [
     "measure_diversity",
     # Individual measures
     "mean_pw_dist", "dist_dispersion", "hamdiv", "diameter", "bottleneck",
-    "sum_diameter", "energy", "cluster_inertia", "span_centroid", "chamfer_dist",
+    "sum_bottleneck", "sum_diameter", "energy", "cluster_inertia", "span_centroid", "chamfer_dist",
     "convex_hull_volume_2d", "radius", "span_medoid", "vendi_score",
     "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
     "graph_entropy", "mst_dispersion",

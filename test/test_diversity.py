@@ -1,5 +1,5 @@
 from embediver import dist_dispersion, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, mag_areas
+    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, mag_areas
 import pytest
 import numpy as np
 
@@ -304,6 +304,138 @@ class TestBottleneck:
         data = [[-1, 0], [-1, 0], [-1, 0]]
         result = bottleneck(data)
         assert result == 0.0
+
+
+class TestSumBottleneck:
+
+    def test_empty_data_raises_error(self):
+        """Test that empty data raises ValueError."""
+        with pytest.raises(ValueError, match="SumBottleneck requires at least 2 datapoints"):
+            sum_bottleneck([])
+
+    def test_single_datapoint_raises_error(self):
+        """Test that single datapoint raises ValueError."""
+        single_point = [[1, 2, 3]]
+        with pytest.raises(ValueError, match="SumBottleneck requires at least 2 datapoints"):
+            sum_bottleneck(single_point)
+
+    def test_return_type(self):
+        """Test that function returns Python float."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+        result = sum_bottleneck(data)
+        assert isinstance(result, float)
+
+    def test_two_points_basic(self):
+        """Test basic functionality with two points."""
+        data = [[0, 0], [1, 1]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        # Both points have min distance sqrt(2) to the (only) other point
+        expected = 2 * np.sqrt(2)
+        assert np.isclose(sum_bn, expected)
+
+    def test_three_points_equilateral(self):
+        """Test with three points forming an equilateral triangle."""
+        # All pairwise distances equal 1 -> each point's nearest = 1
+        data = [[0, 0], [1, 0], [0.5, np.sqrt(3) / 2]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        expected = 3.0  # 1.0 + 1.0 + 1.0
+        assert np.isclose(sum_bn, expected)
+
+    def test_collinear_points(self):
+        """Test with collinear points."""
+        # Points [0,0], [1,0], [2,0]
+        # Nearest distances: [0]->1.0, [1]->1.0, [2]->1.0
+        data = [[0, 0], [1, 0], [2, 0]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        expected = 3.0
+        assert np.isclose(sum_bn, expected)
+
+    def test_identical_points(self):
+        """Test with identical points - all distances are zero."""
+        data = [[1, 1], [1, 1], [1, 1]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        assert sum_bn == 0.0
+
+    def test_different_metrics(self):
+        """Test that different metrics produce different results."""
+        data = [[0, 1], [1, 0], [0.5, 0.5]]
+
+        euclidean_sum = sum_bottleneck(data, metric="euclidean")
+        cosine_sum = sum_bottleneck(data, metric="cosine")
+
+        assert not np.isclose(euclidean_sum, cosine_sum)
+
+    def test_normalize_by_n(self):
+        """Test the normalize_by_n parameter."""
+        data = [[0, 0], [1, 1], [2, 2]]
+        sum_bn = sum_bottleneck(data, metric="euclidean", normalize_by_n=False)
+        avg_bn = sum_bottleneck(data, metric="euclidean", normalize_by_n=True)
+
+        n = len(data)
+        assert np.isclose(avg_bn, sum_bn / n)
+
+    def test_orthogonal_vectors_cosine(self):
+        """Test with orthogonal vectors using cosine distance."""
+        # Two orthogonal unit vectors: cosine distance = 1.0
+        data = [[1, 0], [0, 1]]
+        sum_bn = sum_bottleneck(data, metric="cosine")
+        expected = 2.0  # each row's min = 1.0
+        assert np.isclose(sum_bn, expected)
+
+    def test_relationship_with_bottleneck(self):
+        """sum_bottleneck >= n * bottleneck (each row's min >= global min)."""
+        data = [[0, 0], [1, 1], [0, 1], [1, 0]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        min_bn = bottleneck(data, metric="euclidean")
+        n = len(data)
+
+        assert sum_bn >= n * min_bn - 1e-12
+
+    def test_relationship_with_sum_diameter(self):
+        """sum_bottleneck <= sum_diameter (per-row min <= per-row max)."""
+        data = [[0, 0], [1, 1], [0, 1], [1, 0]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        sum_diam = sum_diameter(data, metric="euclidean")
+
+        assert sum_bn <= sum_diam + 1e-12
+
+    def test_scale_invariance_cosine(self):
+        """Cosine-based sum_bottleneck should be scale-invariant."""
+        small = [[0.5, 0.5], [-0.5, -0.5]]
+        large = [[1.0, 1.0], [-1.0, -1.0]]
+
+        sum_small = sum_bottleneck(small, metric="cosine")
+        sum_large = sum_bottleneck(large, metric="cosine")
+
+        assert np.isclose(sum_small, sum_large)
+
+    def test_four_points_square(self):
+        """Test with four points forming a unit square."""
+        # Each corner's nearest neighbour is at distance 1 (adjacent corner)
+        data = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        expected = 4.0  # 1 + 1 + 1 + 1
+        assert np.isclose(sum_bn, expected)
+
+    def test_two_tight_clusters(self):
+        """With tight clusters, sum_bottleneck stays small even when clusters are far."""
+        data = [[0, 0], [0.1, 0.1], [10, 10], [10.1, 10.1]]
+        sum_bn = sum_bottleneck(data, metric="euclidean")
+        # Each point's nearest is its cluster-mate at distance sqrt(0.02)
+        expected = 4.0 * np.sqrt(0.02)
+        assert np.isclose(sum_bn, expected)
+
+    def test_custom_metric_function(self):
+        """Test using a custom metric function."""
+        def manhattan_distance(u, v):
+            return np.sum(np.abs(u - v))
+
+        data = [[0, 0], [1, 1], [2, 2]]
+
+        custom_sum = sum_bottleneck(data, metric=manhattan_distance)
+        cityblock_sum = sum_bottleneck(data, metric="cityblock")
+
+        assert np.isclose(custom_sum, cityblock_sum)
 
 
 class TestEnergy:
