@@ -1,8 +1,8 @@
-from embediver import evaluate_measures
-from embediver import (mean_pw_dist, dist_dispersion, cluster_inertia,
+from emb_diversity import evaluate_measures
+from emb_diversity import (mean_pw_dist, dist_dispersion, cluster_inertia,
                                        convex_hull_volume_2d)
 import numpy as np
-from embediver import two_d
+from emb_diversity import two_d
 
 def test_eval_measures_not_normed():
     """

@@ -1,4 +1,4 @@
-from embediver import dist_dispersion, mean_pw_dist, cluster_inertia, \
+from emb_diversity import dist_dispersion, mean_pw_dist, cluster_inertia, \
     convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, mag_areas
 import pytest
 import numpy as np

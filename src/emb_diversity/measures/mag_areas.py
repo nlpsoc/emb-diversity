@@ -10,7 +10,7 @@ import numpy as np
 def _load_magnipy():
     """Import ``magnipy.Diversipy`` lazily.
 
-    The import is deferred so that ``import embediver`` (and any measure
+    The import is deferred so that ``import emb_diversity`` (and any measure
     that doesn't use ``mag_areas``) doesn't pull in magnipy, doesn't trip
     the scipy 1.16 incompatibility, and doesn't apply a global monkey-
     patch as a side effect of importing the package.
@@ -30,7 +30,7 @@ def _load_magnipy():
             "mag_areas needs the 'magarea' optional dependency. "
             "Install it with: pip install -e \".[magarea]\" --no-deps  "
             "(--no-deps is required because magnipy's own pyproject pins "
-            "scipy==1.13.0, which conflicts with embediver's scipy~=1.16.0)."
+            "scipy==1.13.0, which conflicts with emb_diversity's scipy~=1.16.0)."
         ) from e
     return Diversipy
 
@@ -73,7 +73,7 @@ def mag_areas(
         metric:
             Distance metric forwarded to magnitude theory. ``"cosine"``
             (default) matches the convention used elsewhere in
-            ``embediver``; ``"euclidean"`` is the theoretically clean
+            ``emb_diversity``; ``"euclidean"`` is the theoretically clean
             choice for magnitude (negative-type metric) and is what the
             magnipy tutorials use. Any metric accepted by
             ``scipy.spatial.distance.pdist`` is allowed.

@@ -2,7 +2,7 @@
 
 When a measure function is decorated with ``@accepts_text``, it gains
 the ability to receive a list of strings instead of embeddings.  The
-decorator detects text input, embeds it via :func:`embediver.embed.embed_texts`,
+decorator detects text input, embeds it via :func:`emb_diversity.embed.embed_texts`,
 and passes the resulting vectors to the original measure function.
 
 Two keyword arguments are added to the decorated function:

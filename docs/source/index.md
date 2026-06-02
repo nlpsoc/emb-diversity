@@ -1,4 +1,4 @@
-# embediver
+# emb-diversity
 
 ```{include} ../../README.md
 :start-after: <!-- docs-intro-start -->
@@ -36,7 +36,7 @@ user-guide/development-notes
 ```{toctree}
 :maxdepth: 2
 
-embediver
+emb_diversity
 ```
 
 ## Indices

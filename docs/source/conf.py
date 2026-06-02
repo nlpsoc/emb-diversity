@@ -27,7 +27,7 @@ autodoc_mock_imports = [
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'embediver'
+project = 'emb-diversity'
 copyright = '2026, Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
 author = 'Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
 

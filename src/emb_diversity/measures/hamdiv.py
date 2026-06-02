@@ -55,7 +55,7 @@ def hamdiv(
     Examples:
         Basic usage with default settings (christofides, cosine distance):
 
-        >>> from embediver import hamdiv
+        >>> from emb_diversity import hamdiv
         >>> embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
         >>> diversity = hamdiv(embeddings)
         >>> print(f"Diversity: {diversity:.4f}")

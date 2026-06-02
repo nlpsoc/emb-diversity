@@ -1,5 +1,5 @@
-from embediver import evaluate_measures
-from embediver import (mean_pw_dist, dist_dispersion, cluster_inertia,
+from emb_diversity import evaluate_measures
+from emb_diversity import (mean_pw_dist, dist_dispersion, cluster_inertia,
                                        convex_hull_volume_2d)
 import numpy as np
 
@@ -10,8 +10,8 @@ class TestOnSTEL:
             Test the evaluate_measures function on style datasets
         """
         # Load more and less diverse formal/informal dataset
-        from embediver.eval.data.STEL import create_formal_diverse, create_formal_only
-        from embediver.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
+        from emb_diversity.eval.data.STEL import create_formal_diverse, create_formal_only
+        from emb_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
         only_formal_text = create_formal_only()
         half_formal_text = create_formal_diverse(formal_share=0.5)
 
@@ -43,8 +43,8 @@ class TestOnSTEL:
             dataset_names=["only formal semantic", "half formal half informal semantic"],)
 
     def test_variety(self):
-        from embediver.eval.data.synthstel import get_low_variety, get_high_variety
-        from embediver.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
+        from emb_diversity.eval.data.synthstel import get_low_variety, get_high_variety
+        from emb_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
         low_variety = get_low_variety()
         high_variety = get_high_variety()
 
@@ -69,8 +69,8 @@ class TestOnSTEL:
 
 
     def test_balance(self):
-        from embediver.eval.data.synthstel import get_low_balance, get_high_balance
-        from embediver.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
+        from emb_diversity.eval.data.synthstel import get_low_balance, get_high_balance
+        from emb_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
         low_balance = get_low_balance()
         high_balance = get_high_balance()
 
@@ -94,8 +94,8 @@ class TestOnSTEL:
             dataset_names=["low balance style", "high balance style"])
 
     def test_disparity(self):
-        from embediver.eval.data.synthstel import get_low_disparity, get_high_disparity
-        from embediver.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
+        from emb_diversity.eval.data.synthstel import get_low_disparity, get_high_disparity
+        from emb_diversity.embeddings.SBERT import encode_style_sentences, encode_semantic_sentences
         low_disparity = get_low_disparity()
         high_disparity = get_high_disparity()
 

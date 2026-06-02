@@ -33,7 +33,7 @@ def measure_diversity(
         Dict mapping measure name to score.
 
     Example:
-        >>> from embediver import measure_diversity
+        >>> from emb_diversity import measure_diversity
         >>> measure_diversity(["The cat sat.", "Dogs play fetch."])
         {'log_determinant': -12.345}
         >>> measure_diversity(texts, measure="core")

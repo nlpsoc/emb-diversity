@@ -1,23 +1,23 @@
 # CLI Reference
 
-embediver provides a command-line interface for measuring diversity from text files.
+emb-diversity provides a command-line interface for measuring diversity from text files.
 
 ## Installation
 
 The CLI is installed automatically with the package:
 
 ```bash
-pip install embediver
+pip install emb-diversity
 ```
 
 ## Commands
 
-### `embediver measure`
+### `emb-diversity measure`
 
 Measure diversity from a text file, CSV, or TSV.
 
 ```bash
-embediver measure INPUT_FILE [OPTIONS]
+emb-diversity measure INPUT_FILE [OPTIONS]
 ```
 
 **Arguments:**
@@ -40,31 +40,31 @@ embediver measure INPUT_FILE [OPTIONS]
 
 ```bash
 # Default measure on a text file (one text per line)
-embediver measure texts.txt
+emb-diversity measure texts.txt
 
 # Core set of representative measures
-embediver measure texts.txt -m core
+emb-diversity measure texts.txt -m core
 
 # All 20 measures
-embediver measure texts.txt -m all
+emb-diversity measure texts.txt -m all
 
 # Specific measures
-embediver measure texts.txt -m mean_pw_dist -m diameter -m vendi_score
+emb-diversity measure texts.txt -m mean_pw_dist -m diameter -m vendi_score
 
 # Style diversity
-embediver measure texts.txt --axis style
+emb-diversity measure texts.txt --axis style
 
 # Custom embedding model
-embediver measure texts.txt --model Qwen/Qwen3-8B
+emb-diversity measure texts.txt --model Qwen/Qwen3-8B
 
 # CSV with custom column
-embediver measure reviews.csv --column review_text
+emb-diversity measure reviews.csv --column review_text
 
 # TSV file
-embediver measure data.tsv --column sentence
+emb-diversity measure data.tsv --column sentence
 
 # JSON output (for piping)
-embediver measure texts.txt -m core --format json
+emb-diversity measure texts.txt -m core --format json
 ```
 
 **Input formats:**
@@ -73,21 +73,21 @@ embediver measure texts.txt -m core --format json
 - `.csv`: comma-separated, reads the `text` column by default
 - `.tsv`: tab-separated, reads the `text` column by default
 
-### `embediver list-measures`
+### `emb-diversity list-measures`
 
 List all available diversity measures.
 
 ```bash
-embediver list-measures
+emb-diversity list-measures
 ```
 
 Measures tagged `[default]` run when no `-m` flag is given.
 Measures tagged `[core]` are included in the `-m core` set.
 
-### `embediver list-axes`
+### `emb-diversity list-axes`
 
 List registered diversity axes and their models.
 
 ```bash
-embediver list-axes
+emb-diversity list-axes
 ```
