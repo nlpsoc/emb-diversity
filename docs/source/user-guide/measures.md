@@ -11,6 +11,7 @@ All measures accept either raw text (list of strings) or pre-computed embeddings
 | {func}`dist_dispersion <emb_diversity.measures.dist_dispersion.dist_dispersion>` | Sum of all pairwise distances |
 | {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two instances |
 | {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two instances |
+| {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances |
 | {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances |
 | {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all datapoints |
 | {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Distance-based span relative to the centroid (Cox et al., 2021) |
