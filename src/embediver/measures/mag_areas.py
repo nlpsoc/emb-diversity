@@ -28,8 +28,8 @@ def _load_magnipy():
     except ImportError as e:
         raise ImportError(
             "mag_areas needs the 'magarea' optional dependency. "
-            "Install it with: uv sync --extra magarea  "
-            "(or: pip install -e \".[magarea]\")."
+            "Install it with: pip install -e \".[magarea]\"  "
+            "(or: uv sync --extra magarea)."
         ) from e
     return Diversipy
 
