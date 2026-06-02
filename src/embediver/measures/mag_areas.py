@@ -28,8 +28,9 @@ def _load_magnipy():
     except ImportError as e:
         raise ImportError(
             "mag_areas needs the 'magarea' optional dependency. "
-            "Install it with: pip install -e \".[magarea]\"  "
-            "(or: uv sync --extra magarea)."
+            "Install it with: pip install -e \".[magarea]\" --no-deps  "
+            "(--no-deps is required because magnipy's own pyproject pins "
+            "scipy==1.13.0, which conflicts with embediver's scipy~=1.16.0)."
         ) from e
     return Diversipy
 
