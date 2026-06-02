@@ -50,7 +50,7 @@ dependencies = [
 # imports cleanly on our scipy version.
 [project.optional-dependencies]
 magarea = [
-    "magnipy @ git+https://github.com/aidos-lab/magnipy.git@54cb6a2c64f442b339118d6922339231cdb60a82",
+    "magnipy @ git+https://github.com/nlpsoc/magnipy.git@e4a3244e483b7427693e18df480b1a6b94f457b8",
     "numexpr>=2.10",
     "seaborn>=0.13",
     "krypy>=2.2",
