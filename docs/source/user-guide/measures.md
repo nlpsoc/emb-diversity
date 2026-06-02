@@ -1,6 +1,6 @@
 # Available Measures
 
-emb-diversity provides 20 diversity measures across four categories.
+emb-diversity provides 21 diversity measures across four categories.
 All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
 
 ## Distance-based
