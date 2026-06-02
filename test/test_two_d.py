@@ -1,4 +1,4 @@
-from embediver.two_d import create_normed_datapoints, duplicate_dataset, create_toy_dataset1_axioms_challenges
+from emb_diversity.two_d import create_normed_datapoints, duplicate_dataset, create_toy_dataset1_axioms_challenges
 import pytest
 import numpy as np
 from collections import Counter

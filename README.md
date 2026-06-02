@@ -1,4 +1,4 @@
-# embediver
+# emb-diversity
 
 <!-- docs-intro-start -->
 A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
@@ -25,7 +25,7 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 <!-- docs-quickstart-start -->
 ```python
-from embediver import measure_diversity
+from emb_diversity import measure_diversity
 
 texts = [
     "The cat sat on the mat.",
@@ -45,7 +45,7 @@ measure_diversity(texts, measure="core")
 measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
 
 # You can also call individual measures directly
-from embediver import log_determinant
+from emb_diversity import log_determinant
 log_determinant(texts)
 log_determinant(texts, diversity_axis="style")
 ```
@@ -226,19 +226,19 @@ Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguid
 
 ### Adding New Measures
 
-When you add a new measure to `src/embediver/measures/`:
+When you add a new measure to `src/emb_diversity/measures/`:
 
 1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
-2. Export it from `src/embediver/__init__.py` if it should be part of the public API.
-3. Register it in `src/embediver/measures_registry.py` with `measures.register("name", func)`.
+2. Export it from `src/emb_diversity/__init__.py` if it should be part of the public API.
+3. Register it in `src/emb_diversity/measures_registry.py` with `measures.register("name", func)`.
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
 ### Adding New Diversity Axes
 
-Register a new axis in `src/embediver/axes_registry.py`:
+Register a new axis in `src/emb_diversity/axes_registry.py`:
 
 ```python
-from embediver.axes_registry import DiversityAxis, axes
+from emb_diversity.axes_registry import DiversityAxis, axes
 
 axes.register(
     "multilingual",

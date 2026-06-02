@@ -19,7 +19,7 @@ local_misc/
 
 # Sphinx auto-generated documentation files
 docs/source/modules.rst
-docs/source/embediver*.rst
+docs/source/emb_diversity*.rst
 
 # ignore tokens
 .env

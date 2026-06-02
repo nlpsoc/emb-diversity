@@ -13,7 +13,7 @@ Measures meaning-based diversity. Texts about different topics will score high; 
 - **Alternatives:** `all-MiniLM-L6-v2` (faster, smaller)
 
 ```python
-from embediver import log_determinant
+from emb_diversity import log_determinant
 
 # These are equivalent (semantic is the default)
 log_determinant(texts)
@@ -55,7 +55,7 @@ log_determinant(texts, embedding_model="all-MiniLM-L6-v2")
 Discover available alternatives programmatically:
 
 ```python
-from embediver import axes
+from emb_diversity import axes
 
 for axis in axes.list_all():
     print(f"{axis.name}: default={axis.default_model}")

@@ -1,4 +1,4 @@
-"""Shared type aliases for embediver."""
+"""Shared type aliases for emb_diversity."""
 
 from __future__ import annotations
 
