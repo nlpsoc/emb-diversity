@@ -1,0 +1,63 @@
+name: Tests
+
+# Trigger: runs on every PR targeting main
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false           # run all matrix versions even if one fails
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Installs the project + dev group (which provides pytest). The magarea
+      # extra is intentionally NOT installed, so magnipy-backed tests are skipped.
+      - name: Install dependencies
+        run: uv sync --python ${{ matrix.python-version }}
+
+      # -m "not integration": skip slow tests that download models / need internet
+      # -k "not TestMagAreas": skip magarea tests (need the optional magnipy extra)
+      - name: Run tests
+        run: uv run --python ${{ matrix.python-version }} pytest -m "not integration" -k "not TestMagAreas"
+
+  # Separate job: installs WITH the magarea extra (pulls magnipy from the fork)
+  # and runs only the magarea tests. Kept apart so the lean job above stays fast.
+  test-magarea:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # --extra magarea pulls magnipy (from the nlpsoc fork) plus its deps.
+      - name: Install dependencies (with magarea extra)
+        run: uv sync --extra magarea --python ${{ matrix.python-version }}
+
+      # -k "TestMagAreas": run only the magarea tests (the lean job covers the rest)
+      - name: Run magarea tests
+        run: uv run --python ${{ matrix.python-version }} pytest -m "not integration" -k "TestMagAreas"
