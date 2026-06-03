@@ -24,7 +24,7 @@ All measures accept either raw text (list of strings) or pre-computed embeddings
 | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | Vendi Score -- effective number of distinct items (Friedman & Dieng, 2023) |
 | {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy |
 | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
-| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph |
+| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph -- **default measure** |
 
 ## Geometry-based
 
@@ -42,4 +42,4 @@ All measures accept either raw text (list of strings) or pre-computed embeddings
 | {func}`energy <emb_diversity.measures.energy.energy>` | Energy distance between the dataset and a reference distribution |
 | {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Inertia -- sum of squared distances to cluster centres |
 | {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | DC Score based on self-similarity with softmax normalisation |
-| {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) -- **default measure** |
+| {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) |

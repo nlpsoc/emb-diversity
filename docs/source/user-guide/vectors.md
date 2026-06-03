@@ -15,8 +15,8 @@ vectors = np.random.randn(100, 384)
 # Default measure
 measure_diversity(vectors)
 
-# Core set
-measure_diversity(vectors, measure="core")
+# A named measure set (variety, balance, or disparity)
+measure_diversity(vectors, measure="variety")
 
 # Specific measures
 measure_diversity(vectors, measure=["mean_pw_dist", "diameter"])

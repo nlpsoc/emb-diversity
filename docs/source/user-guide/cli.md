@@ -30,7 +30,7 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 
 | Option | Default | Description |
 |---|---|---|
-| `-m`, `--measure` | `log_determinant` | Measure(s) to run. Repeat for multiple. Special: `core`, `all` |
+| `-m`, `--measure` | `graph_entropy` | Measure(s) to run. Repeat for multiple. Named sets: `variety`, `balance`, `disparity`; `all` for every measure |
 | `-a`, `--axis` | `semantic` | Diversity axis |
 | `--model` | *(none)* | Explicit embedding model (overrides `--axis`) |
 | `-c`, `--column` | `text` | Column name for CSV/TSV files |
@@ -42,10 +42,10 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 # Default measure on a text file (one text per line)
 emb-diversity measure texts.txt
 
-# Core set of representative measures
-emb-diversity measure texts.txt -m core
+# A named measure set (variety, balance, or disparity)
+emb-diversity measure texts.txt -m variety
 
-# All 20 measures
+# All measures
 emb-diversity measure texts.txt -m all
 
 # Specific measures
@@ -64,7 +64,7 @@ emb-diversity measure reviews.csv --column review_text
 emb-diversity measure data.tsv --column sentence
 
 # JSON output (for piping)
-emb-diversity measure texts.txt -m core --format json
+emb-diversity measure texts.txt -m variety --format json
 ```
 
 **Input formats:**
@@ -82,7 +82,8 @@ emb-diversity list-measures
 ```
 
 Measures tagged `[default]` run when no `-m` flag is given.
-Measures tagged `[core]` are included in the `-m core` set.
+Measures tagged `[variety]`, `[balance]` or `[disparity]` belong to that
+named set and can be selected with `-m <name>`.
 
 ### `emb-diversity list-axes`
 

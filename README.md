@@ -33,14 +33,14 @@ texts = [
     "It was a sunny afternoon.",
 ]
 
-# Default measure (log_determinant), semantic embeddings
+# Default measure (graph_entropy), semantic embeddings
 measure_diversity(texts)
 # Use a different diversity axis
 measure_diversity(texts, diversity_axis="style")
 # Use a specific embedding model
 measure_diversity(texts, embedding_model="Qwen/Qwen3-8B")
-# Run the core set of measures
-measure_diversity(texts, measure="core")
+# Run a named measure set (variety, balance, or disparity)
+measure_diversity(texts, measure="variety")
 # Run specific measures
 measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
 

@@ -51,15 +51,18 @@ measures.register("bins_entropy", bins_entropy)
 measures.register("graph_entropy", graph_entropy)
 measures.register("mst_dispersion", mst_dispersion)
 
-# The single default measure
-DEFAULT_MEASURE = "log_determinant"
+# NOTE: If you change DEFAULT_MEASURE or MEASURE_SETS below, you must also update
+# the hardcoded CLI help, docstrings, docs, and tests. See CLAUDE.md
+# ("Keep the measure sets and the default measure in sync") for the full checklist.
 
-# Curated representative set across categories
-CORE_MEASURES: list[str] = [
-    "log_determinant",
-    "mean_pw_dist",
-    "vendi_score",
-    "convex_hull_volume_2d",
-    "graph_entropy",
-    "energy",
-]
+# The default measure(s) run when no measure is specified.
+# A list so more can be added later.
+DEFAULT_MEASURE: list[str] = ["graph_entropy"]
+
+# Named measure sets, selectable as measure="<name>" or CLI -m <name>.
+# Add a set here and it becomes usable in both places automatically.
+MEASURE_SETS: dict[str, list[str]] = {
+    "variety": ["chamfer_dist", "sum_bottleneck", "mst_dispersion"],
+    "balance": ["graph_entropy"],
+    "disparity": ["graph_entropy", "mst_dispersion"],
+}
