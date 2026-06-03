@@ -30,7 +30,7 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 
 | Option | Default | Description |
 |---|---|---|
-| `-m`, `--measure` | `log_determinant` | Measure(s) to run. Repeat for multiple. Special: `core`, `all` |
+| `-m`, `--measure` | `graph_entropy` | Measure(s) to run. Repeat for multiple. Named sets: `variety`, `balance`, `disparity`; `all` for every measure |
 | `-a`, `--axis` | `semantic` | Diversity axis |
 | `--model` | *(none)* | Explicit embedding model (overrides `--axis`) |
 | `-c`, `--column` | `text` | Column name for CSV/TSV files |
