@@ -29,8 +29,8 @@ def default(
         help=(
             "Measure to run. Use -m name for one, repeat for several: "
             "-m mean_pw_dist -m diameter. "
-            "Use -m core for a curated set, -m all for all 20. "
-            "Default: log_determinant."
+            "Use -m variety|balance|disparity for a named set, -m all for all. "
+            "Default: graph_entropy."
         ),
     ),
     axis: str = typer.Option(
@@ -62,8 +62,8 @@ def measure_cmd(
         help=(
             "Measure to run. Use -m name for one, repeat for several: "
             "-m mean_pw_dist -m diameter. "
-            "Use -m core for a curated set, -m all for all 20. "
-            "Default: log_determinant."
+            "Use -m variety|balance|disparity for a named set, -m all for all. "
+            "Default: graph_entropy."
         ),
     ),
     axis: str = typer.Option(
@@ -95,10 +95,12 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
 
     # ── Convert Typer's list format to measure_diversity()'s format ──
     # Typer always gives a list (e.g. ["all"]), but measure_diversity()
-    # expects a plain string for "all" and "core" shortcuts.
+    # expects a plain string for "all" and named-set shortcuts.
+    from .measures_registry import MEASURE_SETS
+
     if measures is None:
         measure_arg = None
-    elif len(measures) == 1 and measures[0] in ("all", "core"):
+    elif len(measures) == 1 and measures[0] in ("all", *MEASURE_SETS):
         measure_arg = measures[0]
     else:
         measure_arg = measures
@@ -121,14 +123,15 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
 @app.command("list-measures")
 def list_measures_cmd() -> None:
     """List all available diversity measures."""
-    from .measures_registry import CORE_MEASURES, DEFAULT_MEASURE, measures
+    from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measures
 
     for name in sorted(measures):
         tags = []
-        if name == DEFAULT_MEASURE:
+        if name in DEFAULT_MEASURE:
             tags.append("default")
-        if name in CORE_MEASURES:
-            tags.append("core")
+        for set_name, members in MEASURE_SETS.items():
+            if name in members:
+                tags.append(set_name)
         suffix = f"  [{', '.join(tags)}]" if tags else ""
         typer.echo(f"  {name}{suffix}")
 
