@@ -51,6 +51,10 @@ measures.register("bins_entropy", bins_entropy)
 measures.register("graph_entropy", graph_entropy)
 measures.register("mst_dispersion", mst_dispersion)
 
+# NOTE: If you change DEFAULT_MEASURE or MEASURE_SETS below, you must also update
+# the hardcoded CLI help, docstrings, docs, and tests. See CLAUDE.md
+# ("Keep the measure sets and the default measure in sync") for the full checklist.
+
 # The default measure(s) run when no measure is specified.
 # A list so more can be added later.
 DEFAULT_MEASURE: list[str] = ["graph_entropy"]
