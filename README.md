@@ -24,43 +24,68 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 ## Usage
 
 <!-- docs-quickstart-start -->
+
+Let's assume you have two text corpora that you want to compare in terms of their diversity. The simplest way to do this is by calling the `measure_diversity` function on each corpus.
+
 ```python
 from emb_diversity import measure_diversity
 
-texts = [
-    "The cat sat on the mat.",
-    "Dogs love to play fetch.",
-    "It was a sunny afternoon.",
+# more style-diverse, more topic-uniform (music)
+texts_a = [
+    "I thoroughly enjoy the hair bands.",
+    "songs of the 80's are the best.",
+    "Hip Hop is going DOWNHILL!!!!!",
+    "rock music just makes me feel good",
+    "The 80's rocked!That generation had the best music!"
+]
+
+# more style-uniform (formal), more topic-diverse
+texts_b = [
+    "I thoroughly enjoy the hair bands.",
+    "They have not caused any harm to me.",
+    "He has a very distinct walk.",
+    "It depends on what they will pay.",
+    "I would go out with the son of a preacher.",
 ]
 
 # Default measure (graph_entropy), semantic embeddings
-measure_diversity(texts)
-# -> {'graph_entropy': 2.08}
+print(measure_diversity(texts_a))
+# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
 
-# Use a different diversity axis
-measure_diversity(texts, diversity_axis="style")
-# -> {'graph_entropy': 1.41}
-
-# Use a specific embedding model (here a small, fast SBERT model)
-measure_diversity(texts, embedding_model="all-MiniLM-L6-v2")
-# -> {'graph_entropy': 2.07}
-
-# Run a named measure set (variety, balance, or disparity)
-measure_diversity(texts, measure="variety")
-# -> {'chamfer_dist': 0.94, 'sum_bottleneck': 2.81, 'mst_dispersion': 1.90}
-
-# Run specific measures
-measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
-# -> {'mean_pw_dist': 0.98, 'diameter': 1.04}
-
-# You can also call individual measures directly
-from emb_diversity import log_determinant
-log_determinant(texts)                          # -> -0.011
-log_determinant(texts, diversity_axis="style")  # same call on style embeddings
+print(measure_diversity(texts_b))
+# -> {'graph_entropy': 6.91..., 'vendi_score': 4.93..., 'mean_pw_dist': 0.98...}
 ```
 
-The scores above are illustrative — exact values depend on the embedding
-model and its version. Each call returns a dict mapping measure name to score.
+Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
+
+```python
+# Use a different diversity axis, for style diversity AnnaWegmann/style-embeddings is the default
+print(measure_diversity(texts_a, diversity_axis="style"))
+# -> {'graph_entropy': 6.69..., 'vendi_score': 4.17..., 'mean_pw_dist': 0.93...}
+print(measure_diversity(texts_b, diversity_axis="style"))
+# -> {'graph_entropy': 6.32..., 'vendi_score': 2.24..., 'mean_pw_dist': 0.32...}
+```
+
+You can also select a specific embedding model, for example, a model trained for a different language than Dutch. Be careful to use models that were trained on the diversity axis you are interested in, otherwise you might get some weird results!
+
+```python
+# Use a specific embedding model (here a small, fast SBERT model)
+print(measure_diversity(texts_a, embedding_model="GroNLP/bert-base-dutch-cased"))
+# -> {'graph_entropy': 6.61..., 'vendi_score': 1.89..., 'mean_pw_dist': 0.20...}
+print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased"))
+# -> {'graph_entropy': 6.80..., 'vendi_score': 1.52..., 'mean_pw_dist': 0.11...}
+```
+
+You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse than others.
+```python
+# Run specific measures
+print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
+# -> {'diameter': 0.94..., 'log_determinant': -0.93...}
+print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
+# -> {'diameter': 1.0..., 'log_determinant': -0.06...}
+```
+
+Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!
 <!-- docs-quickstart-end -->
 
 ## Install
