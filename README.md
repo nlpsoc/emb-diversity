@@ -35,20 +35,32 @@ texts = [
 
 # Default measure (graph_entropy), semantic embeddings
 measure_diversity(texts)
+# -> {'graph_entropy': 2.08}
+
 # Use a different diversity axis
 measure_diversity(texts, diversity_axis="style")
-# Use a specific embedding model
-measure_diversity(texts, embedding_model="Qwen/Qwen3-8B")
+# -> {'graph_entropy': 1.41}
+
+# Use a specific embedding model (here a small, fast SBERT model)
+measure_diversity(texts, embedding_model="all-MiniLM-L6-v2")
+# -> {'graph_entropy': 2.07}
+
 # Run a named measure set (variety, balance, or disparity)
 measure_diversity(texts, measure="variety")
+# -> {'chamfer_dist': 0.94, 'sum_bottleneck': 2.81, 'mst_dispersion': 1.90}
+
 # Run specific measures
 measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
+# -> {'mean_pw_dist': 0.98, 'diameter': 1.04}
 
 # You can also call individual measures directly
 from emb_diversity import log_determinant
-log_determinant(texts)
-log_determinant(texts, diversity_axis="style")
+log_determinant(texts)                          # -> -0.011
+log_determinant(texts, diversity_axis="style")  # same call on style embeddings
 ```
+
+The scores above are illustrative — exact values depend on the embedding
+model and its version. Each call returns a dict mapping measure name to score.
 <!-- docs-quickstart-end -->
 
 ## Install
