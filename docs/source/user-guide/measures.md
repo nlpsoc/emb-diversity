@@ -3,6 +3,25 @@
 emb-diversity provides 21 diversity measures across four categories.
 All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
 
+## Interpreting the scores
+
+Each diversity measure returns a float. We list a few things to keep in mind when reading those numbers:
+
+- **Higher = more diverse.** For every measure, a larger value means a
+  more diverse set and a smaller value a less diverse one. This holds even for
+  measures that return negative values: `log_determinant` and `energy` are
+  always negative, so a *less negative* value (closer to zero) means more diverse. Keep in mind that this reflects diversity as the measure defines it, not an objective property of the dataset itself.
+
+- **Scores are not normalized.** There is no fixed scale: some measures
+  are bounded (e.g. `vendi_score` lies in `[1, n]`; cosine-based distances in
+  `[0, 2]`), others are unbounded. A score's absolute magnitude is only
+  meaningful relative to other scores from the *same* measure.
+
+- **Scores are sensitive to dataset size.** Measures change with the number
+  of items `n`,  so you can't directly compare datasets of different sizes. To compare datasets, use the same measure and subsample them to the same `n`.
+ 
+- **Measures are sensitive to the embedding model.** Different embedding models will yield different scores, so you should always use the same embedding model when comparing datasets.
+
 ## Distance-based
 
 | Function | Description |
