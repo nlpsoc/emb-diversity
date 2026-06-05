@@ -19,13 +19,20 @@
 :end-before: <!-- docs-quickstart-end -->
 ```
 
+## Citation
+
+```{include} ../../README.md
+:start-after: <!-- docs-citation-start -->
+:end-before: <!-- docs-citation-end -->
+```
+
 ## User Guide
 
 ```{toctree}
 :maxdepth: 2
 
-user-guide/vectors
 user-guide/measures
+user-guide/vectors
 user-guide/axes
 user-guide/cli
 user-guide/development-notes

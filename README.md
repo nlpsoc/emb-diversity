@@ -10,16 +10,32 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 ## Table of Contents
 
-- [Usage](#usage)
 - [Install](#install)
+- [Usage](#usage)
 - [Available Measures](#available-measures)
 - [Development](#development)
+  - [Development setup](#development-setup)
   - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
   - [Working with uv](#working-with-uv)
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
+- [Citation](#citation)
 - [Funding](#funding)
+
+## Install
+
+<!-- docs-install-start -->
+Install the latest release from PyPI:
+
+```bash
+pip install emb-diversity
+```
+
+The first time you measure diversity, the default embedding model
+(`all-mpnet-base-v2`, ~420 MB) is downloaded from the Hugging Face Hub and
+cached locally, so later runs are fast and work offline.
+<!-- docs-install-end -->
 
 ## Usage
 
@@ -95,48 +111,25 @@ print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!
 <!-- docs-quickstart-end -->
 
-## Install
-
-> [!NOTE]
-> You must have **uv** installed before running `uv sync`.
-> Full installation guide: <https://docs.astral.sh/uv/getting-started/installation/>
-
-<!-- docs-install-start -->
-After installing `uv` on your system, you can now follow either **development mode** or **standard installation mode** depending on your use case.
-
-### Development mode
-
-Follow these steps to set up the project for development.
-- Clone the repo
-- Install all dependencies required for development mode:
-   ```bash
-   uv sync --group dev
-   ```
-- Activate the Python environment created by `uv`
-   ```bash
-   source .venv/bin/activate
-   ```
-
-### Standard installation
-
-To use the library directly do the following,
-
-- Clone the repo
-- Install all dependencies required for standard mode
-   ```bash
-   uv sync --no-group dev
-   ```
-- Activate the Python environment created by `uv`
-   ```bash
-   source .venv/bin/activate
-   ```
-<!-- docs-install-end -->
-
 ## Available Measures
 
 For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
 
 ## Development
+
+### Development setup
+
+To work on `emb-diversity` itself, install from a clone with
+[`uv`](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+git clone https://github.com/nlpsoc/Diversity-Measurement.git
+cd Diversity-Measurement
+uv sync --group dev          # runtime + dev tools (pytest, docs, ...)
+source .venv/bin/activate
+```
+
+Use `uv sync --no-group dev` to install only the runtime dependencies.
 
 ### Suggested Workflow for Collaboration
 
@@ -295,6 +288,22 @@ axes.register(
 ```
 
 Update `docs/source/user-guide/axes.md` with the new axis.
+
+## Citation
+
+<!-- docs-citation-start -->
+There is no paper yet, so if you use `emb-diversity` in your work, please cite
+the software:
+
+```bibtex
+@software{emb_diversity,
+  author = {Su, Cantao and Wegmann, Anna and Velayuthan, Menan and Nguyen, Dong and Ploeger, Esther},
+  title  = {{emb-diversity}: Embedding-based diversity measures for text and vector data},
+  year   = {2026},
+  url    = {https://github.com/nlpsoc/Diversity-Measurement},
+}
+```
+<!-- docs-citation-end -->
 
 ## Funding
 
