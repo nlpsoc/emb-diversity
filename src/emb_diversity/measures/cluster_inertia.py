@@ -42,10 +42,13 @@ def cluster_inertia(
         ValueError: If data is empty or contains fewer than 2 datapoints.
     """
 
-    if not data:
+    # Convert first, so numpy-array inputs don't trigger the ambiguous-truth-value
+    # error of `if not data:` when data is an ndarray with >1 element. (This is the
+    # input measure_diversity() always passes, since text is embedded to an array.)
+    X = np.asarray(data, dtype=float)
+    if X.size == 0:
         raise ValueError("Cannot compute cluster inertia for empty data")
 
-    X = np.asarray(data, dtype=float)
     n, d = X.shape
 
     if n < 2:
