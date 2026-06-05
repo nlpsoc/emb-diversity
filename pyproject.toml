@@ -12,10 +12,10 @@ license = "MIT"
 keywords = ["diversity", "nlp", "embeddings", "text-diversity", "metrics"]
 authors = [
     {name = "Cantao Su", email = "c.su@uu.nl"},
-    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
     {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
-    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
     {name = "Esther Ploeger", email = "e.ploeger@uu.nl"},
+    {name = "Dong Nguyen", email = "d.p.nguyen@uu.nl"},
+    {name = "Anna Wegmann", email = "a.m.wegmann@uu.nl"},
 ]
 dependencies = [
     "datasets~=3.3.2",

@@ -24,8 +24,8 @@
 ```{toctree}
 :maxdepth: 2
 
-user-guide/vectors
 user-guide/measures
+user-guide/vectors
 user-guide/axes
 user-guide/cli
 user-guide/development-notes
@@ -44,3 +44,10 @@ emb_diversity
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
+
+## Citation
+
+```{include} ../../README.md
+:start-after: <!-- docs-citation-start -->
+:end-before: <!-- docs-citation-end -->
+```

@@ -12,7 +12,6 @@ class TestMeasureResolution:
 
     def test_none_returns_default(self):
         assert _resolve_measure_names(None) == list(DEFAULT_MEASURE)
-        assert _resolve_measure_names(None) == ["graph_entropy"]
 
     def test_named_sets(self):
         assert _resolve_measure_names("variety") == [

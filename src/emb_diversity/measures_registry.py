@@ -57,7 +57,7 @@ measures.register("mst_dispersion", mst_dispersion)
 
 # The default measure(s) run when no measure is specified.
 # A list so more can be added later.
-DEFAULT_MEASURE: list[str] = ["graph_entropy"]
+DEFAULT_MEASURE: list[str] = ["graph_entropy", "vendi_score", "mean_pw_dist"]
 
 # Named measure sets, selectable as measure="<name>" or CLI -m <name>.
 # Add a set here and it becomes usable in both places automatically.

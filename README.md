@@ -8,91 +8,123 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
 
+## Install
+
+<!-- docs-install-start -->
+Install the latest release from PyPI:
+
+```bash
+pip install emb-diversity
+```
+
+The first time you measure diversity, the default embedding model
+(`all-mpnet-base-v2`, ~420 MB) is downloaded from the Hugging Face Hub and
+cached locally, so later runs are fast and work offline.
+<!-- docs-install-end -->
+
+## Usage
+
+<!-- docs-quickstart-start -->
+
+Measuring the diversity of a dataset with our package is easy: 
+
+```python
+from emb_diversity import measure_diversity
+
+# more style-diverse, more topic-uniform (music)
+texts_a = [
+    "I thoroughly enjoy the hair bands.",
+    "songs of the 80's are the best.",
+    "Hip Hop is going DOWNHILL!!!!!",
+    "rock music just makes me feel good",
+    "The 80's rocked!That generation had the best music!"
+]
+
+# Uses the default measures and semantic embeddings
+print(measure_diversity(texts_a))
+# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
+```
+
+Note that measuring the diversity of a dataset is usually only meaningful when comparing it to another datasets. The reason is that diversity values in isolation are not easily interpretable and are not bounded, sensitive to dataset size and sensitive to the used embedding space. Let's add another corpus. 
+
+```python
+# more style-uniform (formal), more topic-diverse
+texts_b = [
+    "I thoroughly enjoy the hair bands.",
+    "They have not caused any harm to me.",
+    "He has a very distinct walk.",
+    "It depends on what they will pay.",
+    "I would go out with the son of a preacher.",
+]
+
+print(measure_diversity(texts_a))
+# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
+
+print(measure_diversity(texts_b))
+# -> {'graph_entropy': 6.91..., 'vendi_score': 4.93..., 'mean_pw_dist': 0.98...}
+```
+
+When a measure considers a dataset to be more diverse, it will assign it a higher diversity value. Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
+
+```python
+# Use a different diversity axis, for style diversity AnnaWegmann/style-embeddings is the default
+print(measure_diversity(texts_a, diversity_axis="style"))
+# -> {'graph_entropy': 6.69..., 'vendi_score': 4.17..., 'mean_pw_dist': 0.93...}
+print(measure_diversity(texts_b, diversity_axis="style"))
+# -> {'graph_entropy': 6.32..., 'vendi_score': 2.24..., 'mean_pw_dist': 0.32...}
+```
+
+You can also specify a different embedding model with a HuggingFace identifier, for example, a model trained for Dutch. Be careful to use models that were trained on the diversity axis you are interested in, otherwise you might get some inconsistent results!
+
+```python
+# Use a specific embedding model (here a small, fast SBERT model)
+print(measure_diversity(texts_a, embedding_model="GroNLP/bert-base-dutch-cased"))
+# -> {'graph_entropy': 6.61..., 'vendi_score': 1.89..., 'mean_pw_dist': 0.20...}
+print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased"))
+# -> {'graph_entropy': 6.80..., 'vendi_score': 1.52..., 'mean_pw_dist': 0.11...}
+```
+
+You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. For example, log determinat here is finding that the more topic-uniform text set is supposedly more diverse. 
+```python
+# Run specific measures
+print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
+# -> {'diameter': 0.94..., 'log_determinant': -0.93...}
+print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
+# -> {'diameter': 1.0..., 'log_determinant': -0.06...}
+```
+
+Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!
+<!-- docs-quickstart-end -->
+
 ## Table of Contents
 
-- [Usage](#usage)
 - [Install](#install)
-- [Available Measures](#available-measures)
+- [Usage](#usage)
 - [Development](#development)
+  - [Development setup](#development-setup)
   - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
   - [Working with uv](#working-with-uv)
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
 - [Funding](#funding)
-
-## Usage
-
-<!-- docs-quickstart-start -->
-```python
-from emb_diversity import measure_diversity
-
-texts = [
-    "The cat sat on the mat.",
-    "Dogs love to play fetch.",
-    "It was a sunny afternoon.",
-]
-
-# Default measure (graph_entropy), semantic embeddings
-measure_diversity(texts)
-# Use a different diversity axis
-measure_diversity(texts, diversity_axis="style")
-# Use a specific embedding model
-measure_diversity(texts, embedding_model="Qwen/Qwen3-8B")
-# Run a named measure set (variety, balance, or disparity)
-measure_diversity(texts, measure="variety")
-# Run specific measures
-measure_diversity(texts, measure=["mean_pw_dist", "diameter"])
-
-# You can also call individual measures directly
-from emb_diversity import log_determinant
-log_determinant(texts)
-log_determinant(texts, diversity_axis="style")
-```
-<!-- docs-quickstart-end -->
-
-## Install
-
-> [!NOTE]
-> You must have **uv** installed before running `uv sync`.
-> Full installation guide: <https://docs.astral.sh/uv/getting-started/installation/>
-
-<!-- docs-install-start -->
-After installing `uv` on your system, you can now follow either **development mode** or **standard installation mode** depending on your use case.
-
-### Development mode
-
-Follow these steps to set up the project for development.
-- Clone the repo
-- Install all dependencies required for development mode:
-   ```bash
-   uv sync --group dev
-   ```
-- Activate the Python environment created by `uv`
-   ```bash
-   source .venv/bin/activate
-   ```
-
-### Standard installation
-
-To use the library directly do the following,
-
-- Clone the repo
-- Install all dependencies required for standard mode
-   ```bash
-   uv sync --no-group dev
-   ```
-- Activate the Python environment created by `uv`
-   ```bash
-   source .venv/bin/activate
-   ```
-<!-- docs-install-end -->
-
-## Available Measures
-
-For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
+- [Citation](#citation)
 
 ## Development
+
+### Development setup
+
+To work on `emb-diversity` itself, install from a clone with
+[`uv`](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+git clone https://github.com/nlpsoc/Diversity-Measurement.git
+cd Diversity-Measurement
+uv sync --group dev          # runtime + dev tools (pytest, docs, ...)
+source .venv/bin/activate
+```
+
+Use `uv sync --no-group dev` to install only the runtime dependencies.
 
 ### Suggested Workflow for Collaboration
 
@@ -255,3 +287,18 @@ Update `docs/source/user-guide/axes.md` with the new axis.
 ## Funding
 
 This work is supported by the ERC Starting Grant **DataDivers** (101162980).
+
+## Citation
+
+<!-- docs-citation-start -->
+There is no paper yet, so if you use `emb-diversity` in your work, please cite
+the software:
+
+```bibtex
+@misc{emb_diversity,
+  author = {Su, Cantao and Velayuthan, Menan and Ploeger, Esther and Nguyen, Dong and Wegmann, Anna},
+  title  = {emb-diversity},
+  url    = {https://github.com/nlpsoc/Diversity-Measurement},
+}
+```
+<!-- docs-citation-end -->
