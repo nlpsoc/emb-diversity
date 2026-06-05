@@ -36,8 +36,8 @@ log_determinant(texts, diversity_axis="style")
 You can bypass the axis system entirely by passing an embedding model directly:
 
 ```python
-log_determinant(texts, embedding_model="Qwen/Qwen3-8B")
 log_determinant(texts, embedding_model="all-MiniLM-L6-v2")
+log_determinant(texts, embedding_model="all-mpnet-base-v2")
 ```
 
 The `embedding_model` parameter always overrides `diversity_axis` when both are provided.

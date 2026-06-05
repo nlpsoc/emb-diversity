@@ -49,10 +49,10 @@ def cluster_inertia(
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
-    if len(data) == 0:
+    X = np.asarray(data, dtype=float)
+    if X.size == 0:
         raise ValueError("Cannot compute cluster inertia for empty data")
 
-    X = np.asarray(data, dtype=float)
     n, d = X.shape
 
     if n < 2:

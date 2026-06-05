@@ -55,7 +55,7 @@ emb-diversity measure texts.txt -m mean_pw_dist -m diameter -m vendi_score
 emb-diversity measure texts.txt --axis style
 
 # Custom embedding model
-emb-diversity measure texts.txt --model Qwen/Qwen3-8B
+emb-diversity measure texts.txt --model all-MiniLM-L6-v2
 
 # CSV with custom column
 emb-diversity measure reviews.csv --column review_text

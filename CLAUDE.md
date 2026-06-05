@@ -63,6 +63,22 @@ measure that is not registered, which catches typos.
 
 (The `README.md` "Development" section also covers these two workflows.)
 
+## Writing tests
+
+Match the existing style in `test/` (see `test_diversity.py` and
+`test_measure_sets.py`) so the suite stays consistent:
+
+- **Group related tests in a class** named `Test<Thing>`, with `test_*`
+  methods that each have a one-line docstring describing the behaviour.
+- **Construct inputs inline** — small Python lists, or
+  `np.random.RandomState(seed)` for arrays (seed for reproducibility). A
+  `@staticmethod` helper for shared fixtures is fine (e.g. `_toy`, `_vectors`).
+- **Use `pytest.mark.parametrize`** when running the same assertion across many
+  cases (e.g. every registered measure) — it reports each case as its own
+  pass/fail and lets you re-run one with `pytest -k <case>`. See
+  `test_convenience.py`. (It composes with the `Test…` class; put it on the
+  method.)
+
 ## Build, test, lock
 
 ```bash

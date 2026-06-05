@@ -48,7 +48,7 @@ axes.register(
     DiversityAxis(
         name="style",
         default_model="AnnaWegmann/Style-Embedding",
-        alternative_models=["rrivera1849/LUAR-MUD"],
+        alternative_models=["StyleDistance/styledistance", "rrivera1849/LUAR-MUD", "AIDA-UPM/star"],
         description="Writing style diversity",
     ),
 )
