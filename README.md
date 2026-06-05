@@ -266,7 +266,13 @@ Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguid
 
 When you add a new measure to `src/emb_diversity/measures/`:
 
-1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
+1. Create a new file. A measure is a plain function (no decorator) with the
+   signature
+   `def name(data, <params>, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult`.
+   Call `data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)`
+   first (it embeds text input and returns the resolved model id), then return
+   `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
+   Add a complete docstring following the style guide above.
 2. Export it from `src/emb_diversity/__init__.py` if it should be part of the public API.
 3. Register it in `src/emb_diversity/measures_registry.py` with `measures.register("name", func)`.
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.

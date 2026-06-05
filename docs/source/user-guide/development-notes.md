@@ -4,19 +4,20 @@ Internal notes and design decisions for contributors.
 
 ## Text input handling
 
-All measure functions accept both raw text and pre-computed embeddings.
-This is implemented via the `@accepts_text` decorator in `_accepts_text.py`,
-which checks if the first element of the input is a string and, if so,
-embeds it before calling the measure function.
+All measure functions accept both raw text and pre-computed embeddings. Each
+measure calls `resolve_embeddings(data, diversity_axis, embedding_model)` (from
+`embed.py`) as its first line: it checks whether the input is text and, if so,
+embeds it and returns the resolved model id (which the measure records under
+`parameters["embedding_model"]`); numeric input is passed through unchanged with
+a `None` model id.
 
-The decorator avoids repeating the same type-checking logic in all 20
-measure files. An alternative approach would be to add an explicit
-`isinstance` check at the top of each function, which is the pattern
-used by scikit-learn (see e.g.
+This is the explicit per-function approach, similar to how scikit-learn
+validates input via
 [check_array](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/utils/validation.py)
-for how they validate and convert input types). If the decorator becomes
-hard to maintain or debug, switching to explicit checks per function is
-a reasonable alternative.
+at the top of each estimator method. An earlier version used an `@accepts_text`
+decorator that wrapped every measure, but making each measure resolve its own
+input keeps the resolved model id in scope for the result's `parameters` and
+avoids signature-patching machinery.
 
 ## Known limitations
 
