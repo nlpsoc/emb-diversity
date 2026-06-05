@@ -84,7 +84,7 @@ print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased")
 # -> {'graph_entropy': 6.80..., 'vendi_score': 1.52..., 'mean_pw_dist': 0.11...}
 ```
 
-You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. For example, log determinat here is finding that the more topic-uniform text set is supposedly more diverse. 
+You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
 ```python
 # Run specific measures
 print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
