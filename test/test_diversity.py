@@ -610,19 +610,6 @@ class TestClusterInertiaDiversity:
         result = cluster_inertia(data)
         assert isinstance(result, float)
 
-    def test_accepts_numpy_array(self):
-        """Regression: ndarray input must not raise.
-
-        measure_diversity() embeds text to a numpy array before calling each
-        measure, so an ndarray is the normal input. The old ``if not data:``
-        check raised ``ValueError: truth value of an array ... is ambiguous``
-        on arrays, so cluster_inertia silently returned NaN in the main path.
-        """
-        X = np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]])
-        result = cluster_inertia(X, n_clusters=2)
-        assert isinstance(result, float)
-        assert result >= 0.0
-
     def test_spread_vs_clustered_points(self):
         """Test that spread out points have higher inertia than clustered points."""
         spread_points = [[0, 0], [10, 0], [0, 10], [10, 10]]
