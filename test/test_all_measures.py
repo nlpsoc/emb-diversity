@@ -7,7 +7,7 @@ pass/fail case. Behaviours specific to a single measure live in test_diversity.p
 import numpy as np
 import pytest
 
-from emb_diversity import dcscore, graph_entropy, log_determinant, vendi_score
+from emb_diversity import dcscore, graph_entropy, log_determinant, renyi_entropy, vendi_score
 from emb_diversity.measures_registry import measures
 
 
@@ -48,18 +48,40 @@ class TestAllMeasures:
 
 
 class TestZeroNormVectorConsistency:
-    """A zero-norm (all-zero) vector makes cosine/normalized similarity
-    undefined; every cosine-based measure should raise ValueError consistently
-    rather than silently returning nan or a degenerate value."""
+    """A zero-norm (all-zero) vector makes cosine / normalized similarity
+    undefined. No measure should silently return nan: cosine-based measures
+    raise ValueError, the rest return a finite value. Parametrized over the
+    whole registry so a new (or overlooked) measure cannot quietly
+    reintroduce the nan."""
 
     @staticmethod
     def _with_zero():
-        """Three 2D points where the second is the (degenerate) zero vector."""
-        return np.array([[1.0, 0.0], [0.0, 0.0], [1.0, 1.0]])
+        """50 points in 16-D with one (degenerate) all-zero row.
 
-    @pytest.mark.parametrize("measure", [graph_entropy, vendi_score, dcscore, log_determinant])
-    def test_zero_norm_raises(self, measure):
-        """Each cosine-based measure raises ValueError on a zero-norm vector."""
+        Large enough for measures that need several points (e.g.
+        spectral / projection-based ones), matching ``_vectors`` above.
+        """
+        X = np.random.RandomState(0).randn(50, 16)
+        X[7] = 0.0
+        return X
+
+    @pytest.mark.parametrize("name", sorted(measures))
+    def test_zero_norm_never_returns_nan(self, name):
+        """No measure silently returns nan on a zero-norm vector: it either
+        raises ValueError (cosine-based, undefined) or returns a finite value."""
+        try:
+            result = measures[name](self._with_zero())["value"]
+        except ValueError:
+            return  # acceptable: the degenerate input is explicitly rejected
+        assert np.isfinite(result), f"{name} returned non-finite {result!r}"
+
+    @pytest.mark.parametrize("measure", [vendi_score, dcscore, log_determinant, renyi_entropy])
+    def test_normalizing_kernel_measures_raise(self, measure):
+        """The L2-normalizing kernel measures raise on a zero-norm vector (with
+        default normalize=True) rather than silently treating it as
+        zero-similarity. The registry-wide ``never_returns_nan`` test cannot
+        catch this: these measures previously returned a finite but degenerate
+        value, so only an explicit raise check enforces the consistency."""
         with pytest.raises(ValueError):
             measure(self._with_zero())
 
@@ -68,7 +90,7 @@ class TestZeroNormVectorConsistency:
         with pytest.raises(ValueError):
             vendi_score(self._with_zero(), use_dual=False)
 
-    @pytest.mark.parametrize("measure", [vendi_score, dcscore, log_determinant])
+    @pytest.mark.parametrize("measure", [vendi_score, dcscore, log_determinant, renyi_entropy])
     def test_normalize_false_does_not_raise(self, measure):
         """With normalize=False no row is divided by its norm, so a zero vector is fine."""
         result = measure(self._with_zero(), normalize=False)["value"]

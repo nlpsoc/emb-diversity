@@ -54,7 +54,17 @@ def span_centroid(
     centroid = X.mean(axis=0, keepdims=True)
 
     # Distances D_i = d(x_i, μ), shape (n, 1) → flatten to (n,)
+    # cdist is called directly here (point→centroid), so it bypasses the NaN
+    # guard in compute_pairwise_distances; replicate it. A NaN means a
+    # degenerate input for this metric, e.g. a zero-norm (all-zero) vector
+    # under cosine, where the distance divides by the vector norm.
     dists = cdist(X, centroid, metric=metric, **metric_kwargs).ravel()
+    if np.isnan(dists).any():
+        raise ValueError(
+            f"distance computation produced NaN with metric={metric!r}; "
+            "this usually means a degenerate input, e.g. a zero-norm "
+            "(all-zero) vector under cosine distance"
+        )
 
     # Span = Percentile_p(D)
     return {
