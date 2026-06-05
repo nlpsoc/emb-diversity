@@ -61,9 +61,13 @@ def cluster_inertia(
     # Adjust number of clusters only if fewer datapoints than requested clusters
     actual_clusters = n - 1 if n < n_clusters else n_clusters
 
-    kmeans = KMeans(n_clusters=actual_clusters, random_state=42) # , n_init=10 is a value to determine how many times the k-means algorithm will be run with different centroid seeds
+    kmeans = KMeans(n_clusters=actual_clusters, random_state=42)  # , n_init=10 is a value to determine how many times the k-means algorithm will be run with different centroid seeds
     kmeans.fit(X)
     return {
         "value": float(kmeans.inertia_),
-        "parameters": {"n_clusters": n_clusters, "embedding_model": embedding_model},
+        "parameters": {
+            "n_clusters": actual_clusters,
+            "n_clusters_requested": n_clusters,
+            "embedding_model": embedding_model,
+        },
     }
