@@ -100,7 +100,6 @@ Note that most measures return unbounded values that cannot be compared for data
 
 - [Install](#install)
 - [Usage](#usage)
-- [Available Measures](#available-measures)
 - [Development](#development)
   - [Development setup](#development-setup)
   - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
@@ -108,12 +107,8 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
-- [Citation](#citation)
 - [Funding](#funding)
-
-## Available Measures
-
-For an overview of all available measures, see the [documentation](https://nlpsoc.github.io/Diversity-Measurement/#available-measures).
+- [Citation](#citation)
 
 ## Development
 
@@ -289,6 +284,10 @@ axes.register(
 
 Update `docs/source/user-guide/axes.md` with the new axis.
 
+## Funding
+
+This work is supported by the ERC Starting Grant **DataDivers** (101162980).
+
 ## Citation
 
 <!-- docs-citation-start -->
@@ -303,7 +302,3 @@ the software:
 }
 ```
 <!-- docs-citation-end -->
-
-## Funding
-
-This work is supported by the ERC Starting Grant **DataDivers** (101162980).
