@@ -22,7 +22,7 @@ measure_diversity(vectors, measure="variety")
 measure_diversity(vectors, measure=["mean_pw_dist", "diameter"])
 ```
 
-Each measure returns `{"value": <float>, "parameters": {...}}`. For vector input
+Each measure returns `{"value": <float>, "parameters": {...}}`. For vector input,
 no embedding happens, so `parameters["embedding_model"]` is `None`:
 
 ```python
