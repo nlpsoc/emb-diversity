@@ -287,19 +287,32 @@ Update `docs/source/user-guide/axes.md` with the new axis.
 
 ### Building and publishing a release
 
-Releases are published by CI: pushing a version tag triggers the
-`publish-testpypi.yml` workflow, which builds the package and uploads it to
-TestPyPI via PyPI Trusted Publishing (no API token is stored). To cut a release:
+Releases are published by CI via PyPI Trusted Publishing (no API token is
+stored), in two stages — a TestPyPI dry run, then production PyPI:
 
 1. **Bump `version`** in `pyproject.toml`, commit, and merge to `main`. A version
    number can be uploaded only once, so every release needs a new number — you
    cannot re-publish or overwrite an existing version.
-2. **Tag and push** — this triggers the publish (the workflow checks that the tag
-   matches the `pyproject.toml` version):
+2. **Tag and push → TestPyPI.** Pushing a `v*` tag triggers `publish-testpypi.yml`
+   (it checks the tag matches the `pyproject.toml` version):
    ```bash
    git tag v0.0.1          # must match the version in pyproject.toml
    git push origin v0.0.1
    ```
+   Verify the result at <https://test.pypi.org/project/emb-diversity/>.
+3. **Create a GitHub Release → PyPI.** When the TestPyPI run looks good, create a
+   GitHub Release for the tag. That triggers `publish-pypi.yml`, which uploads to
+   real PyPI (<https://pypi.org/project/emb-diversity/>). Create the release either:
+   - **on GitHub:** go to the repository's **Releases** page (right-hand sidebar of
+     the repo, or `.../releases`) → **Draft a new release** → under *Choose a tag*
+     pick the existing tag (e.g. `v0.0.1`) → add a title and notes → **Publish
+     release**; or
+   - **with the GitHub CLI:**
+     ```bash
+     gh release create v0.0.1 --title "v0.0.1" --notes "First release"
+     ```
+
+   Publishing the release (not just drafting it) is what triggers the workflow.
 
 To build and validate **locally** before tagging (optional):
 
