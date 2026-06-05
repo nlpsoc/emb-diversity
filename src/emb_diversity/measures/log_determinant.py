@@ -4,6 +4,7 @@ from typing import Sequence
 
 from ..embed import resolve_embeddings
 from ._types import MeasureResult
+from .utils import _require_nonzero_norms
 
 ### Distribution-Based Diversity Measure
 
@@ -106,9 +107,7 @@ def log_determinant(
     # ---- 1) Build kernel matrix K ----
     if kernel_type == "cs":
         if normalize:
-            norms = np.linalg.norm(X, axis=1, keepdims=True)
-            norms = np.clip(norms, 1e-12, None)
-            X_use = X / norms
+            X_use = X / _require_nonzero_norms(X)[:, None]
         else:
             X_use = X
         K = (X_use @ X_use.T) / tau

@@ -4,6 +4,7 @@ from typing import Sequence
 
 from ..embed import resolve_embeddings
 from ._types import MeasureResult
+from .utils import _require_nonzero_norms
 
 ### Distribution-Based Diversity Measure
 
@@ -74,6 +75,10 @@ def vendi_score(
     if n < 2:
         raise ValueError("Cannot compute Vendi Score for fewer than 2 datapoints")
 
+    # Validate up front (when normalizing) so the dual and explicit paths behave
+    # the same: a zero-norm vector makes the normalized dot-product undefined.
+    norms = _require_nonzero_norms(X) if normalize else None
+
     # Case 1: use dual formulation (recommended when d <= n, or in general for embeddings)
     if use_dual:
         # vendi.score_dual handles normalization internally
@@ -82,9 +87,7 @@ def vendi_score(
     # Case 2: explicitly build similarity matrix K and call score_K
     # Here we use (normalized) dot product as similarity.
     if normalize:
-        norms = np.linalg.norm(X, axis=1, keepdims=True)
-        norms = np.clip(norms, a_min=1e-12, a_max=None)
-        X_norm = X / norms
+        X_norm = X / norms[:, None]
     else:
         X_norm = X
 
