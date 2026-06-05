@@ -9,10 +9,7 @@ description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-keywords = ["diversity", "nlp", "embeddings", "text-diversity", "metrics"]
-# Note: no "License ::" classifier on purpose. The `license` field above is an
-# SPDX expression (Metadata 2.4); pairing it with a license classifier is
-# deprecated and errors on recent setuptools.
+keywords = ["diversity", "nlp", "embeddings", "text-diversißty", "metrics"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
