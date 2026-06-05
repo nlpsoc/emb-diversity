@@ -9,7 +9,7 @@ description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-keywords = ["diversity", "nlp", "embeddings", "text-diversißty", "metrics"]
+keywords = ["diversity", "nlp", "embeddings", "emb-diversity", "metrics"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
