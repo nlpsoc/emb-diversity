@@ -8,21 +8,6 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
 
-## Table of Contents
-
-- [Install](#install)
-- [Usage](#usage)
-- [Available Measures](#available-measures)
-- [Development](#development)
-  - [Development setup](#development-setup)
-  - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
-  - [Working with uv](#working-with-uv)
-  - [Docstring Style Guide](#docstring-style-guide)
-  - [Adding New Measures](#adding-new-measures)
-  - [Adding New Diversity Axes](#adding-new-diversity-axes)
-- [Citation](#citation)
-- [Funding](#funding)
-
 ## Install
 
 <!-- docs-install-start -->
@@ -110,6 +95,21 @@ print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 
 Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!
 <!-- docs-quickstart-end -->
+
+## Table of Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [Available Measures](#available-measures)
+- [Development](#development)
+  - [Development setup](#development-setup)
+  - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
+  - [Working with uv](#working-with-uv)
+  - [Docstring Style Guide](#docstring-style-guide)
+  - [Adding New Measures](#adding-new-measures)
+  - [Adding New Diversity Axes](#adding-new-diversity-axes)
+- [Citation](#citation)
+- [Funding](#funding)
 
 ## Available Measures
 
@@ -296,10 +296,9 @@ There is no paper yet, so if you use `emb-diversity` in your work, please cite
 the software:
 
 ```bibtex
-@software{emb_diversity,
+@misc{emb_diversity,
   author = {Su, Cantao and Wegmann, Anna and Velayuthan, Menan and Nguyen, Dong and Ploeger, Esther},
-  title  = {{emb-diversity}: Embedding-based diversity measures for text and vector data},
-  year   = {2026},
+  title  = {emb-diversity},
   url    = {https://github.com/nlpsoc/Diversity-Measurement},
 }
 ```
