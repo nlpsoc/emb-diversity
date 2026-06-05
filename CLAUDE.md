@@ -63,6 +63,24 @@ measure that is not registered, which catches typos.
 
 (The `README.md` "Development" section also covers these two workflows.)
 
+## Writing tests
+
+Match the existing style in `test/` (see `test_diversity.py` and
+`test_measure_sets.py`) so the suite stays consistent:
+
+- **Group related tests in a class** named `Test<Thing>`, with `test_*`
+  methods that each have a one-line docstring describing the behaviour.
+- **Construct inputs inline** — small Python lists, or
+  `np.random.RandomState(seed)` for arrays (seed for reproducibility). A
+  `@staticmethod` helper for shared fixtures is fine (e.g. `_toy`, `_vectors`).
+- Use plain `assert`; use `np.isclose(...)` for floats and
+  `pytest.raises(ValueError, match="...")` for error cases.
+- **Do not use `pytest.mark.parametrize`** — no test in the suite does; loop
+  over cases inside one method and collect failures into a list instead.
+- When testing a measure, exercise it on a **numpy array** (the input
+  `measure_diversity` actually passes), not only on Python lists — the
+  `cluster_inertia` bug hid for exactly this reason.
+
 ## Build, test, lock
 
 ```bash
