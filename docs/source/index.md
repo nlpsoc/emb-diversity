@@ -19,13 +19,6 @@
 :end-before: <!-- docs-quickstart-end -->
 ```
 
-## Citation
-
-```{include} ../../README.md
-:start-after: <!-- docs-citation-start -->
-:end-before: <!-- docs-citation-end -->
-```
-
 ## User Guide
 
 ```{toctree}
@@ -51,3 +44,10 @@ emb_diversity
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
+
+## Citation
+
+```{include} ../../README.md
+:start-after: <!-- docs-citation-start -->
+:end-before: <!-- docs-citation-end -->
+```
