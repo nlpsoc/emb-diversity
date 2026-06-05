@@ -107,6 +107,7 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
+  - [Building and publishing a release](#building-and-publishing-a-release)
 - [Funding](#funding)
 - [Citation](#citation)
 
@@ -283,6 +284,31 @@ axes.register(
 ```
 
 Update `docs/source/user-guide/axes.md` with the new axis.
+
+### Building and publishing a release
+
+Building and publishing are separate steps with separate tools: `uv build`
+creates the distribution files, and `uv publish` uploads them. `twine` is only
+used for the pre-flight check, run through `uvx` so it never has to be installed.
+
+```bash
+# 1. Bump `version` in pyproject.toml.
+
+# 2. Build the source distribution + wheel into dist/.
+uv build
+
+# 3. Validate the artifacts and that the README will render on PyPI.
+uvx twine check dist/*
+
+# 4. Upload. Test on TestPyPI first, then the real PyPI.
+uv publish --publish-url https://test.pypi.org/legacy/ --token <TESTPYPI_TOKEN>
+uv publish --token <PYPI_TOKEN>
+```
+
+Create API tokens under *Account → API tokens* on
+[test.pypi.org](https://test.pypi.org/) and [pypi.org](https://pypi.org/), and
+never commit them. Each version number can be uploaded only once — to
+re-release, bump the version first.
 
 ## Funding
 
