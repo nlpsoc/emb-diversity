@@ -175,9 +175,9 @@ class TestMeasuresAreCached:
             monkeypatch.setattr(mod, "_compute_pairwise_distances", _patched)
 
         data = _data(n=30, d=8)
-        v1 = mpd.mean_pw_dist(data, metric="cosine")
-        v2 = dia.diameter(data, metric="cosine")
-        v3 = ene.energy(data, metric="cosine")
+        v1 = mpd.mean_pw_dist(data, metric="cosine")["value"]
+        v2 = dia.diameter(data, metric="cosine")["value"]
+        v3 = ene.energy(data, metric="cosine")["value"]
 
         # All three measures returned valid floats
         assert all(isinstance(v, float) for v in (v1, v2, v3))

@@ -193,19 +193,26 @@ def _read_texts(path: Path, column: str) -> list[str]:
         raise typer.Exit(code=1)
 
 
-def _print_results(results: dict[str, float], fmt: str) -> None:
-    """Format and print results."""
+def _print_results(results: dict[str, dict], fmt: str) -> None:
+    """Format and print results.
+
+    Each value in *results* is a ``{"value": float, "parameters": {...}}`` dict.
+    The table and csv formats show the scalar score; json emits the full nested
+    structure (including parameters).
+    """
     if fmt == "json":
-        typer.echo(json.dumps(results, indent=2))
+        # default=str so a callable metric (or other non-serializable param)
+        # can't break serialization.
+        typer.echo(json.dumps(results, indent=2, default=str))
     elif fmt == "csv":
         writer = csv.writer(sys.stdout)
         writer.writerow(["measure", "score"])
-        for name, score in results.items():
-            writer.writerow([name, score])
+        for name, result in results.items():
+            writer.writerow([name, result["value"]])
     else:  # table
         max_name = max(len(n) for n in results) if results else 0
-        for name, score in results.items():
-            typer.echo(f"  {name:<{max_name}}  {score:.6f}")
+        for name, result in results.items():
+            typer.echo(f"  {name:<{max_name}}  {result['value']:.6f}")
 
 
 if __name__ == "__main__":

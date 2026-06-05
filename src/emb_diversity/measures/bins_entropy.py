@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from .._accepts_text import accepts_text
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
@@ -14,7 +15,6 @@ except Exception:
 
 
 
-@accepts_text
 def bins_entropy(
     data,
     n_bins_x: int = 5,
@@ -24,7 +24,10 @@ def bins_entropy(
     projection: str = "umap",
     pca_kwargs=None,
     umap_kwargs=None,
-) -> float:
+    *,
+    diversity_axis: str = "semantic",
+    embedding_model: str | None = None,
+) -> MeasureResult:
     """Compute bins-based entropy diversity from a 2D projection.
 
     1) Project embeddings to 2D with UMAP or PCA.
@@ -59,15 +62,20 @@ def bins_entropy(
             Extra kwargs passed to UMAP(...).
             Defaults to None (treated as {}).
             If random_state is not provided, random_state=42 is used.
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
-        float: bins-based-entropy (normalized if normalize=True) as a float between 0 and 1 (if effective normalization, which is default), where larger values indicate greater diversity.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        bins-based entropy (normalized to [0, 1] if normalize=True with the
+        default effective normalization; larger = more diverse) and
+        ``parameters`` records the configuration used.
 
     Raises:
         ImportError: If projection is "umap" but UMAP is not installed.
         ValueError: If input shape, bins, projection, or normalization is invalid.
     """
-
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
     # Normalize input to numpy array
     X = np.asarray(data, dtype=float)
@@ -99,6 +107,17 @@ def bins_entropy(
         umap_kwargs = {}
     else:
         umap_kwargs = dict(umap_kwargs)  # copy
+
+    parameters = {
+        "n_bins_x": n_bins_x,
+        "n_bins_y": n_bins_y,
+        "normalize": normalize,
+        "normalization": normalization,
+        "projection": projection,
+        "pca_kwargs": pca_kwargs,
+        "umap_kwargs": umap_kwargs,
+        "embedding_model": embedding_model,
+    }
 
     # 2D projection
     # (User can still override solver/whiten/etc via kwargs)
@@ -150,7 +169,7 @@ def bins_entropy(
     if normalize:
         if total_bins <= 1:
             # With a 1x1 grid, entropy is always 0; avoid division by zero
-            return 0.0
+            return {"value": 0.0, "parameters": parameters}
 
         if normalization not in {"effective", "bins"}:
             raise ValueError('normalization must be either "effective" or "bins"')
@@ -158,7 +177,7 @@ def bins_entropy(
         denom_bins = min(n, total_bins) if normalization == "effective" else total_bins
         denom = np.log(denom_bins)
         if denom <= 0:
-            return 0.0
+            return {"value": 0.0, "parameters": parameters}
 
         entropy = entropy / denom
 
@@ -166,4 +185,4 @@ def bins_entropy(
         if normalization == "effective":
             entropy = float(np.clip(entropy, 0.0, 1.0))
 
-    return float(entropy)
+    return {"value": float(entropy), "parameters": parameters}

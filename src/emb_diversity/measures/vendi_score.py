@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .._accepts_text import accepts_text
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
@@ -11,13 +12,15 @@ from vendi_score import vendi
 
 
 
-@accepts_text
 def vendi_score(
         data: Sequence[Sequence[float]],
         q: float = 1.0,
         normalize: bool = True,
         use_dual: bool = True,
-) -> float:
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+) -> MeasureResult:
     """
     Compute diversity using the Vendi Score (Friedman & Dieng, 2023).
 
@@ -41,8 +44,13 @@ def vendi_score(
             If True, use vendi.score_dual(X, ...) which is efficient when d < n.
             If False, build a Gram matrix K and call vendi.score_K(K, ...).
 
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
+
     Returns:
-        The Vendi Score as a float. Higher values indicate higher diversity.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        Vendi Score (higher = more diverse) and ``parameters`` records the
+        configuration used.
 
     Raises:
         ImportError:
@@ -50,6 +58,14 @@ def vendi_score(
         ValueError:
             If there are fewer than 2 datapoints.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    parameters = {
+        "q": q,
+        "normalize": normalize,
+        "use_dual": use_dual,
+        "embedding_model": embedding_model,
+    }
+
     X = np.asarray(data, dtype=float)
     if X.ndim != 2:
         raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")
@@ -61,7 +77,7 @@ def vendi_score(
     # Case 1: use dual formulation (recommended when d <= n, or in general for embeddings)
     if use_dual:
         # vendi.score_dual handles normalization internally
-        return float(vendi.score_dual(X, q=q, normalize=normalize))
+        return {"value": float(vendi.score_dual(X, q=q, normalize=normalize)), "parameters": parameters}
 
     # Case 2: explicitly build similarity matrix K and call score_K
     # Here we use (normalized) dot product as similarity.
@@ -73,4 +89,4 @@ def vendi_score(
         X_norm = X
 
     K = X_norm @ X_norm.T  # Gram matrix of similarities
-    return float(vendi.score_K(K, q=q))
+    return {"value": float(vendi.score_K(K, q=q)), "parameters": parameters}

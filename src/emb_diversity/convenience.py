@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measures
-from .embed import embed_texts
 
 
 def measure_diversity(
@@ -11,12 +10,13 @@ def measure_diversity(
     measure: str | list[str] | None = None,
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
-) -> dict[str, float]:
+) -> dict[str, dict]:
     """Measure diversity of texts or embeddings.
 
-    This is the main entry point for measuring diversity. It handles
-    embedding (if given text), resolving measure names (including named
-    set and "all" shortcuts), and running the measures.
+    This is the main entry point for measuring diversity. It resolves measure
+    names (including named set and "all" shortcuts) and runs the measures. Each
+    measure embeds text itself; the embedding disk cache means text is encoded
+    only once and reused across measures.
 
     Args:
         data: A list of text strings, or embedding vectors (n, d).
@@ -30,14 +30,16 @@ def measure_diversity(
         embedding_model: Explicit model id; overrides *diversity_axis*.
 
     Returns:
-        Dict mapping measure name to score.
+        Dict mapping each measure name to its result, a dict of the form
+        ``{"value": float, "parameters": {...}}`` where ``parameters`` records
+        the configuration used (including the resolved ``embedding_model``).
 
     Example:
         >>> from emb_diversity import measure_diversity
         >>> measure_diversity(["The cat sat.", "Dogs play fetch."])
-        {'graph_entropy': ...}
+        {'graph_entropy': {'value': ..., 'parameters': {'metric': 'cosine', 'embedding_model': ...}}}
         >>> measure_diversity(texts, measure="variety")
-        {'chamfer_dist': ..., 'sum_bottleneck': ..., 'mst_dispersion': ...}
+        {'chamfer_dist': {'value': ..., 'parameters': {...}}, 'sum_bottleneck': {...}, 'mst_dispersion': {...}}
     """
     # ── Resolve measure names ────────────────────────────────────
     measure_names = _resolve_measure_names(measure)
@@ -49,19 +51,18 @@ def measure_diversity(
                 f"Unknown measure {name!r}. Available: {sorted(measures)}"
             )
 
-    # ── Embed once if text, then pass vectors to all measures ────
-    # We embed here rather than letting each measure's @accepts_text
-    # decorator do it, to avoid re-embedding for every measure.
-    if len(data) > 0 and isinstance(data[0], str):
-        data = embed_texts(data, diversity_axis=diversity_axis, embedding_model=embedding_model)
-
     # ── Compute ──────────────────────────────────────────────────
-    results: dict[str, float] = {}
+    # Each measure resolves + embeds its input itself. When *data* is text, the
+    # first measure populates the embedding disk cache and the rest hit it, so
+    # the model runs only once.
+    results: dict[str, dict] = {}
     for name in measure_names:
         try:
-            results[name] = measures[name](data)
+            results[name] = measures[name](
+                data, diversity_axis=diversity_axis, embedding_model=embedding_model
+            )
         except Exception:
-            results[name] = float("nan")
+            results[name] = {"value": float("nan"), "parameters": {}}
     return results
 
 

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .._accepts_text import accepts_text
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
@@ -13,7 +14,6 @@ _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
 
 
 
-@accepts_text
 def renyi_entropy(
         data: Sequence[Sequence[float]],
         alpha: float = 2.0,
@@ -22,7 +22,10 @@ def renyi_entropy(
         normalize: bool = True,
         eps: float = 1e-12,
         use_eigendecomp: bool | None = None,
-) -> float:
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+) -> MeasureResult:
     """
     Rényi Kernel Entropy (RKE) / Matrix-based Rényi entropy.
 
@@ -61,8 +64,21 @@ def renyi_entropy(
             If False: forbid eigendecomp (will error if alpha not in {1,2}).
 
     Returns:
-        float: RKE score (higher => more diverse).
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        RKE score (higher => more diverse) and ``parameters`` records the
+        configuration used.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    parameters = {
+        "alpha": alpha,
+        "kernel_type": kernel_type,
+        "tau": tau,
+        "normalize": normalize,
+        "eps": eps,
+        "use_eigendecomp": use_eigendecomp,
+        "embedding_model": embedding_model,
+    }
+
     # ---- Validate inputs ----
     if kernel_type not in _KERNEL_TYPES:
         raise NotImplementedError(
@@ -104,20 +120,21 @@ def renyi_entropy(
     tr = float(np.trace(K))
     if not np.isfinite(tr) or tr <= eps:
         # Degenerate: everything zero-ish or numerical blow-up
-        return 0.0
+        return {"value": 0.0, "parameters": parameters}
 
     A = K / tr
 
     # Decide whether to eigendecompose
     if use_eigendecomp is None:
         use_eigendecomp = (abs(alpha - 2.0) > 1e-12) and (abs(alpha - 1.0) > 1e-12)
+    parameters["use_eigendecomp"] = use_eigendecomp
 
     # ---- 3) Compute entropy ----
     # Fast path: alpha = 2
     if abs(alpha - 2.0) <= 1e-12 and not use_eigendecomp:
         frob_sq = float(np.sum(A * A))  # ||A||_F^2 = tr(A^2)
         frob_sq = max(frob_sq, eps)
-        return float(-np.log(frob_sq))
+        return {"value": float(-np.log(frob_sq)), "parameters": parameters}
 
     # von Neumann entropy: alpha = 1
     if abs(alpha - 1.0) <= 1e-12:
@@ -125,7 +142,7 @@ def renyi_entropy(
         evals = np.linalg.eigvalsh(A)
         evals = np.clip(evals, eps, 1.0)
         evals = evals / float(np.sum(evals))  # keep sum=1 (numerical)
-        return float(-np.sum(evals * np.log(evals)))
+        return {"value": float(-np.sum(evals * np.log(evals))), "parameters": parameters}
 
     # General Rényi: need eigenvalues
     if not use_eigendecomp:
@@ -137,4 +154,4 @@ def renyi_entropy(
 
     s = float(np.sum(evals ** alpha))
     s = max(s, eps)
-    return float((1.0 / (1.0 - alpha)) * np.log(s))
+    return {"value": float((1.0 / (1.0 - alpha)) * np.log(s)), "parameters": parameters}
