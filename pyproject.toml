@@ -10,6 +10,24 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 keywords = ["diversity", "nlp", "embeddings", "text-diversity", "metrics"]
+# Note: no "License ::" classifier on purpose. The `license` field above is an
+# SPDX expression (Metadata 2.4); pairing it with a license classifier is
+# deprecated and errors on recent setuptools.
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
 authors = [
     {name = "Cantao Su", email = "c.su@uu.nl"},
     {name = "Menan Velayuthan", email = "m.velayuthan@uu.nl"},
