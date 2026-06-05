@@ -22,3 +22,11 @@ measure_diversity(vectors, measure="variety")
 measure_diversity(vectors, measure=["mean_pw_dist", "diameter"])
 ```
 
+Each measure returns `{"value": <float>, "parameters": {...}}`. For vector input
+no embedding happens, so `parameters["embedding_model"]` is `None`:
+
+```python
+measure_diversity(vectors, measure="mean_pw_dist")
+# {'mean_pw_dist': {'value': 1.39, 'parameters': {'metric': 'cosine', 'embedding_model': None}}}
+```
+

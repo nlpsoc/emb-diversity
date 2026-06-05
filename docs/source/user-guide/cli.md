@@ -67,6 +67,20 @@ emb-diversity measure data.tsv --column sentence
 emb-diversity measure texts.txt -m variety --format json
 ```
 
+**Output formats:**
+
+- `table` (default) and `csv` show one score (the measure's `value`) per measure.
+- `json` emits the full result per measure, including the `parameters` used:
+
+  ```json
+  {
+    "mean_pw_dist": {
+      "value": 0.71,
+      "parameters": {"metric": "cosine", "embedding_model": "..."}
+    }
+  }
+  ```
+
 **Input formats:**
 
 - `.txt`: one text per line
