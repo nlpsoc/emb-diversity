@@ -73,16 +73,11 @@ Match the existing style in `test/` (see `test_diversity.py` and
 - **Construct inputs inline** — small Python lists, or
   `np.random.RandomState(seed)` for arrays (seed for reproducibility). A
   `@staticmethod` helper for shared fixtures is fine (e.g. `_toy`, `_vectors`).
-- Use plain `assert`; use `np.isclose(...)` for floats and
-  `pytest.raises(ValueError, match="...")` for error cases.
 - **Use `pytest.mark.parametrize`** when running the same assertion across many
   cases (e.g. every registered measure) — it reports each case as its own
   pass/fail and lets you re-run one with `pytest -k <case>`. See
   `test_convenience.py`. (It composes with the `Test…` class; put it on the
   method.)
-- When testing a measure, exercise it on a **numpy array** (the input
-  `measure_diversity` actually passes), not only on Python lists — the
-  `cluster_inertia` bug hid for exactly this reason.
 
 ## Build, test, lock
 
