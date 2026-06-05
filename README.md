@@ -25,7 +25,7 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 <!-- docs-quickstart-start -->
 
-Let's assume you have two text corpora that you want to compare in terms of their diversity. The simplest way to do this is by calling the `measure_diversity` function on each corpus.
+Measuring the diversity of a dataset with our package is easy: 
 
 ```python
 from emb_diversity import measure_diversity
@@ -39,6 +39,14 @@ texts_a = [
     "The 80's rocked!That generation had the best music!"
 ]
 
+# Uses the default measures and semantic embeddings
+print(measure_diversity(texts_a))
+# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
+```
+
+Note that measuring the diversity of a dataset is usually only meaningful when comparing it to another datasets. The reason is that diversity values in isolation are not easily interpretable and are not bounded, sensitive to dataset size and sensitive to the used embedding space. Let's add another corpus. 
+
+```python
 # more style-uniform (formal), more topic-diverse
 texts_b = [
     "I thoroughly enjoy the hair bands.",
@@ -48,7 +56,6 @@ texts_b = [
     "I would go out with the son of a preacher.",
 ]
 
-# Default measure (graph_entropy), semantic embeddings
 print(measure_diversity(texts_a))
 # -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
 
@@ -56,7 +63,7 @@ print(measure_diversity(texts_b))
 # -> {'graph_entropy': 6.91..., 'vendi_score': 4.93..., 'mean_pw_dist': 0.98...}
 ```
 
-Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
+When a measure considers a dataset to be more diverse, it will assign it a higher diversity value. Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
 
 ```python
 # Use a different diversity axis, for style diversity AnnaWegmann/style-embeddings is the default
@@ -66,7 +73,7 @@ print(measure_diversity(texts_b, diversity_axis="style"))
 # -> {'graph_entropy': 6.32..., 'vendi_score': 2.24..., 'mean_pw_dist': 0.32...}
 ```
 
-You can also select a specific embedding model, for example, a model trained for a different language than Dutch. Be careful to use models that were trained on the diversity axis you are interested in, otherwise you might get some weird results!
+You can also specify a different embedding model with a HuggingFace identifier, for example, a model trained for Dutch. Be careful to use models that were trained on the diversity axis you are interested in, otherwise you might get some inconsistent results!
 
 ```python
 # Use a specific embedding model (here a small, fast SBERT model)
@@ -76,7 +83,7 @@ print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased")
 # -> {'graph_entropy': 6.80..., 'vendi_score': 1.52..., 'mean_pw_dist': 0.11...}
 ```
 
-You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse than others.
+You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. For example, log determinat here is finding that the more topic-uniform text set is supposedly more diverse. 
 ```python
 # Run specific measures
 print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
