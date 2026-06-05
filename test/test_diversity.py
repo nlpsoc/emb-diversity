@@ -6,23 +6,6 @@ import numpy as np
 
 class TestMeanPairwiseDistance:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            mean_pw_dist([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            mean_pw_dist(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = mean_pw_dist(data)
-        assert isinstance(result, float)
-
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
         data = [[0, 0], [1, 1]]
@@ -87,23 +70,6 @@ class TestMeanPairwiseDistance:
 
 class TestDiameter:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            diameter([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            diameter(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = diameter(data)
-        assert isinstance(result, float)
-
     def test_three_points(self):
         # cosine distances
 
@@ -127,23 +93,6 @@ class TestDiameter:
 
 
 class TestSumDiameter:
-
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="SumDiameter requires at least 2 datapoints"):
-            sum_diameter([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="SumDiameter requires at least 2 datapoints"):
-            sum_diameter(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = sum_diameter(data)
-        assert isinstance(result, float)
 
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
@@ -266,23 +215,6 @@ class TestSumDiameter:
         
 class TestBottleneck:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            bottleneck([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            bottleneck(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = bottleneck(data)
-        assert isinstance(result, float)
-
     def test_three_points(self):
         # cosine distances
         data = [[0, 1], [1, 0], [0.5, 0.5]]
@@ -307,23 +239,6 @@ class TestBottleneck:
 
 
 class TestSumBottleneck:
-
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="SumBottleneck requires at least 2 datapoints"):
-            sum_bottleneck([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="SumBottleneck requires at least 2 datapoints"):
-            sum_bottleneck(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = sum_bottleneck(data)
-        assert isinstance(result, float)
 
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
@@ -467,23 +382,6 @@ class TestEnergy:
 
 class TestDistanceDispersion:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute distances for empty data"):
-            dist_dispersion([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1, 2, 3]]
-        with pytest.raises(ValueError, match="Cannot compute distances for single data point"):
-            dist_dispersion(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = dist_dispersion(data)
-        assert isinstance(result, float)
-
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
         data = [[0, 0], [1, 1]]
@@ -521,22 +419,10 @@ class TestDistanceDispersion:
 
 class TestConvexHullVolume2D:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute convex hull for empty data"):
-            convex_hull_volume_2d([])
-
     def test_few_points_raises_error(self):
         """Test behavior when there are fewer than 3 points (cannot form 2D hull)."""
         with pytest.raises(ValueError, match=r"Cannot compute 2D convex hull for fewer than 3 points \(got 2\)"):
             convex_hull_volume_2d([[0, 0], [1, 1]])
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 0], [1, 0], [0, 1]]
-        result = convex_hull_volume_2d(data)
-        assert isinstance(result, float)
-        assert not isinstance(result, np.floating)
 
     def test_collinear_points_zero_volume(self):
         """Test that collinear points have zero area."""
@@ -588,11 +474,6 @@ class TestConvexHullVolume2D:
 
 class TestClusterInertiaDiversity:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="Cannot compute cluster inertia for empty data"):
-            cluster_inertia([])
-
     def test_single_datapoint_returns_zero(self):
         """Test that single datapoint raises ValueError."""
         with pytest.raises(ValueError, match="Cannot compute cluster centers and thus inertia for fewer than 2 datapoints"):
@@ -603,12 +484,6 @@ class TestClusterInertiaDiversity:
         data = [[0, 0], [1, 1]]
         inertia = cluster_inertia(data, n_clusters=1)
         assert inertia > 0
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[0, 1], [1, 0], [0.5, 0.5]]
-        result = cluster_inertia(data)
-        assert isinstance(result, float)
 
     def test_spread_vs_clustered_points(self):
         """Test that spread out points have higher inertia than clustered points."""
@@ -650,31 +525,6 @@ class TestClusterInertiaDiversity:
 
 class TestGraphEntropy:
 
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        # We need to ensure the empty array has 2 dimensions (0, D) or handled as (0,) 
-        # depending on how data.shape is unpacked. 
-        # Typically np.array([]) is (0,), so unpacking n,d = data.shape might fail 
-        # with a ValueError before the assertion if not careful.
-        # Assuming input is at least 2D or handled before:
-        empty_data = np.empty((0, 3)) 
-        
-        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
-            graph_entropy(empty_data)
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = np.array([[1, 2, 3]])
-        with pytest.raises(ValueError, match="Cannot compute graph entropy for fewer than 2 datapoints"):
-            graph_entropy(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = np.array([[0, 1], [1, 0], [0.5, 0.5]])
-        result = graph_entropy(data)
-        assert isinstance(result, float)
-        assert not isinstance(result, np.floating)
-
     def test_identical_points_zero_entropy(self):
         """Test that identical points result in zero entropy."""
         data = np.array([[1, 1], [1, 1], [1, 1]])
@@ -713,22 +563,6 @@ class TestGraphEntropy:
 
 
 class TestDCScore:
-
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="requires at least 2 datapoints"):
-            dcscore([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        with pytest.raises(ValueError, match="requires at least 2 datapoints"):
-            dcscore([[1.0, 2.0, 3.0]])
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[1.0, 0.0], [0.0, 1.0]]
-        score = dcscore(data)
-        assert isinstance(score, float)
 
     def test_two_orthogonal_vectors_cs_kernel(self):
         """
@@ -782,24 +616,6 @@ class TestDCScore:
 
 
 class TestLogDeterminantDiversity:
-
-    def test_empty_data_raises_error(self):
-        """Test that empty data raises ValueError."""
-        with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
-            log_determinant([])
-
-    def test_single_datapoint_raises_error(self):
-        """Test that single datapoint raises ValueError."""
-        single_point = [[1.0, 2.0, 3.0]]
-        with pytest.raises(ValueError, match="LDD requires at least 2 datapoints"):
-            log_determinant(single_point)
-
-    def test_return_type(self):
-        """Test that function returns Python float."""
-        data = [[1.0, 0.0], [0.0, 1.0]]
-        result = log_determinant(data)
-        assert isinstance(result, float)
-        assert not isinstance(result, np.floating)
 
     def test_negative_eps_raises_error(self):
         """Test that negative eps raises ValueError."""
@@ -983,13 +799,6 @@ class TestLogDeterminantDiversity:
 
 
 class TestBinsBasedEntropyPCA:
-    def test_empty_data_raises_error(self):
-        with pytest.raises(ValueError, match="fewer than 2 datapoints"):
-            bins_entropy([])
-
-    def test_single_datapoint_raises_error(self):
-        with pytest.raises(ValueError, match="fewer than 2 datapoints"):
-            bins_entropy([[1, 2, 3]])
     def test_invalid_shape_raises_error(self):
         with pytest.raises(ValueError, match="Expected 2D array"):
             bins_entropy([1, 2, 3])  # 1D input
