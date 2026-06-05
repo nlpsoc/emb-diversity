@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .._accepts_text import accepts_text
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
@@ -13,13 +14,15 @@ _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
 
 
 
-@accepts_text
 def dcscore(
         data: Sequence[Sequence[float]],
         kernel_type: str = "cs",
         tau: float = 1.0,
         normalize: bool = True,
-) -> float:
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+) -> MeasureResult:
     """
     Diversity metric based on DCScore (self-similarity with softmax over rows).
 
@@ -47,14 +50,19 @@ def dcscore(
         normalize:
             If True and kernel_type=="cs", L2-normalize embeddings row-wise
             before computing X Xᵀ, as in the original text-based DCScore.
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
-        A scalar DCScore value (float).
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        scalar DCScore and ``parameters`` records the configuration used.
 
     Raises:
         ValueError: If there are fewer than 2 datapoints or tau <= 0.
         NotImplementedError: For unknown kernel_type.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+
     # ---- Validate inputs ----
     if kernel_type not in _KERNEL_TYPES:
         raise NotImplementedError(
@@ -97,4 +105,12 @@ def dcscore(
 
     # ---- 3) Sum of diagonal of P ----
     score = float(np.trace(P))
-    return score
+    return {
+        "value": score,
+        "parameters": {
+            "kernel_type": kernel_type,
+            "tau": tau,
+            "normalize": normalize,
+            "embedding_model": embedding_model,
+        },
+    }

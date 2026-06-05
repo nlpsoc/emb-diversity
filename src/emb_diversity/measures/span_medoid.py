@@ -2,31 +2,37 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-from .._accepts_text import accepts_text
-from ._types import DISTANCE_METRIC
-
-### Volume-Based Diversity Measure
-
 import numpy as np
 from scipy.spatial.distance import squareform
 
+from ..embed import resolve_embeddings
+from ._types import DISTANCE_METRIC, MeasureResult
 from .utils import _compute_pairwise_distances
 
+### Volume-Based Diversity Measure
 
 
-@accepts_text
 def span_medoid(
         data: Sequence[Sequence[float]],
         metric: DISTANCE_METRIC = "cosine",
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
         **metric_kwargs: Any,
-) -> float:
+) -> MeasureResult:
     """
     Compute the Span with Medoid diversity measure (Cox et al., 2021).
+
+    Returns:
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        mean distance to the medoid and ``parameters`` records the configuration
+        used.
 
     Raises:
         ValueError:
             If data is empty or contains only one datapoint.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     # 1) pairwise distances (condensed) -> full matrix (n, n)
     dist_vec = _compute_pairwise_distances(data, metric, **metric_kwargs)
     dist_mat = squareform(dist_vec)  # symmetric, zeros on diagonal
@@ -39,4 +45,7 @@ def span_medoid(
 
     # 4) distances to the medoid, and take the average
     dists_to_medoid = dist_mat[:, medoid_idx]
-    return float(np.mean(dists_to_medoid))
+    return {
+        "value": float(np.mean(dists_to_medoid)),
+        "parameters": {"metric": metric, "embedding_model": embedding_model, **metric_kwargs},
+    }

@@ -8,6 +8,65 @@ from .axes_registry import axes
 from .embeddings.embed import encode
 
 
+def resolve_model_name(
+    diversity_axis: str | None = "semantic",
+    embedding_model: str | None = None,
+) -> str:
+    """Resolve which embedding model id will actually be used.
+
+    Resolution order:
+      1. If *embedding_model* is given, use it directly.
+      2. Otherwise look up *diversity_axis* in the axis registry.
+
+    Args:
+        diversity_axis: Registered axis name (default ``"semantic"``).
+        embedding_model: Explicit model id; overrides *diversity_axis*.
+
+    Returns:
+        The resolved model id string.
+    """
+    if embedding_model is not None:
+        return embedding_model
+    if diversity_axis is not None:
+        return axes.get(diversity_axis).default_model
+    raise ValueError(
+        "Either diversity_axis or embedding_model must be provided"
+    )
+
+
+def _is_text_input(data) -> bool:
+    """Return True if *data* looks like a list of strings."""
+    return len(data) > 0 and isinstance(data[0], str)
+
+
+def resolve_embeddings(
+    data,
+    diversity_axis: str | None = "semantic",
+    embedding_model: str | None = None,
+):
+    """Turn raw text into vectors, reporting the model that was used.
+
+    Text input is embedded and the resolved model id is returned alongside the
+    vectors. Numeric input (already embeddings) is passed through unchanged with
+    a ``None`` model id, since no embedding happened.
+
+    Args:
+        data: A list of text strings, or embedding vectors (n, d).
+        diversity_axis: Registered axis name (default ``"semantic"``).
+        embedding_model: Explicit model id; overrides *diversity_axis*.
+
+    Returns:
+        Tuple ``(vectors, resolved_model_or_None)``.
+    """
+    if _is_text_input(data):
+        # Resolve the model exactly once and embed with it. We call encode
+        # directly (rather than embed_texts) so the model is not re-resolved.
+        model_name = resolve_model_name(diversity_axis, embedding_model)
+        vectors = np.asarray(encode(data, model_name=model_name), dtype=float)
+        return vectors, model_name
+    return data, None
+
+
 def embed_texts(
     texts: list[str],
     diversity_axis: str | None = "semantic",
@@ -31,15 +90,6 @@ def embed_texts(
     Returns:
         numpy array of shape ``(len(texts), embedding_dim)``.
     """
-    if embedding_model is not None:
-        model_name = embedding_model
-    elif diversity_axis is not None:
-        axis = axes.get(diversity_axis)
-        model_name = axis.default_model
-    else:
-        raise ValueError(
-            "Either diversity_axis or embedding_model must be provided"
-        )
-
+    model_name = resolve_model_name(diversity_axis, embedding_model)
     vectors = encode(texts, model_name=model_name)
     return np.asarray(vectors, dtype=float)

@@ -12,13 +12,26 @@ from emb_diversity.measures_registry import measures
 
 class TestAllMeasures:
 
+    @staticmethod
+    def _vectors():
+        # 50 points in 16-D
+        return np.random.RandomState(0).randn(50, 16)
+
     @pytest.mark.parametrize("name", sorted(measures))
-    def test_returns_finite_float_on_ndarray(self, name):
-        """Every measure returns a finite float for numpy-array input."""
-        X = np.random.RandomState(0).randn(50, 16)
-        result = measures[name](X)
-        assert isinstance(result, float)
-        assert np.isfinite(result)
+    def test_result_contract(self, name):
+        """Every measure returns ``{"value": float, "parameters": {...}}``.
+
+        The value is a finite Python float, and ``parameters`` records an
+        ``embedding_model`` entry which is ``None`` for vector (non-text) input.
+        """
+        result = measures[name](self._vectors())
+
+        assert set(result.keys()) == {"value", "parameters"}
+        assert isinstance(result["value"], float)
+        assert np.isfinite(result["value"])
+        assert isinstance(result["parameters"], dict)
+        # Vector input is not embedded, so no model id is recorded.
+        assert result["parameters"]["embedding_model"] is None
 
     @pytest.mark.parametrize("name", sorted(measures))
     def test_empty_data_raises_value_error(self, name):

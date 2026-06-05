@@ -42,7 +42,11 @@ texts_a = [
 
 # Uses the default measures and semantic embeddings
 print(measure_diversity(texts_a))
-# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
+# Each result holds the score under 'value' and the configuration used under
+# 'parameters' (shown as ... below):
+# -> {'graph_entropy': {'value': 6.86..., ...},
+#     'vendi_score':   {'value': 4.12..., ...},
+#     'mean_pw_dist':  {'value': 0.69..., ...}}
 ```
 
 Note that measuring the diversity of a dataset is usually only meaningful when comparing it to another datasets. The reason is that diversity values in isolation are not easily interpretable and are not bounded, sensitive to dataset size and sensitive to the used embedding space. Let's add another corpus. 
@@ -58,10 +62,10 @@ texts_b = [
 ]
 
 print(measure_diversity(texts_a))
-# -> {'graph_entropy': 6.86..., 'vendi_score': 4.12..., 'mean_pw_dist': 0.69...}
+# -> {'graph_entropy': {'value': 6.86..., ...}, 'vendi_score': {'value': 4.12..., ...}, 'mean_pw_dist': {'value': 0.69..., ...}}
 
 print(measure_diversity(texts_b))
-# -> {'graph_entropy': 6.91..., 'vendi_score': 4.93..., 'mean_pw_dist': 0.98...}
+# -> {'graph_entropy': {'value': 6.91..., ...}, 'vendi_score': {'value': 4.93..., ...}, 'mean_pw_dist': {'value': 0.98..., ...}}
 ```
 
 When a measure considers a dataset to be more diverse, it will assign it a higher diversity value. Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
@@ -69,9 +73,9 @@ When a measure considers a dataset to be more diverse, it will assign it a highe
 ```python
 # Use a different diversity axis, for style diversity AnnaWegmann/style-embeddings is the default
 print(measure_diversity(texts_a, diversity_axis="style"))
-# -> {'graph_entropy': 6.69..., 'vendi_score': 4.17..., 'mean_pw_dist': 0.93...}
+# -> {'graph_entropy': {'value': 6.69..., ...}, 'vendi_score': {'value': 4.17..., ...}, 'mean_pw_dist': {'value': 0.93..., ...}}
 print(measure_diversity(texts_b, diversity_axis="style"))
-# -> {'graph_entropy': 6.32..., 'vendi_score': 2.24..., 'mean_pw_dist': 0.32...}
+# -> {'graph_entropy': {'value': 6.32..., ...}, 'vendi_score': {'value': 2.24..., ...}, 'mean_pw_dist': {'value': 0.32..., ...}}
 ```
 
 You can also specify a different embedding model with a HuggingFace identifier, for example, a model trained for Dutch. Be careful to use models that were trained on the diversity axis you are interested in, otherwise you might get some inconsistent results!
@@ -79,18 +83,18 @@ You can also specify a different embedding model with a HuggingFace identifier, 
 ```python
 # Use a specific embedding model (here a small, fast SBERT model)
 print(measure_diversity(texts_a, embedding_model="GroNLP/bert-base-dutch-cased"))
-# -> {'graph_entropy': 6.61..., 'vendi_score': 1.89..., 'mean_pw_dist': 0.20...}
+# -> {'graph_entropy': {'value': 6.61..., ...}, 'vendi_score': {'value': 1.89..., ...}, 'mean_pw_dist': {'value': 0.20..., ...}}
 print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased"))
-# -> {'graph_entropy': 6.80..., 'vendi_score': 1.52..., 'mean_pw_dist': 0.11...}
+# -> {'graph_entropy': {'value': 6.80..., ...}, 'vendi_score': {'value': 1.52..., ...}, 'mean_pw_dist': {'value': 0.11..., ...}}
 ```
 
 You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
 ```python
 # Run specific measures
 print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
-# -> {'diameter': 0.94..., 'log_determinant': -0.93...}
+# -> {'diameter': {'value': 0.94..., ...}, 'log_determinant': {'value': -0.93..., ...}}
 print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
-# -> {'diameter': 1.0..., 'log_determinant': -0.06...}
+# -> {'diameter': {'value': 1.0..., ...}, 'log_determinant': {'value': -0.06..., ...}}
 ```
 
 Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!

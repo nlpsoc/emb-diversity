@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-from .._accepts_text import accepts_text
-from ._types import DISTANCE_METRIC, TensorLike
+import numpy as np
+import torch
+from scipy.spatial.distance import squareform
+
+from ..embed import resolve_embeddings
+from ._types import DISTANCE_METRIC, MeasureResult, TensorLike
+from .utils import _compute_pairwise_distances
 
 ### Graph-Based Diversity Measure
 
-import numpy as np
-from .utils import _compute_pairwise_distances
-from scipy.spatial.distance import squareform
-import torch
 
-
-
-@accepts_text
 def graph_entropy(data: TensorLike,
-                  metric: DISTANCE_METRIC = "cosine"
-                  ) -> float:
+                  metric: DISTANCE_METRIC = "cosine",
+                  *,
+                  diversity_axis: str = "semantic",
+                  embedding_model: str | None = None,
+                  ) -> MeasureResult:
     """
     Computes the graph entropy of a dataset, a metric for structural diversity.
 
@@ -31,14 +32,19 @@ def graph_entropy(data: TensorLike,
 
     Args:
         data (TensorLike): The input dataset of shape (N, D), where N is the number
-            of samples and D is the dimensionality. Must contain at least 2 samples.
+            of samples and D is the dimensionality, or raw text strings. Must
+            contain at least 2 samples.
         metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights.
             Defaults to "cosine".
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
-        float: The total graph entropy, calculated as the sum of all local node
-        entropies.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        total graph entropy (sum of all local node entropies) and ``parameters``
+        records the configuration used.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
     # normalize input to numpy array
     if isinstance(data, torch.Tensor):
@@ -62,15 +68,15 @@ def graph_entropy(data: TensorLike,
     dist_condensed = _compute_pairwise_distances(X, metric=metric)
 
     # 2.lets get the square matrix from the condensed matrix
-    dist_sqaure = squareform(dist_condensed)
+    dist_square = squareform(dist_condensed)
 
     # 3. calulate the sum of all distances for each node
     # denomianator of eqaution 30 in Tao's notes
-    node_distance_sums = dist_sqaure.sum(axis=1, keepdims=True)  # (n, 1)
+    node_distance_sums = dist_square.sum(axis=1, keepdims=True)  # (n, 1)
 
     # since all the essentials are calculated, we can now do f_i(d_ij) = d_ij / sum_k d_ik.
     # essentially the local probabilities from a node to all other nodes
-    F = np.divide(dist_sqaure, node_distance_sums, out=np.zeros_like(dist_sqaure), where=node_distance_sums != 0)
+    F = np.divide(dist_square, node_distance_sums, out=np.zeros_like(dist_square), where=node_distance_sums != 0)
     F_safe = np.clip(F, 1e-12, 1.0)  # avoid log(0)
 
     # local entropies
@@ -78,4 +84,7 @@ def graph_entropy(data: TensorLike,
 
     # finally the graph entropy
     # we can choose mean as well, but strictly follwoing Tao's notes in page 11 and 12
-    return float(np.sum(local_entropies))
+    return {
+        "value": float(np.sum(local_entropies)),
+        "parameters": {"metric": metric, "embedding_model": embedding_model},
+    }

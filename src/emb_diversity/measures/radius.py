@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .._accepts_text import accepts_text
+import numpy as np
+
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Volume-Based Diversity Measure
 
-import numpy as np
 
-
-
-@accepts_text
 def radius(
-        data: Sequence[Sequence[float]]
-) -> float:
+        data: Sequence[Sequence[float]],
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+) -> MeasureResult:
     """
     Compute diversity as the geometric mean of per-dimension standard deviations,
     following Lai et al. (2020) "Diversity, Density, and Homogeneity:
@@ -24,16 +26,21 @@ def radius(
     where σi is the standard deviation along dimension i.
 
     Args:
-        data: Iterable of embedding vectors (lists/tuples/np.ndarrays), shape (n, d).
+        data: Iterable of embedding vectors (lists/tuples/np.ndarrays), shape
+            (n, d), or raw text strings.
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
-        The geometric mean of standard deviations across all embedding dimensions.
-        Higher values indicate higher dispersion (diversity).
-        Returns 0.0 if fewer than 2 datapoints or zero variance in all dims.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        geometric mean of standard deviations across all embedding dimensions
+        (higher = higher dispersion) and ``parameters`` records the
+        configuration used.
 
     Raises:
         ValueError: If data is empty or contains only one datapoint.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)
     n, d = X.shape
 
@@ -49,4 +56,7 @@ def radius(
     # Geometric mean of stds across all dimensions
     geom_mean = float(np.exp(np.mean(np.log(stds))))
 
-    return geom_mean
+    return {
+        "value": geom_mean,
+        "parameters": {"embedding_model": embedding_model},
+    }

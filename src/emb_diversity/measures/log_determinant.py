@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .._accepts_text import accepts_text
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
@@ -13,7 +14,6 @@ _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
 
 
 
-@accepts_text
 def log_determinant(
         data: Sequence[Sequence[float]],
         kernel_type: str = "cs",
@@ -21,7 +21,10 @@ def log_determinant(
         normalize: bool = True,
         eps: float = 1e-6,
         use_cholesky: bool = True,
-) -> float:
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+) -> MeasureResult:
     """
     Log-Determinant Diversity (LDD):
         LDD = log det(K + eps * I)
@@ -55,10 +58,13 @@ def log_determinant(
         use_cholesky:
             If True, use Cholesky decomposition for efficient logdet computation
             when the matrix is positive definite. Falls back to slogdet if Cholesky fails.
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
-        The log-determinant of (K + eps * I) as a float.
-        Higher values indicate higher diversity.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        log-determinant of (K + eps * I) (higher = more diverse) and
+        ``parameters`` records the configuration used.
 
     Raises:
         ValueError:
@@ -69,6 +75,16 @@ def log_determinant(
             If the matrix determinant is not positive (sign <= 0) after adding eps.
             Try increasing eps or re-checking kernel choice.
     """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    parameters = {
+        "kernel_type": kernel_type,
+        "tau": tau,
+        "normalize": normalize,
+        "eps": eps,
+        "use_cholesky": use_cholesky,
+        "embedding_model": embedding_model,
+    }
+
     # ---- Validate inputs ----
     if kernel_type not in _KERNEL_TYPES:
         raise NotImplementedError(
@@ -113,7 +129,7 @@ def log_determinant(
     if use_cholesky:
         try:
             L = np.linalg.cholesky(A)
-            return float(2.0 * np.sum(np.log(np.diag(L))))
+            return {"value": float(2.0 * np.sum(np.log(np.diag(L)))), "parameters": parameters}
         except np.linalg.LinAlgError:
             # fallback below
             pass
@@ -125,4 +141,4 @@ def log_determinant(
             "logdet undefined: det(A) is not positive (sign <= 0). "
             "Try larger eps or re-check kernel choice."
         )
-    return float(logdet)
+    return {"value": float(logdet), "parameters": parameters}
