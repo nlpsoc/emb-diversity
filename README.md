@@ -287,28 +287,31 @@ Update `docs/source/user-guide/axes.md` with the new axis.
 
 ### Building and publishing a release
 
-Building and publishing are separate steps with separate tools: `uv build`
-creates the distribution files, and `uv publish` uploads them. `twine` is only
-used for the pre-flight check, run through `uvx` so it never has to be installed.
+Releases are published by CI: pushing a version tag triggers the
+`publish-testpypi.yml` workflow, which builds the package and uploads it to
+TestPyPI via PyPI Trusted Publishing (no API token is stored). To cut a release:
+
+1. **Bump `version`** in `pyproject.toml`, commit, and merge to `main`. A version
+   number can be uploaded only once, so every release needs a new number — you
+   cannot re-publish or overwrite an existing version.
+2. **Tag and push** — this triggers the publish (the workflow checks that the tag
+   matches the `pyproject.toml` version):
+   ```bash
+   git tag v0.0.1          # must match the version in pyproject.toml
+   git push origin v0.0.1
+   ```
+
+To build and validate **locally** before tagging (optional):
 
 ```bash
-# 1. Bump `version` in pyproject.toml.
-
-# 2. Build the source distribution + wheel into dist/.
-uv build
-
-# 3. Validate the artifacts and that the README will render on PyPI.
-uvx twine check dist/*
-
-# 4. Upload. Test on TestPyPI first, then the real PyPI.
-uv publish --publish-url https://test.pypi.org/legacy/ --token <TESTPYPI_TOKEN>
-uv publish --token <PYPI_TOKEN>
+rm -rf dist              # clear artifacts from previous versions first
+uv build                 # -> dist/emb_diversity-<version>.{tar.gz,whl}
+uvx twine check dist/*   # validate metadata + that the README renders on PyPI
 ```
 
-Create API tokens under *Account → API tokens* on
-[test.pypi.org](https://test.pypi.org/) and [pypi.org](https://pypi.org/), and
-never commit them. Each version number can be uploaded only once — to
-re-release, bump the version first.
+`uv build` only *adds* to `dist/`, so clear it first when building a new version —
+otherwise old artifacts linger and an upload would try (and fail) to re-publish
+them. CI doesn't need this: each run starts from a clean checkout.
 
 ## Funding
 
