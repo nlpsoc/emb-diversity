@@ -1,0 +1,40 @@
+name: Publish to TestPyPI
+
+# Build and publish to TestPyPI whenever a version tag (e.g. v0.0.1) is pushed.
+# Uses PyPI Trusted Publishing (OIDC) — no API token is stored anywhere.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  testpypi:
+    runs-on: ubuntu-latest
+    environment: testpypi          # must match the "Environment name" in the TestPyPI trusted publisher
+    permissions:
+      id-token: write              # required: lets the job request an OIDC token for Trusted Publishing
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Verify tag matches the version in pyproject.toml
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(grep -m1 '^version = ' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "git tag: v$TAG   pyproject version: $VERSION"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag v$TAG does not match pyproject version $VERSION. Bump the version or fix the tag."
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
