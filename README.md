@@ -107,6 +107,7 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
+  - [Building and publishing a release](#building-and-publishing-a-release)
 - [Funding](#funding)
 - [Citation](#citation)
 
@@ -283,6 +284,34 @@ axes.register(
 ```
 
 Update `docs/source/user-guide/axes.md` with the new axis.
+
+### Building and publishing a release
+
+Releases are published by CI: pushing a version tag triggers the
+`publish-testpypi.yml` workflow, which builds the package and uploads it to
+TestPyPI via PyPI Trusted Publishing (no API token is stored). To cut a release:
+
+1. **Bump `version`** in `pyproject.toml`, commit, and merge to `main`. A version
+   number can be uploaded only once, so every release needs a new number — you
+   cannot re-publish or overwrite an existing version.
+2. **Tag and push** — this triggers the publish (the workflow checks that the tag
+   matches the `pyproject.toml` version):
+   ```bash
+   git tag v0.0.1          # must match the version in pyproject.toml
+   git push origin v0.0.1
+   ```
+
+To build and validate **locally** before tagging (optional):
+
+```bash
+rm -rf dist              # clear artifacts from previous versions first
+uv build                 # -> dist/emb_diversity-<version>.{tar.gz,whl}
+uvx twine check dist/*   # validate metadata + that the README renders on PyPI
+```
+
+`uv build` only *adds* to `dist/`, so clear it first when building a new version —
+otherwise old artifacts linger and an upload would try (and fail) to re-publish
+them. CI doesn't need this: each run starts from a clean checkout.
 
 ## Funding
 
