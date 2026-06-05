@@ -8,6 +8,20 @@ Guidance for AI agents and contributors working in this repository.
 Library code lives in `src/emb_diversity/`. User docs are in `docs/source/`
 (Sphinx + MyST) and `README.md`. Tests are in `test/` (pytest).
 
+## Pull requests: leave the branch free for review
+
+When you open a PR, **leave its branch free for the user to check out** — do not
+leave the PR branch occupied by a long-lived worktree. Git refuses
+`git checkout <branch>` while that branch is checked out anywhere else (e.g. a
+`.claude/worktrees/…` worktree), which blocks the user from reviewing or pulling
+it into their main checkout.
+
+After pushing the PR branch, prefer to switch the working worktree off it (e.g.
+back to a scratch/detached state) so the branch name is unoccupied. At minimum,
+tell the user the branch is held by a worktree and give them the unblock path —
+review on GitHub, `cd` into the worktree, or
+`git checkout -b <newname> origin/<branch>`.
+
 ## ⚠️ Keep the measure sets and the default measure in sync
 
 The default measure and the named measure sets are defined in **one** place —
