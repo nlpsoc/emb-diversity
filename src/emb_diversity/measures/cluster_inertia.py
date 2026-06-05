@@ -42,10 +42,10 @@ def cluster_inertia(
         ValueError: If data is empty or contains fewer than 2 datapoints.
     """
 
-    if not data:
+    X = np.asarray(data, dtype=float)
+    if X.size == 0:
         raise ValueError("Cannot compute cluster inertia for empty data")
 
-    X = np.asarray(data, dtype=float)
     n, d = X.shape
 
     if n < 2:
