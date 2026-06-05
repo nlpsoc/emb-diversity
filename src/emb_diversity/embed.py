@@ -59,8 +59,11 @@ def resolve_embeddings(
         Tuple ``(vectors, resolved_model_or_None)``.
     """
     if _is_text_input(data):
+        # Resolve the model exactly once and embed with it. We call encode
+        # directly (rather than embed_texts) so the model is not re-resolved.
         model_name = resolve_model_name(diversity_axis, embedding_model)
-        return embed_texts(data, diversity_axis, embedding_model), model_name
+        vectors = np.asarray(encode(data, model_name=model_name), dtype=float)
+        return vectors, model_name
     return data, None
 
 
