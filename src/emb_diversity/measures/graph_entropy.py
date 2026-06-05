@@ -68,15 +68,15 @@ def graph_entropy(data: TensorLike,
     dist_condensed = _compute_pairwise_distances(X, metric=metric)
 
     # 2.lets get the square matrix from the condensed matrix
-    dist_sqaure = squareform(dist_condensed)
+    dist_square = squareform(dist_condensed)
 
     # 3. calulate the sum of all distances for each node
     # denomianator of eqaution 30 in Tao's notes
-    node_distance_sums = dist_sqaure.sum(axis=1, keepdims=True)  # (n, 1)
+    node_distance_sums = dist_square.sum(axis=1, keepdims=True)  # (n, 1)
 
     # since all the essentials are calculated, we can now do f_i(d_ij) = d_ij / sum_k d_ik.
     # essentially the local probabilities from a node to all other nodes
-    F = np.divide(dist_sqaure, node_distance_sums, out=np.zeros_like(dist_sqaure), where=node_distance_sums != 0)
+    F = np.divide(dist_square, node_distance_sums, out=np.zeros_like(dist_square), where=node_distance_sums != 0)
     F_safe = np.clip(F, 1e-12, 1.0)  # avoid log(0)
 
     # local entropies
