@@ -8,6 +8,15 @@ Guidance for AI agents and contributors working in this repository.
 Library code lives in `src/emb_diversity/`. User docs are in `docs/source/`
 (Sphinx + MyST) and `README.md`. Tests are in `test/` (pytest).
 
+## Keep docs and comments general
+
+Write code comments and documentation to describe how the code works **now** —
+not how it changed. Do not reference change history, migrations, or specific
+pull requests (avoid phrasings like "an earlier version used X", "previously",
+"we removed Y", "this used to be Z"). Such notes go stale and confuse future
+readers. State the current behaviour and, where useful, the rationale for the
+current design — without contrasting it against past implementations.
+
 ## Pull requests: leave the branch free for review
 
 When you open a PR, **leave its branch free for the user to check out** — do not
@@ -64,8 +73,29 @@ measure that is not registered, which catches typos.
 
 ## Adding a new measure
 
-1. Create `src/emb_diversity/measures/<name>.py`, decorated with `@accepts_text`
-   and a Google-style docstring.
+1. Create `src/emb_diversity/measures/<name>.py`. A measure is a plain function
+   (no decorator) with this shape:
+
+   ```python
+   def <name>(
+       data,
+       <measure-specific params>,
+       *,
+       diversity_axis: str = "semantic",
+       embedding_model: str | None = None,
+   ) -> MeasureResult:
+       data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+       ...
+       return {
+           "value": float(score),
+           "parameters": {<measure-specific params>, "embedding_model": embedding_model},
+       }
+   ```
+
+   `resolve_embeddings` (from `..embed`) embeds text input and returns the
+   resolved model id (`None` for vector input); `MeasureResult` is from
+   `._types`. Embedding args are keyword-only (after `*`). Add a Google-style
+   docstring.
 2. Register it in `src/emb_diversity/measures_registry.py`.
 3. Export it from `src/emb_diversity/__init__.py` (the import **and** `__all__`).
 4. Add a row in `docs/source/user-guide/measures.md`.

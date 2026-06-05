@@ -205,7 +205,7 @@ This project uses **Google-style docstrings** which are automatically parsed by 
 #### Functions and Methods
 
 ```python
-def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
+def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureResult:
     """Calculate diversity score for a set of vectors.
 
     This function computes various diversity metrics for vector representations.
@@ -220,17 +220,18 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
             or "distinctness". Defaults to "vendi".
 
     Returns:
-        Diversity score as a float between 0 and 1, where higher values
-        indicate greater diversity.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        diversity score (higher means more diverse; scores are unbounded, not
+        limited to [0, 1]) and ``parameters`` records the configuration used.
 
     Raises:
         ValueError: If vectors array is empty or method is not recognized.
 
     Example:
         >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> score = calculate_diversity(vectors)
-        >>> print(f"Diversity: {score:.2f}")
-        Diversity: 0.87
+        >>> result = calculate_diversity(vectors)
+        >>> print(f"Diversity: {result['value']:.2f}")
+        Diversity: 1.73
     """
     pass
 ```
@@ -265,7 +266,13 @@ Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguid
 
 When you add a new measure to `src/emb_diversity/measures/`:
 
-1. Create a new file with the function decorated with `@accepts_text` and a complete docstring following the style guide above.
+1. Create a new file. A measure is a plain function (no decorator) with the
+   signature
+   `def name(data, <params>, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult`.
+   Call `data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)`
+   first (it embeds text input and returns the resolved model id), then return
+   `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
+   Add a complete docstring following the style guide above.
 2. Export it from `src/emb_diversity/__init__.py` if it should be part of the public API.
 3. Register it in `src/emb_diversity/measures_registry.py` with `measures.register("name", func)`.
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.

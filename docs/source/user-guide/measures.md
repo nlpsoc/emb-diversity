@@ -5,7 +5,10 @@ All measures accept either raw text (list of strings) or pre-computed embeddings
 
 ## Interpreting the scores
 
-Each diversity measure returns a float. We list a few things to keep in mind when reading those numbers:
+Each diversity measure returns a `{"value": float, "parameters": {...}}` dict;
+the `value` is the diversity score and `parameters` records the configuration
+used to produce it. We list a few things to keep in mind when reading those
+scores:
 
 - **Higher = more diverse.** For every measure, a larger value means a
   more diverse set and a smaller value a less diverse one. This holds even for
