@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 from ..utility._cache import cached_encode, DEFAULT_CACHE_DIR
+from ..utility._progress import load_with_spinner
 
 
 # Models that require the HuggingFace Transformers backend
@@ -15,18 +16,24 @@ _HF_MODELS = {
 def _load_st(model_name: str):
     from sentence_transformers import SentenceTransformer
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    return SentenceTransformer(model_name, device=device)
+    return load_with_spinner(
+        model_name, lambda: SentenceTransformer(model_name, device=device)
+    )
 
 def _load_hf(model_name: str):
     import torch
     from transformers import AutoTokenizer, AutoModel
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
-    model.eval()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model.to(device)
-    return tokenizer, model, device
+
+    def _load():
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModel.from_pretrained(model_name)
+        model.eval()
+        model.to(device)
+        return tokenizer, model, device
+
+    return load_with_spinner(model_name, _load)
 
 
 # private methods to calculate embeddings for the texts not existing in cache
