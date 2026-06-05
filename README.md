@@ -297,7 +297,7 @@ the software:
 
 ```bibtex
 @misc{emb_diversity,
-  author = {Su, Cantao and Wegmann, Anna and Velayuthan, Menan and Nguyen, Dong and Ploeger, Esther},
+  author = {Su, Cantao and Velayuthan, Menan and Ploeger, Esther and Nguyen, Dong and Wegmann, Anna},
   title  = {emb-diversity},
   url    = {https://github.com/nlpsoc/Diversity-Measurement},
 }
