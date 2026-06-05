@@ -44,7 +44,7 @@ def mst_dispersion(data: TensorLike,
 
     n, d = X.shape
     if n < 2:
-        raise ValueError("Cannot compute graph entropy for fewer than 2 datapoints")
+        raise ValueError("Cannot compute MST dispersion for fewer than 2 datapoints")
 
     # now we create and adjacency matrix with a specified pairwise distance metric
     # by default its cosine distance
