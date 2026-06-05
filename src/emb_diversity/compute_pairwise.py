@@ -91,7 +91,8 @@ def compute_pairwise_distances(
         Condensed distance array (upper triangle from scipy.pdist).
 
     Raises:
-        ValueError: If data is empty or single row.
+        ValueError: If data is empty, a single row, or the metric produces NaN
+            distances (e.g. a zero-norm vector under cosine).
     """
     X = np.asarray(data, dtype=float)
     n = X.shape[0]
@@ -119,6 +120,16 @@ def compute_pairwise_distances(
 
     # Level 3: compute, populate both layers
     result = pdist(X, metric=metric, **metric_kwargs)
+    # A valid distance matrix never contains NaN. NaN means a degenerate input
+    # for this metric (e.g. a zero-norm vector under cosine, where the distance
+    # divides by the vector norm). Raise instead of silently caching/returning
+    # NaN, which would otherwise poison every downstream measure.
+    if np.isnan(result).any():
+        raise ValueError(
+            f"distance computation produced NaN with metric={metric!r}; "
+            "this usually means a degenerate input, e.g. a zero-norm "
+            "(all-zero) vector under cosine distance"
+        )
     _store_memory(key, result)
     save_file({"distances": result}, path)
     return result
