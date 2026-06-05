@@ -86,7 +86,7 @@ This project uses **Google-style docstrings** which are automatically parsed by 
 #### Functions and Methods
 
 ```python
-def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
+def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureResult:
     """Calculate diversity score for a set of vectors.
 
     This function computes various diversity metrics for vector representations.
@@ -98,17 +98,18 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> float:
             or "distinctness". Defaults to "vendi".
 
     Returns:
-        Diversity score as a float between 0 and 1, where higher values
-        indicate greater diversity.
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        diversity score (higher means more diverse; scores are unbounded, not
+        limited to [0, 1]) and ``parameters`` records the configuration used.
 
     Raises:
         ValueError: If vectors array is empty or method is not recognized.
 
     Example:
         >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> score = calculate_diversity(vectors)
-        >>> print(f"Diversity: {score:.2f}")
-        Diversity: 0.87
+        >>> result = calculate_diversity(vectors)
+        >>> print(f"Diversity: {result['value']:.2f}")
+        Diversity: 1.73
     """
     pass
 ```

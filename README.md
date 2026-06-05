@@ -221,8 +221,8 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureRe
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        diversity score (higher means more diverse) and ``parameters`` records
-        the configuration used to produce it.
+        diversity score (higher means more diverse; scores are unbounded, not
+        limited to [0, 1]) and ``parameters`` records the configuration used.
 
     Raises:
         ValueError: If vectors array is empty or method is not recognized.
@@ -231,7 +231,7 @@ def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureRe
         >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
         >>> result = calculate_diversity(vectors)
         >>> print(f"Diversity: {result['value']:.2f}")
-        Diversity: 0.87
+        Diversity: 1.73
     """
     pass
 ```
