@@ -8,6 +8,15 @@ Guidance for AI agents and contributors working in this repository.
 Library code lives in `src/emb_diversity/`. User docs are in `docs/source/`
 (Sphinx + MyST) and `README.md`. Tests are in `test/` (pytest).
 
+## Keep docs and comments general
+
+Write code comments and documentation to describe how the code works **now** —
+not how it changed. Do not reference change history, migrations, or specific
+pull requests (avoid phrasings like "an earlier version used X", "previously",
+"we removed Y", "this used to be Z"). Such notes go stale and confuse future
+readers. State the current behaviour and, where useful, the rationale for the
+current design — without contrasting it against past implementations.
+
 ## Pull requests: leave the branch free for review
 
 When you open a PR, **leave its branch free for the user to check out** — do not

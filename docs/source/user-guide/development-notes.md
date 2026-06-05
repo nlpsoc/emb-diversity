@@ -11,13 +11,11 @@ embeds it and returns the resolved model id (which the measure records under
 `parameters["embedding_model"]`); numeric input is passed through unchanged with
 a `None` model id.
 
-This is the explicit per-function approach, similar to how scikit-learn
-validates input via
+Resolving the input inside each measure (rather than in a shared wrapper) keeps
+the resolved model id in scope for the result's `parameters`. This mirrors how
+scikit-learn validates input via
 [check_array](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/utils/validation.py)
-at the top of each estimator method. An earlier version used an `@accepts_text`
-decorator that wrapped every measure, but making each measure resolve its own
-input keeps the resolved model id in scope for the result's `parameters` and
-avoids signature-patching machinery.
+at the top of each estimator method.
 
 ## Known limitations
 
