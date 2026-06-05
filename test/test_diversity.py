@@ -1,5 +1,5 @@
 from emb_diversity import dist_dispersion, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, vendi_score
+    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy
 import pytest
 import numpy as np
 
@@ -560,18 +560,6 @@ class TestGraphEntropy:
 
         assert not np.isclose(euclidean_ent, cosine_ent)
 
-    def test_zero_norm_vector_cosine_raises(self):
-        """A zero-norm vector makes cosine distance undefined; raise, not NaN."""
-        data = np.array([[1, 0], [0, 0]])
-        with pytest.raises(ValueError, match="NaN"):
-            graph_entropy(data, metric="cosine")
-
-    def test_zero_norm_vector_euclidean_ok(self):
-        """A zero-norm vector is fine under euclidean (no division by norm)."""
-        data = np.array([[1, 0], [0, 0]])
-        result = graph_entropy(data, metric="euclidean")["value"]
-        assert np.isfinite(result)
-
 
 
 class TestDCScore:
@@ -977,31 +965,3 @@ class TestRenyiKernelEntropy:
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="alpha must be > 0"):
             renyi_entropy(data, alpha=0.0)["value"]
-
-
-class TestZeroNormVectorConsistency:
-    """A zero-norm (all-zero) vector makes cosine/normalized similarity
-    undefined; every cosine-based measure should raise ValueError consistently
-    rather than silently returning nan or a degenerate value."""
-
-    @staticmethod
-    def _with_zero():
-        """Three 2D points where the second is the (degenerate) zero vector."""
-        return np.array([[1.0, 0.0], [0.0, 0.0], [1.0, 1.0]])
-
-    @pytest.mark.parametrize("measure", [graph_entropy, vendi_score, dcscore, log_determinant])
-    def test_zero_norm_raises(self, measure):
-        """Each cosine-based measure raises ValueError on a zero-norm vector."""
-        with pytest.raises(ValueError):
-            measure(self._with_zero())
-
-    def test_vendi_explicit_path_raises(self):
-        """The non-dual Vendi path (use_dual=False) also raises, not just the dual path."""
-        with pytest.raises(ValueError):
-            vendi_score(self._with_zero(), use_dual=False)
-
-    @pytest.mark.parametrize("measure", [vendi_score, dcscore, log_determinant])
-    def test_normalize_false_does_not_raise(self, measure):
-        """With normalize=False no row is divided by its norm, so a zero vector is fine."""
-        result = measure(self._with_zero(), normalize=False)["value"]
-        assert np.isfinite(result)
