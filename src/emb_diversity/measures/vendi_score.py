@@ -21,25 +21,33 @@ def vendi_score(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
-    Compute diversity using the Vendi Score (Friedman & Dieng, 2023).
+    """**Interpretation of values:** larger value = more diverse.
 
-    The Vendi Score takes a set of samples and a similarity function/kernel,
-    and returns an "effective number of unique elements" based on the
-    von Neumann / Shannon entropy of the similarity matrix eigenvalues.
+    Compute diversity using the Vendi Score: the "effective number of unique
+    elements" in a set, derived from the entropy of the eigenvalues of a
+    similarity matrix over the samples.
 
-    Here we provide a wrapper around the official vendi_score implementation
-    (https://github.com/vertaix/Vendi-Score) for embedding data.
+    1) Build a similarity matrix over the samples (a dot-product / cosine kernel
+       on the input vectors; the dual formulation avoids forming it explicitly).
+    2) Take the eigenvalues of the similarity matrix, normalized to sum to 1.
+    3) Return the exponential of their order-``q`` (Rényi) entropy — the
+       effective number of unique elements.
+
+    References:
+        Friedman, Dan, and Adji Bousso Dieng. "The Vendi Score: A Diversity Evaluation Metric for Machine Learning." Transactions on Machine Learning Research (2023).
+        Limbeck, Katharina, et al. "Metric space magnitude for evaluating the diversity of latent representations." Advances in Neural Information Processing Systems 37 (2024): 123911-123953.
+        Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
 
     Args:
         data:
-            Iterable of embedding vectors, shape (n, d).
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
         q:
             Order of the Vendi score (Renyi-style generalization).
             q = 1.0 corresponds to the original Vendi Score.
         normalize:
             Whether to L2-normalize rows of X when using dot-product similarity.
-            For normalized embeddings, the dot product corresponds to cosine similarity.
+            For normalized vectors, the dot product corresponds to cosine similarity.
         use_dual:
             If True, use vendi.score_dual(X, ...) which is efficient when d < n.
             If False, build a Gram matrix K and call vendi.score_K(K, ...).
@@ -49,14 +57,17 @@ def vendi_score(
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        Vendi Score (higher = more diverse) and ``parameters`` records the
-        configuration used.
+        Vendi Score and ``parameters`` records the configuration used.
 
     Raises:
         ImportError:
             If vendi_score is not installed.
         ValueError:
-            If there are fewer than 2 datapoints.
+            If input is not 2D, or has fewer than 2 datapoints.
+
+    Note:
+        Wraps the official ``vendi_score`` implementation
+        (https://github.com/vertaix/Vendi-Score).
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     parameters = {

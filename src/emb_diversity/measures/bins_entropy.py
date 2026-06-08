@@ -28,19 +28,22 @@ def bins_entropy(
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
 ) -> MeasureResult:
-    """Compute bins-based entropy diversity from a 2D projection.
+    """**Interpretation of values:** larger value = more diverse.
 
-    1) Project embeddings to 2D with UMAP or PCA.
+    Compute bins-based entropy diversity from a 2D projection of a vector set.
+
+    1) Project the input vectors to 2D with UMAP or PCA.
     2) Bin points into a n_bins_x × n_bins_y grid.
     3) Compute Shannon entropy over bin occupancies.
     4) Optionally normalize.
 
     References:
         Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+        Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025.
 
     Args:
         data:
-            Iterable/array-like of embedding vectors with shape (n, d).
+            Iterable/array-like of (embedding) vectors with shape (n, d).
             Must contain at least 2 samples.
             Accepts numpy arrays and (optionally) torch tensors.
         n_bins_x:
@@ -50,8 +53,10 @@ def bins_entropy(
         normalize:
             If True, normalize entropy by a log factor.
         normalization:
-            - "effective": (default) divide by log(min(n, B)) ensures result in [0,1]
-            - "bins": divide by log(B) (paper-style; when n<B max < 1)
+            Normalization denominator:
+
+            - "effective": (default) divide by log(min(n, B)); ensures result in [0, 1].
+            - "bins": divide by log(B) (paper-style; max < 1 when n < B).
         projection:
             "umap" or "pca". Defaults to "umap".
         pca_kwargs:
@@ -68,7 +73,7 @@ def bins_entropy(
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
         bins-based entropy (normalized to [0, 1] if normalize=True with the
-        default effective normalization; larger = more diverse) and
+        default effective normalization) and
         ``parameters`` records the configuration used.
 
     Raises:

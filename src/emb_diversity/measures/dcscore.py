@@ -23,32 +23,36 @@ def dcscore(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
-    Diversity metric based on DCScore (self-similarity with softmax over rows).
+    """**Interpretation of values:** larger value = more diverse.
 
-    It follows the logic of `calculate_dcscore_by_embedding` in the original
-    DCScore implementation:
-        1. Build a similarity matrix K ∈ R^{n×n}.
-        2. Apply a row-wise softmax to K to obtain probabilities P.
-        3. Return the sum of the diagonal of P: DCScore = ∑_i P_{ii}.
+    Compute DCScore, a diversity metric based on the self-similarity of the
+    samples under a row-wise softmax (as in the original DCScore implementation).
+
+    1) Build a similarity matrix K ∈ R^{n×n} from the input vectors.
+    2) Apply a row-wise softmax to K to obtain a probability matrix P.
+    3) Return the sum of the diagonal of P: DCScore = sum_i P_ii.
+
+    References:
+        Zhu, Yuchang, Huizhe Zhang, Bingzhe Wu, Jintang Li, Zibin Zheng, Peilin Zhao, Liang Chen, and Yatao Bian. "Measuring diversity in synthetic datasets." arXiv preprint arXiv:2502.08512 (2025).
 
     Args:
         data:
-            Iterable of embedding vectors, shape (n, d).
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
         kernel_type:
             Type of similarity/kernel:
-                - "cs"  : cosine-similarity-like (X Xᵀ / tau, optionally normalized)
-                - "rbf" : RBF kernel (uses sklearn.metrics.pairwise.rbf_kernel,
-                          with gamma=tau)
-                - "lap" : Laplacian kernel (laplacian_kernel, gamma=tau)
-                - "poly": Polynomial kernel (polynomial_kernel, degree=tau)
+
+            - ``"cs"``: cosine-similarity-like (X Xᵀ / tau, optionally normalized).
+            - ``"rbf"``: RBF kernel (``rbf_kernel`` with ``gamma=tau``).
+            - ``"lap"``: Laplacian kernel (``laplacian_kernel`` with ``gamma=tau``).
+            - ``"poly"``: Polynomial kernel (``polynomial_kernel`` with ``degree=tau``).
         tau:
             Temperature / kernel parameter.
             For "cs", the similarity matrix is (X Xᵀ) / tau.
-            For RBF / Laplacian it is passed as `gamma=tau`,
-            for polynomial as `degree=tau`.
+            For RBF / Laplacian it is passed as ``gamma=tau``,
+            for polynomial as ``degree=tau``.
         normalize:
-            If True and kernel_type=="cs", L2-normalize embeddings row-wise
+            If True and kernel_type=="cs", L2-normalize the input vectors row-wise
             before computing X Xᵀ, as in the original text-based DCScore.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.

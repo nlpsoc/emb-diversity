@@ -19,9 +19,11 @@ def bottleneck(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """Compute the minimum pairwise distance in an embedding set.
+    """**Interpretation of values:** larger value = more diverse.
 
-    1) Compute all unique pairwise distances between datapoints.
+    Compute the minimum pairwise distance in an vector set.
+
+    1) Compute all unique pairwise distances between all datapoints.
     2) Return the smallest distance (the bottleneck distance).
 
     References:

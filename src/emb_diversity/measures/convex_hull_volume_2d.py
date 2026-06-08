@@ -19,41 +19,18 @@ def convex_hull_volume_2d(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
+    """**Interpretation of values:** larger value = more diverse.
+
     Compute diversity as the area of the convex hull of the data, after first
     projecting the input to 2 dimensions.
 
-    Used in: https://aclanthology.org/2022.coling-1.437/
+    1) Project the input to 2D (UMAP, or use as-is if already 2D).
+    2) Compute the convex hull of the projected points.
+    3) Return its area (0.0 if the points are collinear).
 
-    Why project to 2D first
-    -----------------------
-    scipy's ``ConvexHull`` (Qhull) becomes intractable past ~10 dimensions:
-    the number of facets grows as O(n^floor(d/2)). For typical embedding
-    dimensions (e.g. 4096), the raw convex hull is both infeasible to compute
-    and numerically meaningless (the "volume" is a product of many small
-    lengths and underflows). Projecting to 2D yields a stable, comparable
-    "area" measure.
 
-    Dimension reduction
-    -------------------
-    * If the input already has 2 columns, it is used as-is (no projection).
-    * Otherwise the input is projected with
-      ``umap.UMAP(n_components=2, random_state=random_state)``.
-    * If ``umap-learn`` is not installed, or if UMAP fails to fit (e.g. on
-      very small inputs where ``n_neighbors`` exceeds ``n``), the function
-      falls back to taking the first 2 columns of the input and emits a
-      ``UserWarning``. This fallback is only sensible for toy data — for
-      real embeddings, install ``umap-learn``.
-
-    Comparability caveat
-    --------------------
-    The returned value is an area in the UMAP-projected space. UMAP is
-    non-linear and its scale is data-dependent, so values are NOT comparable
-    across separate UMAP fits (i.e. across different datasets, or across
-    runs with different ``random_state``). Fix ``random_state`` and compare
-    within a single experiment.
-
-    Attention: This function is not normed, i.e., it does not return a value in [0, 1].
+    References:
+        Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022.
 
     Args:
         data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d), or raw text strings.
@@ -64,10 +41,35 @@ def convex_hull_volume_2d(
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
         area of the 2D convex hull of the projected points (0.0 if collinear)
-        and ``parameters`` records the configuration used.
+        and ``parameters`` records the configuration used. This value is not
+        normalized (it is not in [0, 1]).
 
     Raises:
         ValueError: If data is empty or has fewer than 3 points.
+
+    Note:
+        **Why project to 2D first:** scipy's ``ConvexHull`` (Qhull) becomes
+        intractable past ~10 dimensions: the number of facets grows as
+        O(n^floor(d/2)). For typical embedding dimensions (e.g. 4096), the raw
+        convex hull is both infeasible to compute and numerically meaningless
+        (the "volume" is a product of many small lengths and underflows).
+        Projecting to 2D yields a stable, comparable "area" measure.
+
+        **Dimension reduction:** if the input already has 2 columns, it is used
+        as-is (no projection). Otherwise the input is projected with
+        ``umap.UMAP(n_components=2, random_state=random_state)``. If
+        ``umap-learn`` is not installed, or if UMAP fails to fit (e.g. on very
+        small inputs where ``n_neighbors`` exceeds ``n``), the function falls
+        back to taking the first 2 columns of the input and emits a
+        ``UserWarning``. This fallback is only sensible for toy data — for real
+        embeddings, install ``umap-learn``.
+
+        **Comparability caveat:** the returned value is an area in the
+        UMAP-projected space. UMAP is non-linear and its scale is
+        data-dependent, so values are NOT comparable across separate UMAP fits
+        (i.e. across different datasets, or across runs with different
+        ``random_state``). Fix ``random_state`` and compare within a single
+        experiment.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     parameters = {"random_state": random_state, "embedding_model": embedding_model}
