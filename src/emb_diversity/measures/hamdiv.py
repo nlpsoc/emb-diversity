@@ -22,14 +22,20 @@ def hamdiv(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """
+    """**Interpretation of values:** larger value = more diverse.
+
     Compute geometric diversity as the length of the shortest Hamiltonian circuit
     (Traveling Salesman Problem tour) through all points.
 
-    Uses NetworkX TSP solvers to find an (approximately) shortest tour.
-    NetworkX provides a much simpler API than Google's Or-Tools.
-    TODO: In the future & for larger datasets,
-        it might be interesting to test Google's or-tools implementation as it uses Cython.
+    1) Build a complete weighted graph: the weight of edge (i, j) is the
+       pairwise distance d_ij under ``metric``.
+    2) Find an (approximately) shortest Hamiltonian circuit through all points
+       with the chosen TSP ``solver``.
+    3) Return the total length of that tour.
+
+    References:
+        Hu, Xiuyuan, et al. "Hamiltonian diversity: effectively measuring molecular diversity by shortest hamiltonian circuits." Journal of Cheminformatics 16.1 (2024): 94.
+        Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
 
     Args:
         data:
@@ -38,10 +44,10 @@ def hamdiv(
             Distance metric name or callable, as accepted by ``scipy.spatial.distance.pdist``.
             Default is ``"cosine"``.
         solver:
-            NetworkX solver strategy. Options:
+            NetworkX TSP solver strategy. Options:
 
-            - ``"greedy"``: Greedy nearest neighbor heuristic
-            - ``"christofides"``: Christofides algorithm (default)
+            - ``"greedy"``: Greedy nearest-neighbour heuristic.
+            - ``"christofides"``: Christofides algorithm (default).
 
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
@@ -79,7 +85,9 @@ def hamdiv(
         for j in range(i + 1, n):
             G.add_edge(i, j, weight=dist_matrix[i, j])
 
-    # Solve TSP based on chosen solver
+    # Solve TSP based on chosen solver.
+    # TODO: for larger datasets, Google OR-Tools (Cython) may be faster than the
+    # NetworkX solvers used here.
     if solver == "greedy":
         # Greedy/nearest neighbor approach
         tour = greedy_tsp(G, weight='weight', source=0)

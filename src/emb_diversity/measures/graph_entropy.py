@@ -17,25 +17,30 @@ def graph_entropy(data: TensorLike,
                   diversity_axis: str = "semantic",
                   embedding_model: str | None = None,
                   ) -> MeasureResult:
-    """
-    Computes the graph entropy of a dataset, a metric for structural diversity.
+    """**Interpretation of values:** larger value = more diverse.
 
-    This implementation follows the methodology described in Tao's notes (Pages 11-12).
-    It constructs a complete weighted graph where vertices correspond to data samples
-    and edge weights correspond to pairwise distances.
+    Compute graph entropy over a complete weighted graph whose vertices are the
+    data samples and whose edge weights are pairwise distances.
 
-    The calculation proceeds in two main steps:
-    1. Local Probabilities (Eq. 30): Determines the relative contribution of each
-       edge to a node's total connectivity.
-    2. Local Entropy (Eq. 31): Calculates the Shannon entropy for each node based
-       on its distance distribution.
+    1) Build a complete weighted graph: the weight of edge (i, j) is the
+       pairwise distance d_ij under ``metric``.
+    2) Turn each node's edge weights into a local probability distribution: f_ij = d_ij / sum_k d_ik, i.e. normalize node i's distances to
+       all other nodes so they sum to 1.
+    3) Compute each node's local Shannon entropy:
+       H_i = -sum_j f_ij * log(f_ij).
+    4) Return the total graph entropy: the sum of all local node entropies.
+
+    References:
+        Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022.
 
     Args:
-        data (TensorLike): The input dataset of shape (N, D), where N is the number
-            of samples and D is the dimensionality, or raw text strings. Must
-            contain at least 2 samples.
-        metric (DISTANCE_METRIC, optional): The distance metric to use for edge weights.
-            Defaults to "cosine".
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist, used as edge weights. Defaults to
+            "cosine".
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
@@ -43,6 +48,9 @@ def graph_entropy(data: TensorLike,
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
         total graph entropy (sum of all local node entropies) and ``parameters``
         records the configuration used.
+
+    Raises:
+        ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 

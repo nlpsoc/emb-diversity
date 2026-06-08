@@ -16,29 +16,31 @@ def radius(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
-    Compute diversity as the geometric mean of per-dimension standard deviations,
-    following Lai et al. (2020) "Diversity, Density, and Homogeneity:
-    Quantitative Characteristic Metrics for Text Collections".
+    """**Interpretation of values:** larger value = more diverse.
 
-    Formula:
-        M_diversity = (σ1 * σ2 * ... * σH)^(1/H)
-    where σi is the standard deviation along dimension i.
+    Compute diversity as the geometric mean of the per-dimension standard
+    deviations along each (embedding) dimension.
+
+    1) Compute the standard deviation σi along each (embedding) dimension i.
+    2) Return their geometric mean: (σ1 * σ2 * ... * σH) ** (1/H).
+
+    References:
+        Lai, Yi-An, et al. "Diversity, density, and homogeneity: Quantitative characteristic metrics for text collections." Proceedings of the Twelfth Language Resources and Evaluation Conference. 2020.
 
     Args:
-        data: Iterable of embedding vectors (lists/tuples/np.ndarrays), shape
-            (n, d), or raw text strings.
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
         geometric mean of standard deviations across all embedding dimensions
-        (higher = higher dispersion) and ``parameters`` records the
-        configuration used.
+        and ``parameters`` records the configuration used.
 
     Raises:
-        ValueError: If data is empty or contains only one datapoint.
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)

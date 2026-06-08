@@ -18,7 +18,9 @@ def cluster_inertia(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """Compute diversity as k-means inertia over embedding vectors.
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute diversity as k-means inertia over (embedding) vectors.
 
     1) Fit k-means with n clusters on the data.
     2) Return the inertia (sum of squared Euclidean distances to cluster centres).
@@ -29,7 +31,7 @@ def cluster_inertia(
 
     Args:
         data:
-            Iterable/array-like of embedding vectors with shape (n, d), or raw
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
             text strings. Must contain at least 2 samples.
         n_clusters:
             Number of clusters for k-means.

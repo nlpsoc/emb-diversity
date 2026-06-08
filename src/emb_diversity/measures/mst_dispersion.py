@@ -18,18 +18,36 @@ def mst_dispersion(data: TensorLike,
                    diversity_axis: str = "semantic",
                    embedding_model: str | None = None,
                    ) -> MeasureResult:
-    """Compute the total edge weight of the minimum spanning tree.
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute the total edge weight of the minimum spanning tree (MST).
+
+    1) Build a complete weighted graph: the weight of edge (i, j) is the
+       pairwise distance d_ij under ``metric``.
+    2) Compute the minimum spanning tree of that graph.
+    3) Return the total weight of the MST edges.
+
+    References:
+        Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021.
+        Atwal, Tevin, Chan Nam Tieu, Yefeng Yuan, Zhan Shi, Yuhong Liu, and Liang Cheng. "Privacy-Preserving Synthetic Review Generation with Diverse Writing Styles Using LLMs." arXiv preprint arXiv:2507.18055 (2025).
 
     Args:
-        data: Embedding vectors of shape (n, d), or raw text strings. Must
+        data:
+            (Embedding) vectors of shape (n, d), or raw text strings. Must
             contain at least 2 samples.
-        metric: Distance metric for the complete-graph edge weights. Defaults to "cosine".
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist, used as edge weights. Defaults to
+            "cosine".
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
         total MST edge weight and ``parameters`` records the configuration used.
+
+    Raises:
+        ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 

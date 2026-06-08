@@ -20,8 +20,30 @@ def span_medoid(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """
-    Compute the Span with Medoid diversity measure (Cox et al., 2021).
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute Span with Medoid diversity: the mean distance from all datapoints to
+    the medoid.
+
+    1) Compute all pairwise distances between datapoints.
+    2) Find the medoid: the point with the smallest sum of distances to all
+       others.
+    3) Return the mean distance from all points to the medoid.
+
+    References:
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+
+    Args:
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist. Defaults to "cosine".
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to pdist for the selected metric.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
@@ -29,8 +51,7 @@ def span_medoid(
         used.
 
     Raises:
-        ValueError:
-            If data is empty or contains only one datapoint.
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     # 1) pairwise distances (condensed) -> full matrix (n, n)

@@ -21,17 +21,34 @@ def sum_diameter(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """
-    SumDiameter: for each sample x_i find its farthest other sample and sum these maxima:
-        SumDiameter(X) = sum_i max_{j != i} d(x_i, x_j)
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute SumDiameter: the sum over samples of each sample's distance to its
+    farthest other sample, SumDiameter(X) = sum_i max_{j != i} d(x_i, x_j).
+
+    1) Compute all pairwise distances between datapoints.
+    2) For each sample, take the distance to its farthest other sample.
+    3) Return the sum of those per-sample maxima (or their average if
+       ``normalize_by_n``).
+
+    References:
+        Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
+        Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. “How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules.” arXiv:2112.12542. Preprint, arXiv, March 6, 2023. https://doi.org/10.48550/arXiv.2112.12542.
 
     Args:
-        data: Iterable of vectors (n, d), or raw text strings.
-        metric: Distance metric name or callable for scipy.spatial.distance.pdist.
-        normalize_by_n: If True, return the average max distance (sum / n).
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist. Defaults to "cosine".
+        normalize_by_n:
+            If True, return the average per-sample maximum distance (sum / n)
+            instead of the sum. Defaults to False.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
-        **metric_kwargs: Extra kwargs forwarded to pdist.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to pdist for the selected metric.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
@@ -39,7 +56,7 @@ def sum_diameter(
         ``parameters`` records the configuration used.
 
     Raises:
-        ValueError: If data is empty or contains fewer than 2 datapoints.
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)

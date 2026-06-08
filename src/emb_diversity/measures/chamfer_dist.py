@@ -20,7 +20,9 @@ def chamfer_dist(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """Compute the average nearest-neighbour distance across all datapoints.
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute the average nearest-neighbour distance across all datapoints.
 
     1) Compute all unique pairwise distances between datapoints.
     2) For each point, find the minimum distance to any other point (excluding itself).
@@ -32,7 +34,7 @@ def chamfer_dist(
 
     Args:
         data:
-            Iterable/array-like of embedding vectors with shape (n, d), or raw
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
             text strings. Must contain at least 2 samples.
         metric:
             Distance metric name or callable accepted by

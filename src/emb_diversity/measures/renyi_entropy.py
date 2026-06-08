@@ -26,47 +26,68 @@ def renyi_entropy(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
-    Rényi Kernel Entropy (RKE) / Matrix-based Rényi entropy.
+    """**Interpretation of values:** larger value = more diverse.
 
-    Pipeline:
-      1) Build a PSD kernel/similarity matrix K (n x n).
-      2) Normalize to A = K / tr(K) so that eigenvalues sum to 1.
-      3) Compute Rényi entropy of order alpha on eigenvalues of A:
+    Compute Rényi Kernel Entropy (RKE), a matrix-based Rényi entropy of the
+    eigenvalue spectrum of a kernel matrix built from the input vectors. A more
+    spread-out spectrum (more modes in the vector space) gives higher entropy.
 
-            RKE_alpha(A) = (1 / (1 - alpha)) * log( sum_i lambda_i^alpha )
+    1) Build a PSD kernel/similarity matrix K (n x n) from the input vectors.
+    2) Normalize to A = K / tr(K) so its eigenvalues lambda_i sum to 1.
+    3) Compute the order-``alpha`` Rényi entropy of the eigenvalues of A:
+       RKE = (1 / (1 - alpha)) * log(sum_i lambda_i ** alpha).
 
-         Special cases:
-           - alpha = 2: RKE_2(A) = -log( tr(A^2) ) = -log(||A||_F^2)  (fast, no eigendecomp)
-           - alpha = 1: von Neumann entropy:  -sum_i lambda_i log(lambda_i)
+    Special cases (computed without a full eigendecomposition):
 
-    Interpretation:
-      Higher RKE => more spread-out / more modes in embedding space => more diversity.
+    - alpha = 2: RKE = -log(tr(A^2)) = -log(||A||_F^2).
+    - alpha = 1: von Neumann entropy, -sum_i lambda_i * log(lambda_i).
+
+    References:
+        Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
+        Jalali, Mohammad, Cheuk Ting Li, and Farzan Farnia. "An information-theoretic evaluation of generative models in learning multi-modal distributions." Advances in Neural Information Processing Systems 36 (2023): 9931-9943.
 
     Args:
-        data: Embeddings, shape (n, d), n >= 2.
-        alpha: Order of Rényi entropy. Must be > 0.
+        data:
+            (Embedding) vectors of shape (n, d), or raw text strings. Must
+            contain at least 2 samples.
+        alpha:
+            Order of the Rényi entropy. Must be > 0. Defaults to 2.0.
         kernel_type:
-            - "cs"  : linear kernel on (optionally) L2-normalized embeddings (PSD)
-            - "rbf" : RBF kernel, gamma=tau
-            - "lap" : Laplacian kernel, gamma=tau
-            - "poly": Polynomial kernel, degree=int(tau)
+            Type of similarity/kernel:
+
+            - ``"cs"``: linear kernel on (optionally) L2-normalized vectors (PSD).
+            - ``"rbf"``: RBF kernel with ``gamma=tau``.
+            - ``"lap"``: Laplacian kernel with ``gamma=tau``.
+            - ``"poly"``: Polynomial kernel with ``degree=int(tau)``.
         tau:
-            Parameter for the kernel:
-              - "cs": temperature scaling via division by tau (K = (X X^T)/tau)
-              - "rbf"/"lap": passed as gamma=tau
-              - "poly": degree=tau (must be integer)
-        normalize: If True and kernel_type=="cs", L2-normalize rows so dot-product == cosine similarity.
-        eps: Numerical stability (clips eigenvalues, avoids division by zero).
+            Kernel parameter:
+
+            - ``"cs"``: temperature scaling via division by tau (K = (X Xᵀ) / tau).
+            - ``"rbf"`` / ``"lap"``: passed as ``gamma=tau``.
+            - ``"poly"``: ``degree=tau`` (must be an integer).
+        normalize:
+            If True and kernel_type=="cs", L2-normalize rows so the dot product
+            equals cosine similarity.
+        eps:
+            Jitter for numerical stability (clips eigenvalues, avoids division
+            by zero).
         use_eigendecomp:
-            If None: auto (False for alpha==2, True otherwise).
-            If True: force eigendecomp even for alpha==2.
-            If False: forbid eigendecomp (will error if alpha not in {1,2}).
+            If None, choose automatically (False for alpha in {1, 2}, True otherwise).
+            If True, force eigenvalue computation even for alpha==2. If False, restrict
+            alpha to {1, 2} (errors for other alpha values).
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        RKE score (higher => more diverse) and ``parameters`` records the
-        configuration used.
+        RKE score and ``parameters`` records the configuration used.
+
+    Raises:
+        ValueError:
+            If there are fewer than 2 datapoints, if tau <= 0, if alpha <= 0, or
+            if use_eigendecomp=False with alpha not in {1, 2}.
+        NotImplementedError:
+            For unknown kernel_type.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     parameters = {

@@ -20,19 +20,31 @@ def span_centroid(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """
-    Span with Centroid diversity (Cox et al., 2021).
-    Computes diversity as the specified percentile (90th by default) of distances from each
-    datapoint to the dataset centroid.
+    """**Interpretation of values:** larger value = more diverse.
+
+    Compute Span with Centroid diversity: a percentile of the distances from
+    each datapoint to the dataset centroid.
+
+    1) Compute the centroid (mean) of all input vectors.
+    2) Compute each point's distance to the centroid under ``metric``.
+    3) Return the given ``percentile`` of those distances.
+
+    References:
+        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. “Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation.” Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
 
     Args:
-        data: Iterable of vectors (lists/tuples/np.ndarrays), shape (n, d), or raw text strings.
-        metric: Metric name or callable, as accepted by scipy.spatial.distance.cdist.
-                Default is "cosine".
-        percentile: Percentile value (0-100) to compute. Default is 90.0.
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.cdist. Defaults to "cosine".
+        percentile:
+            Percentile (0–100) of the centroid distances to return. Defaults to 90.0.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
-        **metric_kwargs: Extra keyword arguments passed to cdist.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to cdist for the selected metric.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
@@ -40,7 +52,7 @@ def span_centroid(
         ``parameters`` records the configuration used.
 
     Raises:
-        ValueError: If data has wrong shape or fewer than 2 datapoints.
+        ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)

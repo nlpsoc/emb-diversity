@@ -25,32 +25,40 @@ def log_determinant(
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
 ) -> MeasureResult:
-    """
-    Log-Determinant Diversity (LDD):
-        LDD = log det(K + eps * I)
+    """**Interpretation of values:** larger value = more diverse (can be negative; less negative = more diverse).
 
-    K is a similarity / kernel matrix built from embeddings.
-    The log-determinant of a positive definite kernel matrix measures
-    the "volume" spanned by the data in the feature space, with higher
-    values indicating greater diversity.
+    Compute Log-Determinant Diversity (LDD): the log-determinant of a kernel
+    matrix built from the input vectors, ``LDD = log det(K + eps * I)``. For a
+    positive definite kernel matrix this measures the "volume" spanned by the
+    data in the feature space, so larger values indicate greater diversity.
 
+    1) Build a similarity/kernel matrix K from the input vectors (per
+       ``kernel_type``).
+    2) Add jitter to the diagonal for numerical stability: A = K + eps * I.
+    3) Return ``log det(A)`` (via Cholesky, falling back to ``slogdet``).
+
+    References:
+        Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024).
+        Ba, Yang, Mohammad Sadeq Abolhasani, and Rong Pan. "Predict Training Data Quality via Its Geometry in Metric Space." arXiv preprint arXiv:2510.15970 (2025).
+        
     Args:
         data:
-            Iterable of embedding vectors, shape (n, d).
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
         kernel_type:
             Type of similarity/kernel:
-                - "cs"  : cosine-similarity-like (X Xᵀ / tau, optionally normalized)
-                - "rbf" : RBF kernel (uses sklearn.metrics.pairwise.rbf_kernel,
-                          with gamma=tau)
-                - "lap" : Laplacian kernel (laplacian_kernel, gamma=tau)
-                - "poly": Polynomial kernel (polynomial_kernel, degree=tau)
+
+            - ``"cs"``: cosine-similarity-like (X Xᵀ / tau, optionally normalized).
+            - ``"rbf"``: RBF kernel (``rbf_kernel`` with ``gamma=tau``).
+            - ``"lap"``: Laplacian kernel (``laplacian_kernel`` with ``gamma=tau``).
+            - ``"poly"``: Polynomial kernel (``polynomial_kernel`` with ``degree=tau``).
         tau:
             Temperature / kernel parameter.
             For "cs", the similarity matrix is (X Xᵀ) / tau.
-            For RBF / Laplacian it is passed as `gamma=tau`,
-            for polynomial as `degree=tau`.
+            For RBF / Laplacian it is passed as ``gamma=tau``,
+            for polynomial as ``degree=tau``.
         normalize:
-            If True and kernel_type=="cs", L2-normalize embeddings row-wise
+            If True and kernel_type=="cs", L2-normalize the input vectors row-wise
             before computing X Xᵀ, so dot product equals cosine similarity.
         eps:
             Jitter term added to the diagonal (eps * I) for numerical stability.
