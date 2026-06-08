@@ -37,7 +37,7 @@ def sum_bottleneck(
 
     Args:
         data:
-            Iterable/array-like of embedding vectors with shape (n, d), or raw
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
             text strings. Must contain at least 2 samples.
         metric:
             Distance metric name or callable accepted by
