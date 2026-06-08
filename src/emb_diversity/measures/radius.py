@@ -29,8 +29,8 @@ def radius(
 
     Args:
         data:
-            Iterable of embedding vectors (lists/tuples/np.ndarrays), shape
-            (n, d), or raw text strings. Must contain at least 2 samples.
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
