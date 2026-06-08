@@ -19,7 +19,7 @@ def radius(
     """**Interpretation of values:** larger value = more diverse.
 
     Compute diversity as the geometric mean of the per-dimension standard
-    deviations of the each (embeddings) dimension.
+    deviations along each (embedding) dimension.
 
     1) Compute the standard deviation σi along each (embedding) dimension i.
     2) Return their geometric mean: (σ1 * σ2 * ... * σH) ** (1/H).
