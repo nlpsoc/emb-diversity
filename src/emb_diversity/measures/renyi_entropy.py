@@ -72,9 +72,9 @@ def renyi_entropy(
             Jitter for numerical stability (clips eigenvalues, avoids division
             by zero).
         use_eigendecomp:
-            If None, choose automatically (False for alpha==2, True otherwise).
-            If True, force the eigendecomposition even for alpha==2. If False,
-            forbid it (errors if alpha is not in {1, 2}).
+            If None, choose automatically (False for alpha in {1, 2}, True otherwise).
+            If True, force eigenvalue computation even for alpha==2. If False, restrict
+            alpha to {1, 2} (errors for other alpha values).
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
