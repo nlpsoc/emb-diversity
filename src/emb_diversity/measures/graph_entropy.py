@@ -18,6 +18,7 @@ def graph_entropy(data: TensorLike,
                   embedding_model: str | None = None,
                   ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, grows with n (a sum of per-node entropies, each <= log(n-1)).
 
     Compute graph entropy over a complete weighted graph whose vertices are the
     data samples and whose edge weights are pairwise distances.

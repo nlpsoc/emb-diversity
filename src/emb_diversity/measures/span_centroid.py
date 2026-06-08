@@ -21,6 +21,7 @@ def span_centroid(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; the upper bound depends on ``metric`` (e.g. [0, 2] for cosine distance).
 
     Compute Span with Centroid diversity: a percentile of the distances from
     each datapoint to the dataset centroid.

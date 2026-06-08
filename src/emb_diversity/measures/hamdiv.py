@@ -23,6 +23,7 @@ def hamdiv(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, grows with n; the upper bound depends on ``metric`` (unbounded for an unbounded metric).
 
     Compute geometric diversity as the length of the shortest Hamiltonian circuit
     (Traveling Salesman Problem tour) through all points.

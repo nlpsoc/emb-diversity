@@ -24,6 +24,10 @@ def dcscore(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** [1, n] (1 when all points are identical; approaches n when each row's softmax is concentrated on the diagonal).
+    The attainable maximum depends on ``kernel_type`` / ``normalize`` and ``tau``; for the default
+    ``kernel_type="cs"`` with ``normalize=True`` and ``tau=1``, the maximum for well-separated points
+    approaches e ≈ 2.718 as n grows.
 
     Compute DCScore, a diversity metric based on the self-similarity of the
     samples under a row-wise softmax (as in the original DCScore implementation).

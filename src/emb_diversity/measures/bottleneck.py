@@ -20,6 +20,7 @@ def bottleneck(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; the upper bound depends on ``metric`` (e.g. [0, 2] for cosine distance).
 
     Compute the minimum pairwise distance in a vector set.
 

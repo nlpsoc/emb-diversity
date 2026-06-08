@@ -27,6 +27,7 @@ def renyi_entropy(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** [0, log(n)] (natural log / nats).
 
     Compute Rényi Kernel Entropy (RKE), a matrix-based Rényi entropy of the
     eigenvalue spectrum of a kernel matrix built from the input vectors. A more
