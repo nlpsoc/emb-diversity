@@ -22,7 +22,7 @@ def chamfer_dist(
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
 
-    Compute the average nearest-neighbour distance (i.e., bottleneck) across all datapoints.
+    Compute the average nearest-neighbour distance across all datapoints.
 
     1) Compute all unique pairwise distances between datapoints.
     2) For each point, find the minimum distance to any other point (excluding itself).
