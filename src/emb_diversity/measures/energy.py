@@ -21,7 +21,7 @@ def energy(
         embedding_model: str | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
-    """**Interpretation of values:** negative; larger value (closer to 0) = more diverse.
+    """**Interpretation of values:** larger value (closer to 0) = more diverse.
     **Range:** (-inf, 0]; always <= 0.
 
     Compute the energy-based diversity of a set of vector representations.

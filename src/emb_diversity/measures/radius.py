@@ -42,6 +42,14 @@ def radius(
 
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
+
+    Note:
+        Because this is a geometric mean, it is very sensitive to low-variance
+        dimensions: a single near-constant dimension (std clipped to 1e-12 to
+        avoid log(0)) drags the whole value toward 0, even if every other
+        dimension is well spread. The value also scales with the magnitude of
+        the input vectors, so it is not comparable across differently scaled
+        embeddings.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)

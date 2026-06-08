@@ -24,7 +24,9 @@ def dcscore(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
-    **Range:** roughly [1, n] (1 when all points are identical, n when maximally distinct).
+    **Range:** [1, n] (1 when all points are identical). The attainable maximum is
+    controlled by ``tau``: with the default ``tau=1`` it saturates near 2.7
+    regardless of n, approaching n only as ``tau`` -> 0.
 
     Compute DCScore, a diversity metric based on the self-similarity of the
     samples under a row-wise softmax (as in the original DCScore implementation).
