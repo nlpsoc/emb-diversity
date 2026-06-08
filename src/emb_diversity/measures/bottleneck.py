@@ -21,9 +21,9 @@ def bottleneck(
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
 
-    Compute the minimum pairwise distance in an vector set.
+    Compute the minimum pairwise distance in a vector set.
 
-    1) Compute all unique pairwise distances between all datapoints.
+    1) Compute all unique pairwise distances between datapoints.
     2) Return the smallest distance (the bottleneck distance).
 
     References:
