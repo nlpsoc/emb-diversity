@@ -21,6 +21,7 @@ def span_medoid(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; the upper bound depends on ``metric`` (e.g. [0, 2] for cosine distance).
 
     Compute Span with Medoid diversity: the mean distance from all datapoints to
     the medoid.

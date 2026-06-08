@@ -17,6 +17,7 @@ def radius(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, unbounded above.
 
     Compute diversity as the geometric mean of the per-dimension standard
     deviations along each (embedding) dimension.

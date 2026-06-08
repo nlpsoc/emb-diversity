@@ -22,6 +22,7 @@ def sum_diameter(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; grows with n unless ``normalize_by_n``; the upper bound depends on ``metric`` (e.g. <= 2n for cosine distance).
 
     Compute SumDiameter: the sum over samples of each sample's distance to its
     farthest other sample, SumDiameter(X) = sum_i max_{j != i} d(x_i, x_j).

@@ -26,6 +26,7 @@ def log_determinant(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse (can be negative; less negative = more diverse).
+    **Range:** unbounded, (-inf, +inf); can be negative.
 
     Compute Log-Determinant Diversity (LDD): the log-determinant of a kernel
     matrix built from the input vectors, ``LDD = log det(K + eps * I)``. For a

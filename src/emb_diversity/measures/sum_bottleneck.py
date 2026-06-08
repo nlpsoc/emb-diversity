@@ -22,6 +22,7 @@ def sum_bottleneck(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; grows with n unless ``normalize_by_n``; the upper bound depends on ``metric`` (e.g. <= 2n for cosine distance).
 
     Compute SumBottleneck: the sum over samples of each sample's distance to its
     nearest other sample, SumBottleneck(X) = sum_i min_{j != i} d(x_i, x_j).

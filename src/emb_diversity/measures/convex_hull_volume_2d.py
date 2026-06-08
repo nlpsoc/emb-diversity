@@ -20,6 +20,7 @@ def convex_hull_volume_2d(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, unbounded above (0 if the projected points are collinear).
 
     Compute diversity as the area of the convex hull of the data, after first
     projecting the input to 2 dimensions.

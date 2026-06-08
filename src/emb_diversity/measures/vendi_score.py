@@ -22,6 +22,7 @@ def vendi_score(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** [1, n] (the effective number of unique elements).
 
     Compute diversity using the Vendi Score: the "effective number of unique
     elements" in a set, derived from the entropy of the eigenvalues of a

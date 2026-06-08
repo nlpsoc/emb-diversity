@@ -29,6 +29,7 @@ def bins_entropy(
     embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** [0, 1] with the default ``"effective"`` normalization; with ``"bins"`` it may be < 1.
 
     Compute bins-based entropy diversity from a 2D projection of a vector set.
 

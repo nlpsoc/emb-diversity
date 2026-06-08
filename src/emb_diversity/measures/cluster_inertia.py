@@ -19,6 +19,7 @@ def cluster_inertia(
         embedding_model: str | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, unbounded above.
 
     Compute diversity as k-means inertia over (embedding) vectors.
 

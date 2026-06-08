@@ -20,6 +20,7 @@ def dist_dispersion(
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, grows with n; the upper bound depends on ``metric`` (e.g. <= n(n-1) for cosine distance).
 
     Compute the sum of all pairwise distances between datapoints.
 

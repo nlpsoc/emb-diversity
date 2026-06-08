@@ -19,6 +19,7 @@ def mst_dispersion(data: TensorLike,
                    embedding_model: str | None = None,
                    ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0, grows with n; bounded by (n-1) times the largest edge under ``metric``.
 
     Compute the total edge weight of the minimum spanning tree (MST).
 
