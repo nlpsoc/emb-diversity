@@ -55,8 +55,8 @@ def log_determinant(
         tau:
             Temperature / kernel parameter.
             For "cs", the similarity matrix is (X Xᵀ) / tau.
-            For RBF / Laplacian it is passed as `gamma=tau`,
-            for polynomial as `degree=tau`.
+            For RBF / Laplacian it is passed as ``gamma=tau``,
+            for polynomial as ``degree=tau``.
         normalize:
             If True and kernel_type=="cs", L2-normalize the input vectors row-wise
             before computing X Xᵀ, so dot product equals cosine similarity.
