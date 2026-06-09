@@ -2,36 +2,14 @@
 
 from __future__ import annotations
 
-### Distance-Based Diversity Measures
-from .measures.mean_pw_dist import mean_pw_dist
-from .measures.dist_dispersion import dist_dispersion
-from .measures.hamdiv import hamdiv
-from .measures.diameter import diameter
-from .measures.bottleneck import bottleneck
-from .measures.sum_bottleneck import sum_bottleneck
-from .measures.sum_diameter import sum_diameter
-from .measures.energy import energy
-from .measures.cluster_inertia import cluster_inertia
-from .measures.span_centroid import span_centroid
-from .measures.chamfer_dist import chamfer_dist
-
-### Volume-Based Diversity Measures
-from .measures.convex_hull_volume_2d import convex_hull_volume_2d
-from .measures.radius import radius
-from .measures.span_medoid import span_medoid
-
-### Distribution-Based Diversity Measures
-from .measures.vendi_score import vendi_score
-from .measures.renyi_entropy import renyi_entropy
-from .measures.dcscore import dcscore
-from .measures.log_determinant import log_determinant
-from .measures.bins_entropy import bins_entropy
-
-### Graph-Based Diversity Measures
-from .measures.graph_entropy import graph_entropy
-from .measures.mst_dispersion import mst_dispersion
-
 ### Registries
+# Import the (empty) measures subpackage first so the import system binds
+# ``emb_diversity.measures`` to it, then immediately rebind that name to the
+# registry below. Without this, the first *lazy* import of a measure module
+# would set ``emb_diversity.measures`` to the subpackage and clobber the
+# registry; importing the subpackage up front means later measure imports find
+# it already loaded and leave the registry binding intact.
+from . import measures as _measures_subpackage  # noqa: F401
 from .axes_registry import axes
 from .measures_registry import measures
 
@@ -43,6 +21,22 @@ from .convenience import measure_diversity
 
 ### Caching utilities
 from .compute_pairwise import compute_pairwise_distances, clear_distance_cache, distance_cache_info
+
+
+# Individual measure functions are imported lazily on first attribute access
+# (e.g. ``emb_diversity.vendi_score``), so ``import emb_diversity`` does not pull
+# in every measure's dependencies. Resolution is delegated to the measures
+# registry, which imports each measure's module on demand and caches the result.
+def __getattr__(name: str):
+    if name in measures:
+        value = measures.get(name)
+        globals()[name] = value  # cache so __getattr__ is not called again
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(measures.keys()))
 
 
 __all__ = [

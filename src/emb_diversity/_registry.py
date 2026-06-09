@@ -5,11 +5,24 @@ Based on https://dev.to/dentedlogic/stop-writing-giant-if-else-chains-master-the
 
 from __future__ import annotations
 
+from typing import Callable
+
+
+class _Lazy:
+    """A registry value produced by *loader* the first time it is looked up."""
+
+    __slots__ = ("loader",)
+
+    def __init__(self, loader: Callable[[], object]):
+        self.loader = loader
+
+
 class Registry:
     """A simple key-value store with register, get, and list operations.
 
     Used by both the axes registry and the measures registry to avoid
-    repeated dictionary boilerplate.
+    repeated dictionary boilerplate. Values may be registered eagerly or
+    lazily; a lazy value is produced (and cached) on first lookup.
     """
 
     def __init__(self):
@@ -19,8 +32,12 @@ class Registry:
         """Add an entry. Overwrites if key already exists."""
         self._store[key] = value
 
+    def register_lazy(self, key: str, loader: Callable[[], object]) -> None:
+        """Add an entry whose value is produced by *loader* on first get."""
+        self._store[key] = _Lazy(loader)
+
     def get(self, key: str) -> object:
-        """Look up by key.
+        """Look up by key, resolving (and caching) a lazy value on first use.
 
         Raises:
             KeyError: If the key has not been registered.
@@ -28,11 +45,15 @@ class Registry:
         if key not in self._store:
             registered = ", ".join(sorted(self._store)) or "(none)"
             raise KeyError(f"Unknown key {key!r}. Registered: {registered}")
-        return self._store[key]
+        value = self._store[key]
+        if isinstance(value, _Lazy):
+            value = value.loader()
+            self._store[key] = value  # cache the resolved value
+        return value
 
     def list_all(self) -> list[object]:
-        """Return all values sorted by key."""
-        return [self._store[k] for k in sorted(self._store)]
+        """Return all values sorted by key (resolves any lazy entries)."""
+        return [self.get(k) for k in sorted(self._store)]
 
     def keys(self) -> list[str]:
         """Return all registered keys."""
