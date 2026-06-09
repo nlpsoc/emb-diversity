@@ -31,17 +31,28 @@ class TestLoadWithSpinner:
     def test_returns_loader_result(self, monkeypatch):
         """The loader's return value is passed straight through."""
         monkeypatch.setenv("EMB_DIVERSITY_PROGRESS", "1")
-        assert load_with_spinner("m", lambda: "model") == "model"
+        assert load_with_spinner("m", lambda stage: "model") == "model"
 
     def test_loader_errors_propagate(self, monkeypatch):
         """A real loading error is not swallowed by the spinner."""
         monkeypatch.setenv("EMB_DIVERSITY_PROGRESS", "1")
 
-        def loader():
+        def loader(stage):
             raise ValueError("boom")
 
         with pytest.raises(ValueError, match="boom"):
             load_with_spinner("m", loader)
+
+    def test_disabled_passes_noop_stage(self, monkeypatch):
+        """When disabled, stage updates are no-ops and the loader still runs."""
+        monkeypatch.setenv("EMB_DIVERSITY_PROGRESS", "0")
+
+        def loader(stage):
+            stage.loading_libraries()
+            stage.fetching_model("m")
+            return "model"
+
+        assert load_with_spinner("m", loader) == "model"
 
 
 def test_quiet_huggingface_restores_logger_level():

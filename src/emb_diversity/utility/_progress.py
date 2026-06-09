@@ -3,7 +3,8 @@
 Loading an embedding model for the first time downloads weights and prints a
 lot of HuggingFace chatter (download bars, an ``HF_TOKEN`` notice, a model
 load report). In an interactive session that wall of text is replaced here by a
-single spinner; the underlying noise is suppressed only while the spinner is
+spinner whose message tracks the current stage (loading libraries, downloading,
+loading the model); the underlying noise is suppressed only while the spinner is
 shown.
 
 The feedback is shown only when the session is interactive (a real terminal or
@@ -117,18 +118,70 @@ def _quiet_huggingface():
                     pass
 
 
-def load_with_spinner(model_name: str, load_fn: Callable[[], T]) -> T:
-    """Run *load_fn* while showing a spinner, in interactive sessions only.
+def _model_is_cached(model_name: str) -> bool:
+    """Best-effort guess at whether *model_name* is already downloaded.
+
+    Used only to choose between "Downloading" and "Loading" in the spinner text,
+    so a wrong guess merely changes the wording — it never affects loading. Never
+    raises.
+    """
+    try:
+        from huggingface_hub import try_to_load_from_cache
+
+        candidates = [model_name]
+        if "/" not in model_name:
+            candidates.append(f"sentence-transformers/{model_name}")
+        return any(
+            isinstance(try_to_load_from_cache(repo, "config.json"), str)
+            for repo in candidates
+        )
+    except Exception:
+        return False
+
+
+class _Stage:
+    """Handle a loader uses to update the spinner text between stages.
+
+    When the spinner is disabled (or unavailable) every method is a no-op, so a
+    loader can call them unconditionally.
+    """
+
+    def __init__(self, status=None):
+        self._status = status
+
+    def _set(self, message: str) -> None:
+        if self._status is None:
+            return
+        try:
+            self._status.update(message)
+        except Exception:
+            pass
+
+    def loading_libraries(self) -> None:
+        """Stage shown while the (slow, first-call) imports run."""
+        self._set("[bold cyan]Loading libraries[/]…")
+
+    def fetching_model(self, model_name: str) -> None:
+        """Stage shown while the model is downloaded or read from the cache."""
+        if self._status is None:
+            return
+        verb = "Loading" if _model_is_cached(model_name) else "Downloading"
+        self._set(f"[bold cyan]{verb} model[/] '{model_name}'…")
+
+
+def load_with_spinner(model_name: str, load_fn: Callable[["_Stage"], T]) -> T:
+    """Run *load_fn* while showing a staged spinner, in interactive sessions only.
 
     Args:
-        model_name: Model id, shown in the spinner text.
-        load_fn: Zero-argument callable that downloads and/or loads the model.
+        model_name: Model id, shown in the completion message.
+        load_fn: Callable taking a :class:`_Stage` handle (used to update the
+            spinner text) and returning the loaded model.
 
     Returns:
         Whatever *load_fn* returns.
     """
     if not progress_enabled():
-        return load_fn()
+        return load_fn(_Stage())
 
     # Set up the display defensively; if it cannot be created, load plainly so a
     # cosmetic failure never blocks real work. Errors raised by load_fn itself
@@ -138,15 +191,13 @@ def load_with_spinner(model_name: str, load_fn: Callable[[], T]) -> T:
 
         console = Console(stderr=True)
         status = console.status(
-            f"[bold cyan]Downloading & preparing model[/] '{model_name}' "
-            f"[dim](first run may take a while)[/]",
-            spinner="dots",
+            f"[bold cyan]Preparing model[/] '{model_name}'…", spinner="dots"
         )
     except Exception:
-        return load_fn()
+        return load_fn(_Stage())
 
     with _quiet_huggingface(), status:
-        model = load_fn()
+        model = load_fn(_Stage(status))
 
     try:
         console.print(f"[green]✓[/] Model '{model_name}' ready")
