@@ -14,19 +14,24 @@ _HF_MODELS = {
 
 # private functions to load models
 def _load_st(model_name: str):
-    from sentence_transformers import SentenceTransformer
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    return load_with_spinner(
-        model_name, lambda: SentenceTransformer(model_name, device=device)
-    )
+    def _load(stage):
+        stage.loading_libraries()
+        from sentence_transformers import SentenceTransformer
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        stage.fetching_model(model_name)
+        return SentenceTransformer(model_name, device=device)
+
+    return load_with_spinner(model_name, _load)
 
 def _load_hf(model_name: str):
-    import torch
-    from transformers import AutoTokenizer, AutoModel
+    def _load(stage):
+        stage.loading_libraries()
+        import torch
+        from transformers import AutoTokenizer, AutoModel
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    def _load():
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        stage.fetching_model(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(model_name)
         model.eval()
