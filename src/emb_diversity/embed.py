@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from ._validation import to_numeric_array
+from .embeddings._embed_numpy import to_numeric_array
 from .axes_registry import axes
-from .embeddings.embed import encode
+from .embeddings.embed_text import encode
 
 
 def resolve_model_name(

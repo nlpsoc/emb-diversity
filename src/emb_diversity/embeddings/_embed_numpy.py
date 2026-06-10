@@ -9,7 +9,11 @@ conversion for callers that use it directly.
 from __future__ import annotations
 
 import numpy as np
+import numbers
 
+# numpy dtype kinds that already hold numbers:
+# b = bool, u = unsigned int, i = signed int, f = float
+_NUMERIC_KINDS = "buif"
 
 def to_numeric_array(data) -> np.ndarray:
     """Convert *data* to a float array, rejecting non-numeric content.
@@ -22,12 +26,12 @@ def to_numeric_array(data) -> np.ndarray:
             interpreted as floats.
     """
     X = np.asarray(data)
-    contains_strings = X.dtype.kind in ("U", "S") or (
-        X.dtype == object and any(isinstance(v, (str, bytes)) for v in X.flat)
+    is_numeric = X.dtype.kind in _NUMERIC_KINDS or (
+        X.dtype == object and all(isinstance(v, numbers.Real) for v in X.flat)
     )
-    if contains_strings:
+    if not is_numeric:
         raise ValueError(
-            "Data must be numeric, but it contains strings. Number-like "
+            f"Data must be numeric, got dtype '{X.dtype}'. Number-like "
             "strings (e.g. '1') are not converted automatically; convert "
             "them to numbers first. To measure diversity of texts, pass a "
             "flat list of strings instead."

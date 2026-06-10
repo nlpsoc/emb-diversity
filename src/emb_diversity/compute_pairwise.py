@@ -27,7 +27,7 @@ import xxhash
 from scipy.spatial.distance import pdist
 from safetensors.numpy import save_file, load_file
 
-from ._validation import to_numeric_array
+from .embeddings._embed_numpy import to_numeric_array
 
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 DEFAULT_CACHE_DIR = Path(".cache/pdist")

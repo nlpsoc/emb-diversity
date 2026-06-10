@@ -30,12 +30,12 @@ class TestStringVectorRejection:
     @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
     def test_numeric_strings_raise(self, name):
         """Number-like strings are rejected rather than silently coerced."""
-        with pytest.raises(ValueError, match="contains strings"):
+        with pytest.raises(ValueError, match="not converted automatically"):
             get_measure(name)(self._numeric_strings())
 
     def test_mixed_numeric_strings_and_ints_raise(self):
         """Mixing number-like strings with ints is rejected as well."""
-        with pytest.raises(ValueError, match="contains strings"):
+        with pytest.raises(ValueError, match="not converted automatically"):
             mean_pw_dist([["1", 0], ["1", "1"]])
 
     def test_flat_list_of_strings_is_text_input(self):
