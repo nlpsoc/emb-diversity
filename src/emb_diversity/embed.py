@@ -59,7 +59,7 @@ def resolve_embeddings(
         Tuple ``(vectors, resolved_model_or_None)``.
 
     Raises:
-        TypeError: If *data* is a single string instead of a list of texts
+        ValueError: If *data* is a single string instead of a list of texts
             (a bare string is iterable, so it would otherwise be embedded
             character by character).
     """
@@ -95,13 +95,13 @@ def embed_texts(
         numpy array of shape ``(len(texts), embedding_dim)``.
 
     Raises:
-        TypeError: If *texts* is a single string instead of a list of texts.
+        ValueError: If *texts* is a single string instead of a list of texts.
     """
     # A bare string is iterable, so it would otherwise be embedded
     # character by character. All text input funnels through here
     # (resolve_embeddings delegates), so this is the single check.
     if isinstance(texts, str):
-        raise TypeError(
+        raise ValueError(
             "Expected a list of texts, not a single string. Wrap it in "
             "a list, e.g. [\"some text\", \"another text\"] — measuring "
             "diversity needs at least 2 texts."
