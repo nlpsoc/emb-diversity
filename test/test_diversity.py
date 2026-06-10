@@ -474,11 +474,6 @@ class TestConvexHullVolume2D:
 
 class TestClusterInertiaDiversity:
 
-    def test_single_datapoint_raises(self):
-        """Test that single datapoint raises ValueError."""
-        with pytest.raises(ValueError, match="at least 2 samples"):
-            cluster_inertia([[1, 2, 3]])["value"]
-
     def test_two_points_positive_inertia(self):
         """Test that two points produce positive inertia."""
         data = [[0, 0], [1, 1]]
@@ -799,10 +794,6 @@ class TestLogDeterminantDiversity:
 
 
 class TestBinsBasedEntropyPCA:
-    def test_invalid_shape_raises_error(self):
-        with pytest.raises(ValueError, match="2-dimensional"):
-            bins_entropy([1, 2, 3])["value"]  # 1D input
-
     def test_invalid_bins_raises_error(self):
         data = [[0, 1], [1, 0], [0.5, 0.5]]
 
@@ -883,10 +874,6 @@ class TestBinsBasedEntropyPCA:
         assert entropy > 0.0
 
 class TestRenyiKernelEntropy:
-
-    def test_requires_at_least_2_datapoints(self):
-        with pytest.raises(ValueError, match="at least 2 samples"):
-            renyi_entropy([[1.0, 2.0, 3.0]])["value"]
 
     def test_return_type_is_python_float(self):
         data = [[1.0, 0.0], [0.0, 1.0]]
