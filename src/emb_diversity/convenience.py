@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measures
+from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measure_registry
 
 
 def measure_diversity(
@@ -46,9 +46,9 @@ def measure_diversity(
 
     # ── Validate ─────────────────────────────────────────────────
     for name in measure_names:
-        if name not in measures:
+        if name not in measure_registry:
             raise KeyError(
-                f"Unknown measure {name!r}. Available: {sorted(measures)}"
+                f"Unknown measure {name!r}. Available: {sorted(measure_registry)}"
             )
 
     # ── Compute ──────────────────────────────────────────────────
@@ -58,7 +58,7 @@ def measure_diversity(
     results: dict[str, dict] = {}
     for name in measure_names:
         try:
-            results[name] = measures[name](
+            results[name] = measure_registry[name](
                 data, diversity_axis=diversity_axis, embedding_model=embedding_model
             )
         except Exception:
@@ -80,7 +80,7 @@ def _resolve_measure_names(measure: str | list[str] | None) -> list[str]:
         return list(DEFAULT_MEASURE)
     if isinstance(measure, str):
         if measure == "all":
-            return list(measures)
+            return list(measure_registry)
         if measure in MEASURE_SETS:
             return list(MEASURE_SETS[measure])
         return [measure]

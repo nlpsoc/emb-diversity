@@ -24,9 +24,18 @@ def test_heavy_deps_not_imported_at_package_import():
     assert result.stdout.strip() == "[]", f"heavy imports leaked: {result.stdout}"
 
 
-def test_measures_registry_survives_lazy_measure_import():
-    """Accessing a measure must not replace `measures` with the subpackage."""
-    import emb_diversity
+def test_registry_and_measures_subpackage_do_not_collide():
+    """The registry and the `measures` code subpackage have distinct names.
 
-    _ = emb_diversity.vendi_score  # triggers a lazy measure-module import
-    assert isinstance(emb_diversity.measures, Registry)
+    The registry is ``measure_registry``; ``emb_diversity.measures`` is the
+    subpackage. Accessing a measure imports that subpackage, which must remain a
+    plain module (not get confused with the registry).
+    """
+    import types
+
+    import emb_diversity
+    from emb_diversity.measures_registry import measure_registry
+
+    assert isinstance(measure_registry, Registry)
+    assert callable(emb_diversity.vendi_score)  # lazy top-level access works
+    assert isinstance(emb_diversity.measures, types.ModuleType)

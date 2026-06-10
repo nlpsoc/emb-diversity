@@ -3,15 +3,8 @@
 from __future__ import annotations
 
 ### Registries
-# Import the (empty) measures subpackage first so the import system binds
-# ``emb_diversity.measures`` to it, then immediately rebind that name to the
-# registry below. Without this, the first *lazy* import of a measure module
-# would set ``emb_diversity.measures`` to the subpackage and clobber the
-# registry; importing the subpackage up front means later measure imports find
-# it already loaded and leave the registry binding intact.
-from . import measures as _measures_subpackage  # noqa: F401
 from .axes_registry import axes
-from .measures_registry import measures
+from .measures_registry import measure_registry
 
 ### Embedding helper
 from .embed import embed_texts
@@ -25,18 +18,20 @@ from .compute_pairwise import compute_pairwise_distances, clear_distance_cache, 
 
 # Individual measure functions are imported lazily on first attribute access
 # (e.g. ``emb_diversity.vendi_score``), so ``import emb_diversity`` does not pull
-# in every measure's dependencies. Resolution is delegated to the measures
+# in every measure's dependencies. Resolution is delegated to the measure
 # registry, which imports each measure's module on demand and caches the result.
+# (The registry is named ``measure_registry`` rather than ``measures`` so it does
+# not collide with the ``emb_diversity.measures`` code subpackage.)
 def __getattr__(name: str):
-    if name in measures:
-        value = measures.get(name)
+    if name in measure_registry:
+        value = measure_registry.get(name)
         globals()[name] = value  # cache so __getattr__ is not called again
         return value
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def __dir__():
-    return sorted(set(globals()) | set(measures.keys()))
+    return sorted(set(globals()) | set(measure_registry.keys()))
 
 
 __all__ = [
@@ -51,7 +46,7 @@ __all__ = [
     # Helpers
     "embed_texts",
     # Registries
-    "axes", "measures",
+    "axes", "measure_registry",
     # Pairwise distance caching
     "compute_pairwise_distances", "clear_distance_cache", "distance_cache_info",
 ]

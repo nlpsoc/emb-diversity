@@ -45,9 +45,9 @@ def _measure_loader(name: str):
     return load
 
 
-measures = Registry()
+measure_registry = Registry()
 for _name in _MEASURE_NAMES:
-    measures.register_lazy(_name, _measure_loader(_name))
+    measure_registry.register_lazy(_name, _measure_loader(_name))
 
 # NOTE: If you change DEFAULT_MEASURE or MEASURE_SETS below, you must also update
 # the hardcoded CLI help, docstrings, docs, and tests. See CLAUDE.md
