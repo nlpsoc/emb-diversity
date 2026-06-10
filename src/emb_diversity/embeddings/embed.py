@@ -1,4 +1,3 @@
-import torch
 from pathlib import Path
 from typing import List, Optional, Sequence
 
@@ -16,6 +15,7 @@ _HF_MODELS = {
 def _load_st(model_name: str):
     def _load(stage):
         stage.loading_libraries()
+        import torch
         from sentence_transformers import SentenceTransformer
 
         device = "cuda" if torch.cuda.is_available() else "cpu"

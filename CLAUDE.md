@@ -95,10 +95,25 @@ measure that is not registered, which catches typos.
    `resolve_embeddings` (from `..embed`) embeds text input and returns the
    resolved model id (`None` for vector input); `MeasureResult` is from
    `._types`. Embedding args are keyword-only (after `*`). Add a Google-style
-   docstring.
-2. Register it in `src/emb_diversity/measures_registry.py`.
-3. Export it from `src/emb_diversity/__init__.py` (the import **and** `__all__`).
+   docstring. The file and the function must share the measure's name — the
+   registry and the package's lazy attribute access rely on that convention.
+2. Add the name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
+   The public API (`emb_diversity.<name>`), the CLI, and `measure_diversity`
+   all derive from it.
+3. Add the matching import to the `TYPE_CHECKING` block in
+   `src/emb_diversity/__init__.py` (static-only, for IDEs and type checkers).
+   `test/test_lazy_import.py` fails if this step is forgotten.
 4. Add a row in `docs/source/user-guide/measures.md`.
+
+## ⚠️ Keep `import emb_diversity` fast
+
+Public names are resolved lazily (PEP 562 `__getattr__` in `__init__.py`), so
+importing the package does not load the heavy dependencies (torch,
+scikit-learn, scipy, umap, pandas, …). Don't break this: nothing that runs at
+package import time (`__init__.py`, `measures_registry.py`, `axes_registry.py`,
+`convenience.py`, `cli.py` at module level) may import a heavy dependency.
+Inside a measure module or behind a function call is fine — that's the point.
+`test/test_lazy_import.py` guards this in a fresh interpreter.
 
 ## Adding a new diversity axis
 

@@ -8,11 +8,6 @@ from ._types import MeasureResult
 import numpy as np
 from sklearn.decomposition import PCA
 
-try:
-    from umap import UMAP
-except Exception:
-    UMAP = None
-
 
 
 def bins_entropy(
@@ -128,7 +123,11 @@ def bins_entropy(
     # 2D projection
     # (User can still override solver/whiten/etc via kwargs)
     if projection == "umap":
-        if UMAP is None:
+        # umap is slow to import, so it is loaded only when actually
+        # projecting with it (PCA calls never pay for it).
+        try:
+            from umap import UMAP
+        except ImportError:
             raise ImportError("UMAP is not installed.")
         umap_kwargs.setdefault("random_state", 42)
         reducer = UMAP(n_components=2, **umap_kwargs)

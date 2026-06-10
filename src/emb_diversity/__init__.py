@@ -2,62 +2,78 @@
 
 from __future__ import annotations
 
-### Distance-Based Diversity Measures
-from .measures.mean_pw_dist import mean_pw_dist
-from .measures.dist_dispersion import dist_dispersion
-from .measures.hamdiv import hamdiv
-from .measures.diameter import diameter
-from .measures.bottleneck import bottleneck
-from .measures.sum_bottleneck import sum_bottleneck
-from .measures.sum_diameter import sum_diameter
-from .measures.energy import energy
-from .measures.cluster_inertia import cluster_inertia
-from .measures.span_centroid import span_centroid
-from .measures.chamfer_dist import chamfer_dist
+import importlib
+from typing import TYPE_CHECKING
 
-### Volume-Based Diversity Measures
-from .measures.convex_hull_volume_2d import convex_hull_volume_2d
-from .measures.radius import radius
-from .measures.span_medoid import span_medoid
+from .measures_registry import MEASURE_NAMES
 
-### Distribution-Based Diversity Measures
-from .measures.vendi_score import vendi_score
-from .measures.renyi_entropy import renyi_entropy
-from .measures.dcscore import dcscore
-from .measures.log_determinant import log_determinant
-from .measures.bins_entropy import bins_entropy
-
-### Graph-Based Diversity Measures
-from .measures.graph_entropy import graph_entropy
-from .measures.mst_dispersion import mst_dispersion
-
-### Registries
-from .axes_registry import axes
-from .measures_registry import measures
-
-### Embedding helper
-from .embed import embed_texts
-
-### Main entry point
-from .convenience import measure_diversity
-
-### Caching utilities
-from .compute_pairwise import compute_pairwise_distances, clear_distance_cache, distance_cache_info
-
-
-__all__ = [
+# Public names resolve lazily on first attribute access (PEP 562), keeping
+# `import emb_diversity` fast: the heavy dependencies (torch, scikit-learn,
+# umap, …) load only when something that needs them is actually called.
+# Maps each public name to the submodule that defines it.
+_ATTR_TO_SUBMODULE = {
     # Main entry point
-    "measure_diversity",
+    "measure_diversity": "convenience",
     # Individual measures
-    "mean_pw_dist", "dist_dispersion", "hamdiv", "diameter", "bottleneck",
-    "sum_bottleneck", "sum_diameter", "energy", "cluster_inertia", "span_centroid", "chamfer_dist",
-    "convex_hull_volume_2d", "radius", "span_medoid", "vendi_score",
-    "renyi_entropy", "dcscore", "log_determinant", "bins_entropy",
-    "graph_entropy", "mst_dispersion",
-    # Helpers
-    "embed_texts",
-    # Registries
-    "axes", "measures",
+    **{name: f"measures.{name}" for name in MEASURE_NAMES},
+    # Embedding helper
+    "embed_texts": "embed",
+    # Axes registry
+    "axes": "axes_registry",
     # Pairwise distance caching
-    "compute_pairwise_distances", "clear_distance_cache", "distance_cache_info",
-]
+    "compute_pairwise_distances": "compute_pairwise",
+    "clear_distance_cache": "compute_pairwise",
+    "distance_cache_info": "compute_pairwise",
+}
+
+__all__ = list(_ATTR_TO_SUBMODULE)
+
+
+def __getattr__(name: str):
+    try:
+        submodule = _ATTR_TO_SUBMODULE[name]
+    except KeyError:
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r}"
+        ) from None
+    attr = getattr(importlib.import_module(f".{submodule}", __name__), name)
+    globals()[name] = attr  # cache so later accesses skip __getattr__
+    return attr
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | set(_ATTR_TO_SUBMODULE))
+
+
+if TYPE_CHECKING:
+    # Static-only mirror of the lazy attributes above, so IDEs and type
+    # checkers can resolve `from emb_diversity import <name>`.
+    from .axes_registry import axes
+    from .compute_pairwise import (
+        clear_distance_cache,
+        compute_pairwise_distances,
+        distance_cache_info,
+    )
+    from .convenience import measure_diversity
+    from .embed import embed_texts
+    from .measures.bins_entropy import bins_entropy
+    from .measures.bottleneck import bottleneck
+    from .measures.chamfer_dist import chamfer_dist
+    from .measures.cluster_inertia import cluster_inertia
+    from .measures.convex_hull_volume_2d import convex_hull_volume_2d
+    from .measures.dcscore import dcscore
+    from .measures.diameter import diameter
+    from .measures.dist_dispersion import dist_dispersion
+    from .measures.energy import energy
+    from .measures.graph_entropy import graph_entropy
+    from .measures.hamdiv import hamdiv
+    from .measures.log_determinant import log_determinant
+    from .measures.mean_pw_dist import mean_pw_dist
+    from .measures.mst_dispersion import mst_dispersion
+    from .measures.radius import radius
+    from .measures.renyi_entropy import renyi_entropy
+    from .measures.span_centroid import span_centroid
+    from .measures.span_medoid import span_medoid
+    from .measures.sum_bottleneck import sum_bottleneck
+    from .measures.sum_diameter import sum_diameter
+    from .measures.vendi_score import vendi_score

@@ -8,8 +8,7 @@ from __future__ import annotations
 class Registry:
     """A simple key-value store with register, get, and list operations.
 
-    Used by both the axes registry and the measures registry to avoid
-    repeated dictionary boilerplate.
+    Used by the axes registry to avoid repeated dictionary boilerplate.
     """
 
     def __init__(self):

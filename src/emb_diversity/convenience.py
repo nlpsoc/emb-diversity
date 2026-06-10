@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import warnings
 
-from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measures
+from .measures_registry import (
+    DEFAULT_MEASURE,
+    MEASURE_NAMES,
+    MEASURE_SETS,
+    get_measure,
+)
 
 
 def measure_diversity(
@@ -51,9 +56,9 @@ def measure_diversity(
 
     # ── Validate ─────────────────────────────────────────────────
     for name in measure_names:
-        if name not in measures:
+        if name not in MEASURE_NAMES:
             raise KeyError(
-                f"Unknown measure {name!r}. Available: {sorted(measures)}"
+                f"Unknown measure {name!r}. Available: {sorted(MEASURE_NAMES)}"
             )
 
     # ── Compute ──────────────────────────────────────────────────
@@ -62,8 +67,11 @@ def measure_diversity(
     # the model runs only once.
     results: dict[str, dict] = {}
     for name in measure_names:
+        # Resolve outside the try block so an import failure surfaces as an
+        # error instead of being silently recorded as NaN.
+        measure_fn = get_measure(name)
         try:
-            results[name] = measures[name](
+            results[name] = measure_fn(
                 data, diversity_axis=diversity_axis, embedding_model=embedding_model
             )
         except Exception as exc:
@@ -93,7 +101,7 @@ def _resolve_measure_names(measure: str | list[str] | None) -> list[str]:
         return list(DEFAULT_MEASURE)
     if isinstance(measure, str):
         if measure == "all":
-            return list(measures)
+            return list(MEASURE_NAMES)
         if measure in MEASURE_SETS:
             return list(MEASURE_SETS[measure])
         return [measure]
