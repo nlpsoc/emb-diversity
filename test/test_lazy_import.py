@@ -31,6 +31,23 @@ class TestLazyImport:
         )
         subprocess.run([sys.executable, "-c", code], check=True)
 
+    def test_default_measures_on_vectors_do_not_load_torch(self):
+        """Running the default measures on vector input never imports torch.
+
+        torch is needed only to embed text input (and to accept tensor input,
+        which is detected via sys.modules without importing it).
+        """
+        code = (
+            "import sys\n"
+            "import numpy as np\n"
+            "from emb_diversity import measure_diversity\n"
+            "X = np.random.RandomState(0).randn(20, 8)\n"
+            "measure_diversity(X)\n"
+            "loaded = [m for m in ('torch', 'umap') if m in sys.modules]\n"
+            "assert not loaded, f'unnecessarily loaded: {loaded}'\n"
+        )
+        subprocess.run([sys.executable, "-c", code], check=True)
+
     def test_measure_attribute_resolves_to_callable(self):
         """Accessing a measure on the package returns the measure function."""
         from emb_diversity.measures.mean_pw_dist import mean_pw_dist

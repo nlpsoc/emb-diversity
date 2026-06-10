@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import sys
+
 import numpy as np
-import torch
 from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import squareform
 
@@ -52,8 +53,11 @@ def mst_dispersion(data: TensorLike,
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
-    # normalize input to numpy array
-    if isinstance(data, torch.Tensor):
+    # normalize input to numpy array; torch is checked via sys.modules so that
+    # accepting tensor input does not force the (slow) torch import — if torch
+    # was never imported, *data* cannot be a torch tensor.
+    torch = sys.modules.get("torch")
+    if torch is not None and isinstance(data, torch.Tensor):
         X = data.detach().cpu().numpy()
     else:
         X = np.asarray(data, dtype=float)
