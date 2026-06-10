@@ -66,11 +66,14 @@ def resolve_embeddings(
             (a bare string is iterable, so it would otherwise be embedded
             character by character) — or if numeric input contains strings
             (number-like strings are rejected, not coerced), has fewer than
-            2 samples, or is not a 2-D (n_samples, n_features) matrix.
+            2 samples, or is not a 2-D (n_samples, n_features) matrix — or
+            if the vectors (given or embedded) contain non-finite values
+            (nan or inf).
     """
     if _is_text_input(data):
         # Resolve the model id once so it can be reported back, then pass it
-        # down explicitly: embed_texts is the single embedding code path.
+        # down explicitly: embed_texts is the single embedding code path
+        # (and runs the embedded vectors through to_numeric_array itself).
         model_name = resolve_model_name(diversity_axis, embedding_model)
         return embed_texts(data, embedding_model=model_name), model_name
     return to_numeric_array(data), None
@@ -100,11 +103,14 @@ def embed_texts(
         numpy array of shape ``(len(texts), embedding_dim)``.
 
     Raises:
-        ValueError: If *texts* is a single string instead of a list of texts.
+        ValueError: If *texts* is a single string instead of a list of
+            texts, contains fewer than 2 texts, or if the embedded vectors
+            contain non-finite values (nan or inf — embedding models can
+            emit those, e.g. on half-precision overflow).
     """
     # A bare string is iterable, so it would otherwise be embedded
-    # character by character. All text input funnels through here
-    # (resolve_embeddings delegates), so this is the single check.
+    # character by character. This must fire before the model loads (and
+    # before to_numeric_array, which would only see the embedded chars).
     if isinstance(texts, str):
         raise ValueError(
             "Expected a list of texts, not a single string. Wrap it in "
@@ -112,5 +118,7 @@ def embed_texts(
             "diversity needs at least 2 texts."
         )
     model_name = resolve_model_name(diversity_axis, embedding_model)
-    vectors = encode(texts, model_name=model_name)
-    return np.asarray(vectors, dtype=float)
+    # to_numeric_array is the shared exit gate for measure data: embedded
+    # vectors get the same validation (>= 2 samples, finite) as vector
+    # input, with no extra guards here.
+    return to_numeric_array(encode(texts, model_name=model_name))

@@ -99,7 +99,8 @@ measure that is not registered, which catches typos.
    registry and the package's lazy attribute access rely on that convention.
 
    Calling `resolve_embeddings` first is what gives the measure the shared
-   input validation (string rejection, 2-D shape check) — do not skip it.
+   input validation (string rejection, 2-D shape check, nan/inf rejection)
+   — do not skip it.
    The validation tests are parametrized over the measure registry, so a
    registered measure that bypasses `resolve_embeddings` fails the suite.
 2. Add the name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
