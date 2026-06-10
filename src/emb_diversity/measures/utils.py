@@ -22,6 +22,8 @@ def _compute_pairwise_distances(
         Condensed distance array.
 
     Raises:
-        ValueError: If data is empty or contains only one datapoint.
+        ValueError: If data is not numeric (strings are rejected), empty, a
+            single datapoint, not 2-dimensional, or contains all-zero
+            vectors while ``metric`` is ``"cosine"``.
     """
     return compute_pairwise_distances(data, metric=metric, **metric_kwargs)

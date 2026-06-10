@@ -60,6 +60,37 @@ def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
     return xxhash.xxh64("|".join(parts).encode()).hexdigest()
 
 
+def _to_numeric_matrix(data) -> np.ndarray:
+    """Convert *data* to a float array, rejecting non-numeric content.
+
+    String content is rejected rather than coerced, so that number-like
+    strings (e.g. ``"1"``) do not silently pass as numbers.
+
+    Raises:
+        ValueError: If data contains strings or values that cannot be
+            interpreted as floats.
+    """
+    X = np.asarray(data)
+    contains_strings = X.dtype.kind in ("U", "S") or (
+        X.dtype == object and any(isinstance(v, (str, bytes)) for v in X.flat)
+    )
+    if contains_strings:
+        raise ValueError(
+            "Data must be numeric to compute distances, but it contains "
+            "strings. Number-like strings (e.g. '1') are not converted "
+            "automatically; convert them to numbers first. To measure "
+            "diversity of texts, pass a flat list of strings instead."
+        )
+    try:
+        return X.astype(float)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            "Data must be numeric to compute distances (conversion to float "
+            f"failed: {exc}). Pass vectors of numbers with shape "
+            "(n_samples, n_features)."
+        ) from exc
+
+
 def _store_memory(key: str, result: np.ndarray) -> None:
     if _MEMORY_MAX <= 0:
         return
@@ -91,14 +122,33 @@ def compute_pairwise_distances(
         Condensed distance array (upper triangle from scipy.pdist).
 
     Raises:
-        ValueError: If data is empty or single row.
+        ValueError: If data is not numeric (strings are rejected, not
+            coerced), empty, a single row, not 2-dimensional, or contains
+            all-zero vectors while ``metric`` is ``"cosine"`` (cosine
+            distance is undefined for zero vectors).
     """
-    X = np.asarray(data, dtype=float)
-    n = X.shape[0]
+    X = _to_numeric_matrix(data)
+    n = X.shape[0] if X.ndim > 0 else 1
     if n == 0:
         raise ValueError("Cannot compute distances for empty data")
     if n == 1:
         raise ValueError("Cannot compute distances for single data point")
+    if X.ndim != 2:
+        raise ValueError(
+            "Data must be a 2-dimensional array of shape "
+            f"(n_samples, n_features); got shape {X.shape}. For "
+            "one-dimensional samples, pass one vector per row, e.g. "
+            "[[0], [1]] instead of [0, 1]."
+        )
+    if metric == "cosine":
+        zero_rows = np.flatnonzero(np.linalg.norm(X, axis=1) == 0)
+        if zero_rows.size > 0:
+            raise ValueError(
+                "Cosine distance is undefined for all-zero vectors (their "
+                "norm is 0, which would cause a division by zero); data "
+                f"row(s) {zero_rows.tolist()} are all zeros. Remove these "
+                "rows or use a different metric (e.g. metric='euclidean')."
+            )
 
     metric_id = _metric_key(metric, metric_kwargs)
     fp = _fingerprint(X)

@@ -553,8 +553,8 @@ class TestGraphEntropy:
 
     def test_different_metrics(self):
         """Test that different metrics produce different entropy values."""
-        data = np.array([[0, 0], [1, 1], [2, 2]])
-        
+        data = np.array([[1, 0], [0, 1], [2, 2]])
+
         euclidean_ent = graph_entropy(data, metric="euclidean")["value"]
         cosine_ent = graph_entropy(data, metric="cosine")["value"]
 
