@@ -39,6 +39,21 @@ def _is_text_input(data) -> bool:
     return len(data) > 0 and isinstance(data[0], str)
 
 
+def _reject_bare_string(data) -> None:
+    """Raise if *data* is a single string instead of a list of strings.
+
+    A bare string is iterable, so it would otherwise be mistaken for a list
+    of texts and embedded as one datapoint — only to fail much later (after
+    loading the embedding model) with a confusing shape error.
+    """
+    if isinstance(data, str):
+        raise TypeError(
+            "data must be a list of texts, not a single string. Wrap it in "
+            "a list, e.g. [\"some text\", \"another text\"] — measuring "
+            "diversity needs at least 2 texts."
+        )
+
+
 def resolve_embeddings(
     data,
     diversity_axis: str | None = "semantic",
@@ -57,7 +72,11 @@ def resolve_embeddings(
 
     Returns:
         Tuple ``(vectors, resolved_model_or_None)``.
+
+    Raises:
+        TypeError: If *data* is a single string instead of a list of texts.
     """
+    _reject_bare_string(data)
     if _is_text_input(data):
         # Resolve the model exactly once and embed with it. We call encode
         # directly (rather than embed_texts) so the model is not re-resolved.
@@ -89,7 +108,11 @@ def embed_texts(
 
     Returns:
         numpy array of shape ``(len(texts), embedding_dim)``.
+
+    Raises:
+        TypeError: If *texts* is a single string instead of a list of texts.
     """
+    _reject_bare_string(texts)
     model_name = resolve_model_name(diversity_axis, embedding_model)
     vectors = encode(texts, model_name=model_name)
     return np.asarray(vectors, dtype=float)
