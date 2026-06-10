@@ -57,13 +57,17 @@ def resolve_embeddings(
 
     Returns:
         Tuple ``(vectors, resolved_model_or_None)``.
+
+    Raises:
+        ValueError: If *data* is a single string instead of a list of texts
+            (a bare string is iterable, so it would otherwise be embedded
+            character by character).
     """
     if _is_text_input(data):
-        # Resolve the model exactly once and embed with it. We call encode
-        # directly (rather than embed_texts) so the model is not re-resolved.
+        # Resolve the model id once so it can be reported back, then pass it
+        # down explicitly: embed_texts is the single embedding code path.
         model_name = resolve_model_name(diversity_axis, embedding_model)
-        vectors = np.asarray(encode(data, model_name=model_name), dtype=float)
-        return vectors, model_name
+        return embed_texts(data, embedding_model=model_name), model_name
     return data, None
 
 
@@ -89,7 +93,19 @@ def embed_texts(
 
     Returns:
         numpy array of shape ``(len(texts), embedding_dim)``.
+
+    Raises:
+        ValueError: If *texts* is a single string instead of a list of texts.
     """
+    # A bare string is iterable, so it would otherwise be embedded
+    # character by character. All text input funnels through here
+    # (resolve_embeddings delegates), so this is the single check.
+    if isinstance(texts, str):
+        raise ValueError(
+            "Expected a list of texts, not a single string. Wrap it in "
+            "a list, e.g. [\"some text\", \"another text\"] — measuring "
+            "diversity needs at least 2 texts."
+        )
     model_name = resolve_model_name(diversity_axis, embedding_model)
     vectors = encode(texts, model_name=model_name)
     return np.asarray(vectors, dtype=float)
