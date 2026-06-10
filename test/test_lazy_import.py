@@ -6,8 +6,10 @@ actually used. Import-time behaviour is checked in a fresh interpreter so the
 test is independent of what the current process already imported.
 """
 
+import ast
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -55,3 +57,30 @@ class TestLazyImport:
         """get_measure rejects unregistered names with a helpful KeyError."""
         with pytest.raises(KeyError, match="not_a_measure"):
             get_measure("not_a_measure")
+
+    @staticmethod
+    def _type_checking_import_names():
+        """Names imported inside __init__.py's ``if TYPE_CHECKING:`` block."""
+        tree = ast.parse(Path(emb_diversity.__file__).read_text())
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.If)
+                and isinstance(node.test, ast.Name)
+                and node.test.id == "TYPE_CHECKING"
+            ):
+                return {
+                    alias.asname or alias.name
+                    for stmt in node.body
+                    if isinstance(stmt, ast.ImportFrom)
+                    for alias in stmt.names
+                }
+        raise AssertionError("no `if TYPE_CHECKING:` block found in __init__.py")
+
+    def test_type_checking_block_matches_public_api(self):
+        """The static TYPE_CHECKING mirror lists exactly the lazy public names.
+
+        The lazy names resolve at runtime via ``__getattr__``, which IDEs and
+        type checkers cannot see; they read the TYPE_CHECKING imports instead.
+        This keeps the two lists from drifting apart.
+        """
+        assert self._type_checking_import_names() == set(emb_diversity.__all__)

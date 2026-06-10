@@ -102,6 +102,7 @@ measure that is not registered, which catches typos.
    all derive from it.
 3. Add the matching import to the `TYPE_CHECKING` block in
    `src/emb_diversity/__init__.py` (static-only, for IDEs and type checkers).
+   `test/test_lazy_import.py` fails if this step is forgotten.
 4. Add a row in `docs/source/user-guide/measures.md`.
 
 ## ⚠️ Keep `import emb_diversity` fast

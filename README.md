@@ -277,7 +277,8 @@ When you add a new measure to `src/emb_diversity/measures/`:
    The public API (`emb_diversity.<name>`), the CLI, and `measure_diversity`
    all pick it up from there.
 3. Add the matching import to the `TYPE_CHECKING` block in
-   `src/emb_diversity/__init__.py` so IDEs and type checkers see it.
+   `src/emb_diversity/__init__.py` so IDEs and type checkers see it
+   (`test/test_lazy_import.py` fails if this step is forgotten).
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
 ### Adding New Diversity Axes
