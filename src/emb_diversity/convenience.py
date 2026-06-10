@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 from .measures_registry import DEFAULT_MEASURE, MEASURE_SETS, measures
 
 
@@ -33,6 +35,9 @@ def measure_diversity(
         Dict mapping each measure name to its result, a dict of the form
         ``{"value": float, "parameters": {...}}`` where ``parameters`` records
         the configuration used (including the resolved ``embedding_model``).
+        If a measure fails, its ``value`` is ``nan``, the entry gains an
+        ``"error"`` key with the failure message, and a ``UserWarning`` is
+        emitted — so other measures still run, but failures stay visible.
 
     Example:
         >>> from emb_diversity import measure_diversity
@@ -61,8 +66,16 @@ def measure_diversity(
             results[name] = measures[name](
                 data, diversity_axis=diversity_axis, embedding_model=embedding_model
             )
-        except Exception:
-            results[name] = {"value": float("nan"), "parameters": {}}
+        except Exception as exc:
+            # A failing measure must not abort the others (e.g. measure="all"),
+            # but the failure has to stay visible: warn and record the message.
+            error = f"{type(exc).__name__}: {exc}"
+            warnings.warn(f"Measure {name!r} failed — {error}", stacklevel=2)
+            results[name] = {
+                "value": float("nan"),
+                "parameters": {},
+                "error": error,
+            }
     return results
 
 

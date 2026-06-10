@@ -33,3 +33,34 @@ class TestConvenienceFunction:
         assert np.isclose(via[name]["value"], direct["value"]), (
             f"{name}: measure_diversity={via[name]['value']} != direct={direct['value']}"
         )
+
+
+class TestMeasureFailureReporting:
+
+    @staticmethod
+    def _two_points():
+        # Too few points for convex_hull_volume_2d, which needs at least 3.
+        return [[0.0, 1.0], [1.0, 0.0]]
+
+    def test_failing_measure_warns_and_records_error(self):
+        """A failing measure emits a UserWarning and an 'error' entry."""
+        with pytest.warns(UserWarning, match="convex_hull_volume_2d.*fewer than 3"):
+            results = measure_diversity(
+                self._two_points(), measure=["convex_hull_volume_2d"]
+            )
+        result = results["convex_hull_volume_2d"]
+        assert np.isnan(result["value"])
+        assert "fewer than 3" in result["error"]
+
+    def test_failing_measure_does_not_abort_others(self):
+        """Measures after a failing one still run and report values."""
+        with pytest.warns(UserWarning):
+            results = measure_diversity(
+                self._two_points(), measure=["convex_hull_volume_2d", "mean_pw_dist"]
+            )
+        assert not np.isnan(results["mean_pw_dist"]["value"])
+
+    def test_successful_measure_has_no_error_key(self):
+        """Successful results keep the plain {value, parameters} shape."""
+        results = measure_diversity(self._two_points(), measure=["mean_pw_dist"])
+        assert "error" not in results["mean_pw_dist"]
