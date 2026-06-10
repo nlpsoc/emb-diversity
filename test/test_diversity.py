@@ -1,5 +1,5 @@
 from emb_diversity import dist_dispersion, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy
+    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, radius
 import pytest
 import numpy as np
 
@@ -523,6 +523,15 @@ class TestClusterInertiaDiversity:
 
 
 
+class TestRadius:
+
+    def test_known_value_two_points(self):
+        """Radius of two points equals the geometric mean of per-dim stds."""
+        data = [[0.0, 0.0], [2.0, 2.0]]
+        # std with ddof=1 along each dimension is sqrt(2)
+        assert np.isclose(radius(data)["value"], np.sqrt(2))
+
+
 class TestGraphEntropy:
 
     def test_identical_points_zero_entropy(self):
@@ -810,6 +819,19 @@ class TestBinsBasedEntropyPCA:
             bins_entropy(data, n_bins_x=0, n_bins_y=5)["value"]
         with pytest.raises(ValueError, match="must be positive integers"):
             bins_entropy(data, n_bins_x=5, n_bins_y=-1)["value"]
+
+    @pytest.mark.parametrize("n", [2, 3])
+    def test_too_few_points_for_umap_raises_clear_error(self, n):
+        """Below 4 points, UMAP projection fails; the error should say so."""
+        data = np.random.RandomState(0).rand(n, 6)
+        with pytest.raises(ValueError, match="at least 4 datapoints.*projection='pca'"):
+            bins_entropy(data, projection="umap")
+
+    def test_few_points_work_with_pca(self):
+        """The suggested projection='pca' workaround works from 2 points up."""
+        data = np.random.RandomState(0).rand(2, 6)
+        result = bins_entropy(data, projection="pca")["value"]
+        assert 0.0 <= result <= 1.0
 
     def test_return_type_is_python_float(self):
         data = [[0, 1], [1, 0], [0.5, 0.5]]
