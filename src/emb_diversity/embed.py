@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from .embeddings._embed_numpy import to_numeric_array
 from .axes_registry import axes
-from .embeddings.embed import encode
+from .embeddings.embed_text import encode
 
 
 def resolve_model_name(
@@ -47,8 +48,10 @@ def resolve_embeddings(
     """Turn raw text into vectors, reporting the model that was used.
 
     Text input is embedded and the resolved model id is returned alongside the
-    vectors. Numeric input (already embeddings) is passed through unchanged with
-    a ``None`` model id, since no embedding happened.
+    vectors. Numeric input (already embeddings) is converted to a float numpy
+    array and returned with a ``None`` model id, since no embedding happened.
+    Every measure resolves its data through this function, so the numeric
+    validation here covers the whole API.
 
     Args:
         data: A list of text strings, or embedding vectors (n, d).
@@ -61,14 +64,16 @@ def resolve_embeddings(
     Raises:
         ValueError: If *data* is a single string instead of a list of texts
             (a bare string is iterable, so it would otherwise be embedded
-            character by character).
+            character by character) — or if numeric input contains strings
+            (number-like strings are rejected, not coerced) or values that
+            cannot be interpreted as floats.
     """
     if _is_text_input(data):
         # Resolve the model id once so it can be reported back, then pass it
         # down explicitly: embed_texts is the single embedding code path.
         model_name = resolve_model_name(diversity_axis, embedding_model)
         return embed_texts(data, embedding_model=model_name), model_name
-    return data, None
+    return to_numeric_array(data), None
 
 
 def embed_texts(

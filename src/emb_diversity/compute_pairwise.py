@@ -27,6 +27,8 @@ import xxhash
 from scipy.spatial.distance import pdist
 from safetensors.numpy import save_file, load_file
 
+from .embeddings._embed_numpy import to_numeric_array
+
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 DEFAULT_CACHE_DIR = Path(".cache/pdist")
 # how many chunks we feed into the hash function at a time, to keep memory
@@ -91,9 +93,10 @@ def compute_pairwise_distances(
         Condensed distance array (upper triangle from scipy.pdist).
 
     Raises:
-        ValueError: If data is empty or single row.
+        ValueError: If data is empty, a single row, or not numeric (strings
+            are rejected, not coerced).
     """
-    X = np.asarray(data, dtype=float)
+    X = to_numeric_array(data)
     n = X.shape[0]
     if n == 0:
         raise ValueError("Cannot compute distances for empty data")

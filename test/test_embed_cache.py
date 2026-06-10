@@ -7,7 +7,7 @@ import time
 import torch
 from pathlib import Path
 
-from emb_diversity.embeddings.embed import encode
+from emb_diversity.embeddings.embed_text import encode
 from emb_diversity.utility import clear_cache
 
 CACHE_DIR = Path(".cache/test_embeddings")
