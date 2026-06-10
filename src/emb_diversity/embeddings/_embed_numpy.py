@@ -21,13 +21,13 @@ def to_numeric_array(data) -> np.ndarray:
     """Convert measure input to a validated float (n_samples, n_features) array.
 
     Anything this returns is safe to compute on: numeric content (strings
-    are rejected, not coerced), at least 2 samples, and 2-dimensional.
-    Measures with higher minimums (e.g. a convex hull needs 3 points)
-    check those themselves afterwards.
+    are rejected, not coerced), at least 2 samples, 2-dimensional, and
+    finite. Measures with higher minimums (e.g. a convex hull needs 3
+    points) check those themselves afterwards.
 
     Raises:
-        ValueError: If data is not numeric, has fewer than 2 samples, or is
-            not 2-dimensional.
+        ValueError: If data is not numeric, has fewer than 2 samples, is
+            not 2-dimensional, or contains non-finite values (nan or inf).
     """
     X = np.asarray(data)
     is_numeric = X.dtype.kind in _NUMERIC_KINDS or (
@@ -60,4 +60,29 @@ def to_numeric_array(data) -> np.ndarray:
             "one-dimensional samples, pass one vector per row, e.g. "
             "[[0], [1]] instead of [0, 1]."
         )
+    ensure_finite(X)
     return X
+
+
+def ensure_finite(X: np.ndarray) -> None:
+    """Raise if *X* contains non-finite values (nan or inf).
+
+    A single non-finite value would otherwise propagate into the measure
+    and turn the result into nan — or worse, a plausible-looking wrong
+    value. Runs inside ``to_numeric_array`` for vector input; embedded
+    text vectors run it separately, since they skip the conversion.
+
+    Raises:
+        ValueError: If any value is nan or inf.
+    """
+    non_finite_rows = np.flatnonzero(~np.isfinite(X).all(axis=1))
+    if non_finite_rows.size == 0:
+        return
+    shown = non_finite_rows[:10].tolist()
+    more = non_finite_rows.size - len(shown)
+    suffix = f" (+{more} more)" if more else ""
+    raise ValueError(
+        "Data contains non-finite values (nan or inf) in row(s) "
+        f"{shown}{suffix}. Diversity values involving these rows would be "
+        "nan or wrong; remove or impute the non-finite values first."
+    )

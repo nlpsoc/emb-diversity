@@ -94,7 +94,8 @@ def compute_pairwise_distances(
 
     Raises:
         ValueError: If data is not numeric (strings are rejected, not
-            coerced), has fewer than 2 samples, or is not 2-dimensional.
+            coerced), has fewer than 2 samples, is not 2-dimensional, or
+            contains non-finite values (nan or inf).
     """
     X = to_numeric_array(data)
 

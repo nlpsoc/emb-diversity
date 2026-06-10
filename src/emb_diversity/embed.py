@@ -66,7 +66,8 @@ def resolve_embeddings(
             (a bare string is iterable, so it would otherwise be embedded
             character by character) — or if numeric input contains strings
             (number-like strings are rejected, not coerced), has fewer than
-            2 samples, or is not a 2-D (n_samples, n_features) matrix.
+            2 samples, is not a 2-D (n_samples, n_features) matrix, or
+            contains non-finite values (nan or inf).
     """
     if _is_text_input(data):
         # Resolve the model id once so it can be reported back, then pass it
