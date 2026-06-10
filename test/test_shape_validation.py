@@ -26,13 +26,14 @@ class TestShapeValidation:
         with pytest.raises(ValueError, match=r"got shape \(4, 3, 2\)"):
             get_measure(name)(data)
 
-    def test_empty_data_raises(self):
+    @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
+    def test_empty_data_raises(self, name):
         """An empty input raises a ValueError naming the sample minimum."""
         with pytest.raises(ValueError, match="at least 2 samples, got 0"):
-            mean_pw_dist([])
+            get_measure(name)([])
 
-    @pytest.mark.parametrize("single", [[0], [[0]]], ids=["flat", "nested"])
-    def test_single_datapoint_raises(self, single):
+    @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
+    def test_single_datapoint_raises(self, name):
         """A single datapoint raises the same minimum, however it is written."""
         with pytest.raises(ValueError, match="at least 2 samples, got 1"):
-            mean_pw_dist(single)
+            get_measure(name)([0])
