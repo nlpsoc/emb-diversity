@@ -27,6 +27,8 @@ import xxhash
 from scipy.spatial.distance import pdist
 from safetensors.numpy import save_file, load_file
 
+from ._validation import ensure_cosine_defined, to_numeric_array
+
 DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 DEFAULT_CACHE_DIR = Path(".cache/pdist")
 # how many chunks we feed into the hash function at a time, to keep memory
@@ -58,37 +60,6 @@ def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
     for k in sorted(metric_kwargs):
         parts.append(f"{k}={metric_kwargs[k]!r}")
     return xxhash.xxh64("|".join(parts).encode()).hexdigest()
-
-
-def _to_numeric_matrix(data) -> np.ndarray:
-    """Convert *data* to a float array, rejecting non-numeric content.
-
-    String content is rejected rather than coerced, so that number-like
-    strings (e.g. ``"1"``) do not silently pass as numbers.
-
-    Raises:
-        ValueError: If data contains strings or values that cannot be
-            interpreted as floats.
-    """
-    X = np.asarray(data)
-    contains_strings = X.dtype.kind in ("U", "S") or (
-        X.dtype == object and any(isinstance(v, (str, bytes)) for v in X.flat)
-    )
-    if contains_strings:
-        raise ValueError(
-            "Data must be numeric to compute distances, but it contains "
-            "strings. Number-like strings (e.g. '1') are not converted "
-            "automatically; convert them to numbers first. To measure "
-            "diversity of texts, pass a flat list of strings instead."
-        )
-    try:
-        return X.astype(float)
-    except (ValueError, TypeError) as exc:
-        raise ValueError(
-            "Data must be numeric to compute distances (conversion to float "
-            f"failed: {exc}). Pass vectors of numbers with shape "
-            "(n_samples, n_features)."
-        ) from exc
 
 
 def _store_memory(key: str, result: np.ndarray) -> None:
@@ -127,7 +98,7 @@ def compute_pairwise_distances(
             all-zero vectors while ``metric`` is ``"cosine"`` (cosine
             distance is undefined for zero vectors).
     """
-    X = _to_numeric_matrix(data)
+    X = to_numeric_array(data)
     n = X.shape[0] if X.ndim > 0 else 1
     if n == 0:
         raise ValueError("Cannot compute distances for empty data")
@@ -140,15 +111,7 @@ def compute_pairwise_distances(
             "one-dimensional samples, pass one vector per row, e.g. "
             "[[0], [1]] instead of [0, 1]."
         )
-    if metric == "cosine":
-        zero_rows = np.flatnonzero(np.linalg.norm(X, axis=1) == 0)
-        if zero_rows.size > 0:
-            raise ValueError(
-                "Cosine distance is undefined for all-zero vectors (their "
-                "norm is 0, which would cause a division by zero); data "
-                f"row(s) {zero_rows.tolist()} are all zeros. Remove these "
-                "rows or use a different metric (e.g. metric='euclidean')."
-            )
+    ensure_cosine_defined(X, metric)
 
     metric_id = _metric_key(metric, metric_kwargs)
     fp = _fingerprint(X)

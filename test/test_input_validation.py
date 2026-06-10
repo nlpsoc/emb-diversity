@@ -1,7 +1,35 @@
 import numpy as np
 import pytest
 
-from emb_diversity import graph_entropy, mean_pw_dist
+from emb_diversity import mean_pw_dist, span_centroid
+from emb_diversity.measures_registry import measures
+
+# Measures whose distances flow through compute_pairwise_distances
+# (scipy.pdist) and therefore share its cosine zero-vector check.
+PDIST_MEASURE_NAMES = [
+    "bottleneck",
+    "chamfer_dist",
+    "diameter",
+    "dist_dispersion",
+    "energy",
+    "graph_entropy",
+    "hamdiv",
+    "mean_pw_dist",
+    "mst_dispersion",
+    "span_medoid",
+    "sum_bottleneck",
+    "sum_diameter",
+]
+
+# span_centroid computes cosine via scipy.cdist instead of pdist and runs
+# the same zero-vector check itself.
+COSINE_MEASURE_NAMES = PDIST_MEASURE_NAMES + ["span_centroid"]
+
+
+def test_cosine_measure_names_are_registered():
+    """Guard against typos: every listed name must be a registered measure."""
+    unknown = [name for name in COSINE_MEASURE_NAMES if name not in measures]
+    assert not unknown, f"Unregistered measure names in test list: {unknown}"
 
 
 class TestDistanceInputValidation:
@@ -22,30 +50,50 @@ class TestDistanceInputValidation:
         with pytest.raises(ValueError, match=r"2-dimensional.*\(n_samples, n_features\)"):
             mean_pw_dist([0, 0])
 
-    def test_zero_vector_with_cosine_raises(self):
-        """A zero vector under cosine distance raises instead of returning nan."""
+    @pytest.mark.parametrize("name", COSINE_MEASURE_NAMES)
+    def test_zero_vector_with_cosine_raises(self, name):
+        """A zero vector under the default cosine metric raises instead of nan."""
         with pytest.raises(ValueError, match="Cosine distance is undefined.*row\\(s\\) \\[1\\]"):
-            mean_pw_dist([[1, 1], [0, 0]], metric="cosine")
+            measures[name]([[1.0, 1.0], [0.0, 0.0]])
 
-    def test_zero_vector_with_cosine_raises_in_graph_entropy(self):
-        """The zero-vector check covers every distance-based measure."""
-        with pytest.raises(ValueError, match="Cosine distance is undefined"):
-            graph_entropy([[1, 0], [0, 0]])
+    def test_zero_centroid_with_cosine_raises_in_span_centroid(self):
+        """Nonzero vectors whose mean is the zero vector raise in span_centroid."""
+        with pytest.raises(ValueError, match="centroid.*zero vector"):
+            span_centroid([[1.0, 0.0], [-1.0, 0.0]])
 
     def test_zero_vector_with_euclidean_works(self):
         """Zero vectors are fine for metrics that are defined on them."""
         result = mean_pw_dist([[1, 1], [0, 0]], metric="euclidean")["value"]
         assert np.isclose(result, np.sqrt(2))
 
-    def test_non_numeric_strings_raise(self):
+
+class TestStringInputRejection:
+    """String content is rejected for every registered measure.
+
+    All measures resolve their data through resolve_embeddings, which
+    validates numeric input centrally — so each measure raises before any
+    measure-specific code runs.
+    """
+
+    @staticmethod
+    def _letters():
+        return [list(row) for row in ("abc", "def", "ghi", "jkl")]
+
+    @staticmethod
+    def _numeric_strings():
+        return [["0", "1", "0"], ["1", "0", "1"], ["1", "1", "0"], ["0", "0", "1"]]
+
+    @pytest.mark.parametrize("name", sorted(measures))
+    def test_letter_strings_raise(self, name):
         """Letter strings raise a ValueError pointing at non-numeric data."""
         with pytest.raises(ValueError, match="must be numeric"):
-            mean_pw_dist([["a", "b"], ["c", "d"]])
+            measures[name](self._letters())
 
-    def test_numeric_strings_raise(self):
+    @pytest.mark.parametrize("name", sorted(measures))
+    def test_numeric_strings_raise(self, name):
         """Number-like strings are rejected rather than silently coerced."""
         with pytest.raises(ValueError, match="contains strings"):
-            mean_pw_dist([["0", "1"], ["1", "0"]])
+            measures[name](self._numeric_strings())
 
     def test_mixed_numeric_strings_and_ints_raise(self):
         """Mixing number-like strings with ints is rejected as well."""

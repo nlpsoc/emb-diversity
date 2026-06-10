@@ -5,6 +5,7 @@ from typing import Any, Sequence
 import numpy as np
 from scipy.spatial.distance import cdist
 
+from .._validation import ensure_cosine_defined
 from ..embed import resolve_embeddings
 from ._types import DISTANCE_METRIC, MeasureResult
 
@@ -53,7 +54,9 @@ def span_centroid(
         ``parameters`` records the configuration used.
 
     Raises:
-        ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
+        ValueError: If input is not 2D, empty, or has fewer than 2
+            datapoints — or, under the cosine metric, if a datapoint or the
+            centroid is the zero vector (cosine distance is undefined there).
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     X = np.asarray(data, dtype=float)
@@ -63,8 +66,18 @@ def span_centroid(
     if n < 2:
         raise ValueError("Cannot compute span_with_centroid for fewer than 2 datapoints")
 
+    ensure_cosine_defined(X, metric)
+
     # Centroid μ = (1/n) * sum_i x_i, shape (1, d)
     centroid = X.mean(axis=0, keepdims=True)
+
+    if metric == "cosine" and not np.linalg.norm(centroid):
+        raise ValueError(
+            "Cosine distance to the centroid is undefined: the centroid of "
+            "this data is the zero vector (this happens for symmetric data, "
+            "e.g. [[1, 0], [-1, 0]]). Use a different metric "
+            "(e.g. metric='euclidean')."
+        )
 
     # Distances D_i = d(x_i, μ), shape (n, 1) → flatten to (n,)
     dists = cdist(X, centroid, metric=metric, **metric_kwargs).ravel()
