@@ -65,8 +65,8 @@ def resolve_embeddings(
         ValueError: If *data* is a single string instead of a list of texts
             (a bare string is iterable, so it would otherwise be embedded
             character by character) — or if numeric input contains strings
-            (number-like strings are rejected, not coerced) or values that
-            cannot be interpreted as floats.
+            (number-like strings are rejected, not coerced), has fewer than
+            2 samples, or is not a 2-D (n_samples, n_features) matrix.
     """
     if _is_text_input(data):
         # Resolve the model id once so it can be reported back, then pass it
