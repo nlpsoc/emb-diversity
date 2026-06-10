@@ -654,7 +654,7 @@ wheels = [
 
 [[package]]
 name = "emb-diversity"
-version = "0.0.4"
+version = "0.0.6"
 source = { editable = "." }
 dependencies = [
     { name = "datasets" },

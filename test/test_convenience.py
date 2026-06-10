@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from emb_diversity import measure_diversity
-from emb_diversity.measures_registry import measures
+from emb_diversity.measures_registry import MEASURE_NAMES, get_measure
 
 
 class TestConvenienceFunction:
@@ -15,7 +15,7 @@ class TestConvenienceFunction:
         # 50 points in 16-D
         return np.random.RandomState(0).randn(50, 16)
 
-    @pytest.mark.parametrize("name", sorted(measures))
+    @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
     def test_measure_runs_via_convenience_and_matches_direct(self, name):
         """Each measure runs via measure_diversity on array input without
         returning NaN, and matches the direct call on the same vectors.
@@ -23,7 +23,7 @@ class TestConvenienceFunction:
         Each result is a ``{"value": float, "parameters": {...}}`` dict.
         """
         X = self._vectors()
-        direct = measures[name](X)
+        direct = get_measure(name)(X)
         via = measure_diversity(X, measure=[name])
 
         assert name in via

@@ -3,8 +3,8 @@
 from emb_diversity.convenience import _resolve_measure_names
 from emb_diversity.measures_registry import (
     DEFAULT_MEASURE,
+    MEASURE_NAMES,
     MEASURE_SETS,
-    measures,
 )
 
 
@@ -23,7 +23,7 @@ class TestMeasureResolution:
         ]
 
     def test_all_returns_every_registered_measure(self):
-        assert _resolve_measure_names("all") == list(measures)
+        assert _resolve_measure_names("all") == list(MEASURE_NAMES)
 
     def test_single_name_passthrough(self):
         assert _resolve_measure_names("energy") == ["energy"]
@@ -40,11 +40,11 @@ class TestMeasureSetIntegrity:
 
     def test_default_members_are_registered(self):
         for name in DEFAULT_MEASURE:
-            assert name in measures, f"DEFAULT_MEASURE references unknown measure {name!r}"
+            assert name in MEASURE_NAMES, f"DEFAULT_MEASURE references unknown measure {name!r}"
 
     def test_every_set_member_is_registered(self):
         for set_name, members in MEASURE_SETS.items():
             for name in members:
-                assert name in measures, (
+                assert name in MEASURE_NAMES, (
                     f"set {set_name!r} references unknown measure {name!r}"
                 )
