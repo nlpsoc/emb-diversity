@@ -56,11 +56,11 @@ class TestCorrectness:
         assert np.allclose(first, second)
 
     def test_empty_data_raises(self):
-        with pytest.raises(ValueError, match="empty data"):
+        with pytest.raises(ValueError, match="at least 2 samples, got 0"):
             compute_pairwise_distances(np.empty((0, 5)), "cosine", CACHE_DIR)
 
     def test_single_point_raises(self):
-        with pytest.raises(ValueError, match="single data point"):
+        with pytest.raises(ValueError, match="at least 2 samples, got 1"):
             compute_pairwise_distances(np.zeros((1, 5)), "cosine", CACHE_DIR)
 
 

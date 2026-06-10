@@ -93,15 +93,10 @@ def compute_pairwise_distances(
         Condensed distance array (upper triangle from scipy.pdist).
 
     Raises:
-        ValueError: If data is empty, a single row, or not numeric (strings
-            are rejected, not coerced).
+        ValueError: If data is not numeric (strings are rejected, not
+            coerced), has fewer than 2 samples, or is not 2-dimensional.
     """
     X = to_numeric_array(data)
-    n = X.shape[0]
-    if n == 0:
-        raise ValueError("Cannot compute distances for empty data")
-    if n == 1:
-        raise ValueError("Cannot compute distances for single data point")
 
     metric_id = _metric_key(metric, metric_kwargs)
     fp = _fingerprint(X)
