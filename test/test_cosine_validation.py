@@ -52,7 +52,7 @@ class TestCosineZeroVectorValidation:
             value = get_measure(name)(data)["value"]
         except ValueError:
             return
-        assert np.isfinite(value)
+        assert np.isfinite(value)  # The value is a finite float, not nan or inf.
 
     @pytest.mark.parametrize("name", COSINE_MEASURE_NAMES)
     def test_zero_vector_with_cosine_raises(self, name):
