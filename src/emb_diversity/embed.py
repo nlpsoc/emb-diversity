@@ -40,11 +40,10 @@ def _is_text_input(data) -> bool:
 
 
 def _reject_bare_string(data) -> None:
-    """Raise if *data* is a single string instead of a list of strings.
+    """Raise if *data* is a single string instead of a list of strings/floats.
 
     A bare string is iterable, so it would otherwise be mistaken for a list
-    of texts and embedded as one datapoint — only to fail much later (after
-    loading the embedding model) with a confusing shape error.
+    of texts and embedded several datapoints.
     """
     if isinstance(data, str):
         raise TypeError(
