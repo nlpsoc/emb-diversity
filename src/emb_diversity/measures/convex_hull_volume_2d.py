@@ -46,7 +46,8 @@ def convex_hull_volume_2d(
         normalized (it is not in [0, 1]).
 
     Raises:
-        ValueError: If data is empty or has fewer than 3 points.
+        ValueError: If data is empty, not 2-dimensional, has fewer than 3
+            points, or contains non-finite values (nan or inf).
 
     Note:
         **Why project to 2D first:** scipy's ``ConvexHull`` (Qhull) becomes
@@ -81,10 +82,24 @@ def convex_hull_volume_2d(
     if X.size == 0:
         raise ValueError("Cannot compute convex hull for empty data")
 
+    # Validate before handing the data to UMAP / Qhull: malformed or
+    # non-finite input can crash their native code rather than raise.
+    if X.ndim != 2:
+        raise ValueError(
+            "Data must be a 2-dimensional array of shape "
+            f"(n_samples, n_features); got shape {X.shape}."
+        )
+
     n = X.shape[0]
     if n < 3:
         raise ValueError(
             f"Cannot compute 2D convex hull for fewer than 3 points (got {n})"
+        )
+
+    if not np.isfinite(X).all():
+        raise ValueError(
+            "Data contains non-finite values (nan or inf); remove or impute "
+            "them before computing the convex hull."
         )
 
     two_d = _reduce_to_2d(X, random_state=random_state)

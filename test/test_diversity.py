@@ -424,6 +424,31 @@ class TestConvexHullVolume2D:
         with pytest.raises(ValueError, match=r"Cannot compute 2D convex hull for fewer than 3 points \(got 2\)"):
             convex_hull_volume_2d([[0, 0], [1, 1]])["value"]
 
+    def test_three_dimensional_input_raises(self):
+        """A 3-D array raises a ValueError instead of crashing UMAP."""
+        data = np.random.RandomState(0).rand(4, 3, 2)
+        with pytest.raises(ValueError, match=r"2-dimensional.*got shape \(4, 3, 2\)"):
+            convex_hull_volume_2d(data)
+
+    def test_one_dimensional_input_raises(self):
+        """A flat 1-D input raises a clear shape error."""
+        with pytest.raises(ValueError, match="2-dimensional"):
+            convex_hull_volume_2d([1.0, 2.0, 3.0])
+
+    def test_nan_input_raises_instead_of_zero(self):
+        """nan values raise instead of being misreported as zero area."""
+        data = np.random.RandomState(0).rand(5, 3)
+        data[1, 2] = np.nan
+        with pytest.raises(ValueError, match="non-finite"):
+            convex_hull_volume_2d(data)
+
+    def test_inf_input_raises(self):
+        """inf values raise a non-finite error as well."""
+        data = np.random.RandomState(0).rand(5, 2)
+        data[0, 0] = np.inf
+        with pytest.raises(ValueError, match="non-finite"):
+            convex_hull_volume_2d(data)
+
     def test_collinear_points_zero_volume(self):
         """Test that collinear points have zero area."""
         # Input is already 2D, so reduction is a no-op and points stay collinear.
