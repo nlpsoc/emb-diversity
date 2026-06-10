@@ -7,14 +7,14 @@ from emb_diversity.measures_registry import MEASURE_NAMES, get_measure
 class TestStringVectorRejection:
     """Vectors containing strings are rejected for every registered measure.
 
-    Only *vector* input must be numeric — a flat list of strings is text
-    input and is embedded as usual (see the last test). All measures resolve
-    their data through resolve_embeddings, which validates vector input
-    centrally — so each measure raises before any measure-specific code runs.
+    "vector" input (or list of lists) must be numeric.
+    Flat list of strings is accepted as text input and is embedded as usual (see the last test).
+    All measures resolve their data through resolve_embeddings, which validates vector input
+    centrally. So each measure raises before any measure-specific code runs.
     """
 
     @staticmethod
-    def _letters():
+    def _letters():  # list of list of strings -> should fail
         return [list(row) for row in ("abc", "def", "ghi", "jkl")]
 
     @staticmethod
