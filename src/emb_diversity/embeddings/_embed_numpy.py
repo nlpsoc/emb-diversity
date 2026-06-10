@@ -69,8 +69,8 @@ def ensure_finite(X: np.ndarray) -> None:
 
     A single non-finite value would otherwise propagate into the measure
     and turn the result into nan — or worse, a plausible-looking wrong
-    value. Runs inside ``to_numeric_array`` for vector input; embedded
-    text vectors run it separately, since they skip the conversion.
+    value. Runs as part of ``to_numeric_array``, which both given and
+    embedded vectors pass through.
 
     Raises:
         ValueError: If any value is nan or inf.
