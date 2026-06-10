@@ -30,13 +30,13 @@ class TestNonFiniteInputValidation:
         data = np.random.RandomState(0).rand(5, 4)
         data[0, 0] = np.inf
         with pytest.raises(ValueError, match="non-finite"):
-            mean_pw_dist(data)
+            mean_pw_dist(data)  # only test for one, should be the same for all measures
 
     def test_many_bad_rows_are_truncated_in_message(self):
         """With more than 10 bad rows, the message is truncated with a count."""
         data = np.full((15, 3), np.nan)
         with pytest.raises(ValueError, match=r"\(\+5 more\)"):
-            mean_pw_dist(data)
+            mean_pw_dist(data)  # only test for one, should be the same for all measures
 
     def test_nan_embeddings_from_model_raise(self, monkeypatch):
         """Embedded text is checked too: a model emitting nan raises.
@@ -64,7 +64,7 @@ class TestNonFiniteInputValidation:
         import emb_diversity.embed as embed_module
 
         def fake_encode(texts, model_name):
-            return np.ones((len(texts), 4))
+            return np.ones((len(texts), 4))  # ← ONE row = one sample
 
         monkeypatch.setattr(embed_module, "encode", fake_encode)
         with pytest.raises(ValueError, match="at least 2 samples, got 1"):
