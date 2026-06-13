@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 
 from .embeddings._embed_numpy import to_numeric_array
@@ -83,6 +85,7 @@ def embed_texts(
     texts: list[str],
     diversity_axis: str | None = "semantic",
     embedding_model: str | None = None,
+    cache_dir: Path | None = None,
 ) -> np.ndarray:
     """Embed a list of texts into vectors, with disk caching.
 
@@ -121,4 +124,7 @@ def embed_texts(
     # to_numeric_array is the shared exit gate for measure data: embedded
     # vectors get the same validation (>= 2 samples, finite) as vector
     # input, with no extra guards here.
-    return to_numeric_array(encode(texts, model_name=model_name))
+    kwargs = {"model_name": model_name}
+    if cache_dir is not None:
+        kwargs["cache_dir"] = cache_dir
+    return to_numeric_array(encode(texts, **kwargs))
