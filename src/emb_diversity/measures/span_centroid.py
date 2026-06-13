@@ -6,14 +6,14 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 from ..embed import resolve_embeddings
-from ._types import DISTANCE_METRIC, MeasureResult
+from ._types import DistanceMetric, MeasureResult
 
 ### Distance-Based Diversity Measure
 
 
 def span_centroid(
         data: Sequence[Sequence[float]],
-        metric: DISTANCE_METRIC = "cosine",
+        metric: DistanceMetric = "cosine",
         percentile: float = 90.0,
         *,
         diversity_axis: str = "semantic",

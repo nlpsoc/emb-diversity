@@ -6,14 +6,14 @@ import numpy as np
 from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
-from ._types import DISTANCE_METRIC, MeasureResult, TensorLike
+from ._types import DistanceMetric, MeasureResult, TensorLike
 from .utils import _compute_pairwise_distances
 
 ### Graph-Based Diversity Measure
 
 
 def graph_entropy(data: TensorLike,
-                  metric: DISTANCE_METRIC = "cosine",
+                  metric: DistanceMetric = "cosine",
                   *,
                   diversity_axis: str = "semantic",
                   embedding_model: str | None = None,

@@ -5,12 +5,12 @@ from typing import Any, Sequence
 import numpy as np
 
 from ..compute_pairwise import compute_pairwise_distances
-from ._types import DISTANCE_METRIC
+from ._types import DistanceMetric
 
 
 def _compute_pairwise_distances(
         data: Sequence[Sequence[float]],
-        metric: DISTANCE_METRIC = "cosine",
+        metric: DistanceMetric = "cosine",
         **metric_kwargs: Any,
 ) -> np.ndarray:
     """
