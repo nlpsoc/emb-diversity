@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Sequence, Union
 
 import numpy as np
 
-DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
+DistanceMetric = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 
 # Return shape of every measure: the scalar score plus the parameters that
 # produced it. ``{"value": float, "parameters": dict[str, Any]}``.
