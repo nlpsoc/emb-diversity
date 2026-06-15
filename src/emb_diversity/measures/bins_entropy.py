@@ -98,6 +98,15 @@ def bins_entropy(
     if projection not in {"umap", "pca"}:
         raise ValueError('projection must be either "umap" or "pca"')
 
+    # UMAP's spectral initialization needs more points than its output
+    # dimensionality and fails with cryptic internal errors below this.
+    if projection == "umap" and n < 4:
+        raise ValueError(
+            f"bins_entropy with projection='umap' requires at least 4 "
+            f"datapoints (got {n}); use projection='pca' for very small "
+            "inputs or provide more data."
+        )
+
     # Projection kwargs 
     if pca_kwargs is None:
         pca_kwargs = {}
