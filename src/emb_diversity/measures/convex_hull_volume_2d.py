@@ -7,7 +7,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 from ..embed import resolve_embeddings
-from ._types import MeasureResult
+from .types import MeasureResult
 
 ### Volume-Based Diversity Measure (2D-projected)
 

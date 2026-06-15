@@ -94,7 +94,7 @@ measure that is not registered, which catches typos.
 
    `resolve_embeddings` (from `..embed`) embeds text input and returns the
    resolved model id (`None` for vector input); `MeasureResult` is from
-   `._types`. Embedding args are keyword-only (after `*`). Add a Google-style
+   `.types`. Embedding args are keyword-only (after `*`). Add a Google-style
    docstring. The file and the function must share the measure's name — the
    registry and the package's lazy attribute access rely on that convention.
 

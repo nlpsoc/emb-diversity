@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Sequence
 
 from ..embed import resolve_embeddings
+from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
-from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 

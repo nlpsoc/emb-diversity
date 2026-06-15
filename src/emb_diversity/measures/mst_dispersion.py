@@ -7,7 +7,7 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
-from ._types import DistanceMetric, MeasureResult, TensorLike
+from .types import DistanceMetric, MeasureResult, TensorLike
 from .utils import _compute_pairwise_distances
 
 ### Graph-Based Diversity Measure

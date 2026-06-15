@@ -7,7 +7,7 @@ from scipy.spatial.distance import cdist
 
 from ..embed import resolve_embeddings
 from ..utility.validate import ensure_cosine_defined
-from ._types import DistanceMetric, MeasureResult
+from .types import DistanceMetric, MeasureResult
 
 ### Distance-Based Diversity Measure
 
