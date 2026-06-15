@@ -25,16 +25,6 @@ from emb_diversity.embed import embed_texts
 from emb_diversity.utility import project_root
 
 
-def encode_style_sentences(texts):
-    """Embed texts on the style axis using the package's embedding API."""
-    return embed_texts(texts, diversity_axis="style")
-
-
-def encode_semantic_sentences(texts):
-    """Embed texts on the semantic axis using the package's embedding API."""
-    return embed_texts(texts, diversity_axis="semantic")
-
-
 # ── STEL formality pairs (local pilot dataset) ────────────────────────
 
 STEL_path = (project_root.find() / "pilot_datasets" / "style_diversity" / "original_data" /
@@ -233,11 +223,11 @@ class TestOnSTEL:
 
         measures = _style_measures()
 
-        only_formal_style_vectors = encode_style_sentences(only_formal_text)
-        half_formal_style_vectors = encode_style_sentences(half_formal_text)
+        only_formal_style_vectors = embed_texts(only_formal_text, diversity_axis="style")
+        half_formal_style_vectors = embed_texts(half_formal_text, diversity_axis="style")
 
-        only_formal_semantic_vectors = encode_semantic_sentences(only_formal_text)
-        half_formal_semantic_vectors = encode_semantic_sentences(half_formal_text)
+        only_formal_semantic_vectors = embed_texts(only_formal_text, diversity_axis="semantic")
+        half_formal_semantic_vectors = embed_texts(half_formal_text, diversity_axis="semantic")
 
         evaluate_measures.evaluate_monotone_order(
             [only_formal_style_vectors, half_formal_style_vectors], measures,
@@ -253,8 +243,8 @@ class TestOnSTEL:
 
         measures = _style_measures()
 
-        low_variety_sv = encode_style_sentences(low_variety)
-        high_variety_sv = encode_style_sentences(high_variety)
+        low_variety_sv = embed_texts(low_variety, diversity_axis="style")
+        high_variety_sv = embed_texts(high_variety, diversity_axis="style")
 
         evaluate_measures.evaluate_monotone_order(
             [low_variety_sv, high_variety_sv], measures,
@@ -266,8 +256,8 @@ class TestOnSTEL:
 
         measures = _style_measures()
 
-        low_balance_sv = encode_style_sentences(low_balance)
-        high_balance_sv = encode_style_sentences(high_balance)
+        low_balance_sv = embed_texts(low_balance, diversity_axis="style")
+        high_balance_sv = embed_texts(high_balance, diversity_axis="style")
 
         evaluate_measures.evaluate_monotone_order(
             [low_balance_sv, high_balance_sv], measures,
@@ -279,8 +269,8 @@ class TestOnSTEL:
 
         measures = _style_measures()
 
-        low_disparity_sv = encode_style_sentences(low_disparity)
-        high_disparity_sv = encode_style_sentences(high_disparity)
+        low_disparity_sv = embed_texts(low_disparity, diversity_axis="style")
+        high_disparity_sv = embed_texts(high_disparity, diversity_axis="style")
 
         evaluate_measures.evaluate_monotone_order(
             [low_disparity_sv, high_disparity_sv], measures,
