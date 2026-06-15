@@ -28,6 +28,7 @@ from scipy.spatial.distance import pdist
 from safetensors.numpy import save_file, load_file
 
 from .embeddings._embed_numpy import to_numeric_array
+from .utility.validate import ensure_cosine_defined
 from .measures._types import DistanceMetric
 
 DEFAULT_CACHE_DIR = Path(".cache/pdist")
@@ -94,10 +95,13 @@ def compute_pairwise_distances(
 
     Raises:
         ValueError: If data is not numeric (strings are rejected, not
-            coerced), has fewer than 2 samples, is not 2-dimensional, or
-            contains non-finite values (nan or inf).
+            coerced), has fewer than 2 samples, is not 2-dimensional,
+            contains non-finite values (nan or inf), or contains all-zero
+            vectors while ``metric`` is ``"cosine"`` (cosine distance is
+            undefined for zero vectors).
     """
     X = to_numeric_array(data)
+    ensure_cosine_defined(X, metric)
 
     metric_id = _metric_key(metric, metric_kwargs)
     fp = _fingerprint(X)
