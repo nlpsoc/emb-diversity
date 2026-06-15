@@ -4,20 +4,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
 
-from emb_diversity import embed_texts, vendi_score
+from emb_diversity import embed_texts, graph_entropy
 
 
 BLUE   = "#6C7FB8"
 ORANGE = "#F5A77E"
 
 
-# Full datasets — used to fit PCA
+# Full datasets — used to fit PCA and to score diversity
 full_a = [
-    "I thoroughly enjoy the hair bands of the 1980s."
+    "I thoroughly enjoy the hair bands of the 1980s.",
     "songs of the 80's are the best.",
     "Hip Hop is going DOWNHILL!!!!!",
     "rock music just makes me feel good",
-    "The 80's rocked!That generation had the best music!"
+    "The 80's rocked!That generation had the best music!",
 ]
 full_b = [
     "I thoroughly enjoy the hair bands of the 1980s.",
@@ -65,15 +65,15 @@ for ax, axis_name in zip(axes_grid, AXES):
     coords_a = pca.transform(emb_disp_a)
     coords_b = pca.transform(emb_disp_b)
 
-    # Diversity scores on the displayed pairs (in original embedding space)
-    score_a = vendi_score(emb_disp_a)["value"]
-    score_b = vendi_score(emb_disp_b)["value"]
+    # Diversity scores on the full datasets (in original embedding space).
+    score_a = graph_entropy(emb_full_a)["value"]
+    score_b = graph_entropy(emb_full_b)["value"]
 
     ax.scatter(coords_a[:, 0], coords_a[:, 1],
-               c=BLUE, s=360, label=f"vendi score: {score_a:.3f}")
+               c=BLUE, s=360, label=f"graph entropy: {score_a:.3f}")
     ax.scatter(coords_b[:, 0], coords_b[:, 1],
                c=ORANGE, s=360, marker="^",
-               label=f"vendi score: {score_b:.3f}")
+               label=f"graph entropy: {score_b:.3f}")
 
     shared_owner = SHARED_COLOR_OWNER[axis_name]
 
