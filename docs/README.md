@@ -30,7 +30,7 @@ The generated HTML files will be in `docs/build/html/`. Open `docs/build/html/in
 
 ### Available Make Commands
 
-- `make apidoc` - Generate API documentation RST files from source code (discovers all modules including utility, eval, etc.)
+- `make apidoc` - Generate API documentation RST files from source code (discovers all modules including utility, embeddings, etc.)
 - `make html` - Build HTML documentation from RST files
 - `make clean` - Remove built documentation files
 - `make cleanall` - Remove both built documentation AND generated API RST files
@@ -42,7 +42,7 @@ This project uses `sphinx-apidoc` to generate documentation from source code. Yo
 ### How It Works
 
 1. **Run `make apidoc`** to scan your source code in `../src/emb_diversity/`
-2. `sphinx-apidoc` discovers all Python modules and submodules (measure, two_d, utility, eval, embeddings, etc.)
+2. `sphinx-apidoc` discovers all Python modules and submodules (measures, two_d, utility, embeddings, etc.)
 3. It generates RST files with a **flat structure** using the `--no-headings` flag
    - All modules appear as `emb_diversity.module_name`
    - No hierarchical "Submodules" or "Subpackages" sections
