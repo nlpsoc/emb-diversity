@@ -30,9 +30,12 @@ def measure_diversity(
         measure: Which measure(s) to run. Options:
             - ``None``: run the default measure(s) (``graph_entropy``)
             - a named set: ``"variety"``, ``"balance"`` or ``"disparity"``
-            - ``"all"``: run every registered measure
+            - ``"all"``: run every built-in measure
             - a measure name like ``"mean_pw_dist"``
-            - a list of measure names like ``["mean_pw_dist", "diameter"]``
+            - a measure callable defined with ``@measure`` (or registered with
+              ``register_measure``)
+            - a list mixing names and callables, like
+              ``["mean_pw_dist", my_measure]``
         diversity_axis: Registered axis name (default ``"semantic"``).
         embedding_model: Explicit model id; overrides *diversity_axis*.
 
@@ -51,25 +54,20 @@ def measure_diversity(
         >>> measure_diversity(texts, measure="variety")
         {'chamfer_dist': {'value': ..., 'parameters': {...}}, 'sum_bottleneck': {...}, 'mst_dispersion': {...}}
     """
-    # ── Resolve measure names ────────────────────────────────────
-    measure_names = _resolve_measure_names(measure)
+    # ── Resolve measures ─────────────────────────────────────────
+    items = _resolve_measure_names(measure)
 
-    # ── Validate ─────────────────────────────────────────────────
-    for name in measure_names:
-        if name not in MEASURE_NAMES:
-            raise KeyError(
-                f"Unknown measure {name!r}. Available: {sorted(MEASURE_NAMES)}"
-            )
+    # Resolve every item to a (name, callable) pair up front, so an unknown name
+    # or a non-measure callable fails fast here instead of being recorded as a
+    # per-measure NaN in the compute loop below.
+    resolved = [_resolve_measure(item) for item in items]
 
     # ── Compute ──────────────────────────────────────────────────
-    # Each measure resolves + embeds its input itself. When *data* is text, the
-    # first measure populates the embedding disk cache and the rest hit it, so
-    # the model runs only once.
+    # Each measure embeds its input itself. When *data* is text, the first
+    # measure populates the embedding disk cache and the rest hit it, so the
+    # model runs only once.
     results: dict[str, dict] = {}
-    for name in measure_names:
-        # Resolve outside the try block so an import failure surfaces as an
-        # error instead of being silently recorded as NaN.
-        measure_fn = get_measure(name)
+    for name, measure_fn in resolved:
         try:
             results[name] = measure_fn(
                 data, diversity_axis=diversity_axis, embedding_model=embedding_model
@@ -87,23 +85,43 @@ def measure_diversity(
     return results
 
 
-def _resolve_measure_names(measure: str | list[str] | None) -> list[str]:
-    """Convert the measure argument into a list of measure names.
+def _resolve_measure_names(measure):
+    """Convert the measure argument into a list of names and/or callables.
 
     Args:
-        measure: None for default, a named set, "all", a single name,
-            or a list of names.
+        measure: None for default; a named set, "all", a single name, or a
+            measure callable; or a list mixing names and callables.
 
     Returns:
-        List of measure name strings.
+        List whose items are measure name strings or measure callables.
     """
     if measure is None:
         return list(DEFAULT_MEASURE)
+    if callable(measure):
+        return [measure]
     if isinstance(measure, str):
         if measure == "all":
             return list(MEASURE_NAMES)
         if measure in MEASURE_SETS:
             return list(MEASURE_SETS[measure])
         return [measure]
-    # It's a list
+    # It's a list (of names and/or callables).
     return list(measure)
+
+
+def _resolve_measure(item):
+    """Resolve a name or measure callable to a ``(name, callable)`` pair.
+
+    Raises:
+        KeyError: If *item* is a name that is not a known measure.
+        TypeError: If *item* is a callable that was not built with ``@measure``
+            (and so would bypass the shared validation and result envelope).
+    """
+    if callable(item):
+        if not getattr(item, "_is_measure", False):
+            raise TypeError(
+                f"{getattr(item, '__name__', item)!r} is not a measure. Define it "
+                "with the @measure decorator, or register it with register_measure()."
+            )
+        return item.__name__, item
+    return item, get_measure(item)

@@ -14,6 +14,9 @@ from .measures_registry import MEASURE_NAMES
 _ATTR_TO_SUBMODULE = {
     # Main entry point
     "measure_diversity": "convenience",
+    # Runtime measure registration
+    "measure": "measures_registry",
+    "register_measure": "measures_registry",
     # Individual measures
     **{name: f"measures.{name}" for name in MEASURE_NAMES},
     # Embedding helper
@@ -56,6 +59,7 @@ if TYPE_CHECKING:
     )
     from .convenience import measure_diversity
     from .embed import embed_texts
+    from .measures_registry import measure, register_measure
     from .measures.bins_entropy import bins_entropy
     from .measures.bottleneck import bottleneck
     from .measures.chamfer_dist import chamfer_dist
