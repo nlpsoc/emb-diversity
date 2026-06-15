@@ -22,12 +22,14 @@ def my_measure(data, *, diversity_axis="semantic", embedding_model=None):
 - returns a dict with a float `"value"` and a `"parameters"` dict recording the
   configuration used.
 
-### Handling text input
+### Validating and embedding the input
 
-To accept text as well as vectors, embed the input with `resolve_embeddings` — the
-same helper the built-in measures use. It validates the input (rejecting a bare
-string, non-2-D data, fewer than 2 samples, and nan/inf), embeds text, and returns
-the resolved embedding-model id (or `None` for vector input) so you can record it:
+Make `resolve_embeddings` the first line of your measure — it is the same helper the
+built-in measures use, and the single place input validation happens. It rejects bad
+input (a bare string, non-2-D data, fewer than 2 samples, nan/inf), embeds text, and
+returns the resolved embedding-model id (or `None` for vector input) so you can
+record it. Your measure runs as given, so calling `resolve_embeddings` is what gives
+it the same validation — and the same text/vector handling — as the built-ins:
 
 ```python
 import numpy as np
@@ -38,9 +40,6 @@ def my_std(data, *, diversity_axis="semantic", embedding_model=None):
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
 ```
-
-If you only ever pass vectors (never text), you can skip `resolve_embeddings` and
-work with `data` directly.
 
 ### Reusing built-in helpers
 
@@ -93,9 +92,9 @@ Your measure is keyed by its function name (`my_std`) in the result.
 
 ## Good to know
 
-- **Run as given.** A custom measure is not validated or wrapped — it runs exactly
-  as written. (Calling `resolve_embeddings` first is what gives the built-ins their
-  input validation; do the same if you want it.)
+- **Run as given.** A custom measure is not wrapped or checked — it runs exactly as
+  written. Calling `resolve_embeddings` first (as above) is what validates the input,
+  so make it the first line of your measure.
 - **Failures are isolated.** If your measure raises, its `"value"` is `nan`, the
   entry gains an `"error"` key, and a `UserWarning` is emitted — the other measures
   in the call still run. This matches how built-in failures are reported.
