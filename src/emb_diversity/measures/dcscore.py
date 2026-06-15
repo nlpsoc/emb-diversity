@@ -4,6 +4,7 @@ from typing import Sequence
 
 from ..embed import resolve_embeddings
 from .types import MeasureResult
+from ..utility.validate import warn_on_zero_norm_rows
 
 ### Distribution-Based Diversity Measure
 
@@ -68,6 +69,12 @@ def dcscore(
     Raises:
         ValueError: If there are fewer than 2 datapoints or tau <= 0.
         NotImplementedError: For unknown kernel_type.
+
+    Warns:
+        UserWarning: If ``kernel_type="cs"`` and ``normalize=True`` and the
+            input contains an all-zero row (cosine similarity is undefined for
+            it). The score is still returned, treating the zero row as
+            near-orthogonal to every other point.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
@@ -90,6 +97,7 @@ def dcscore(
     # ---- 1) Build kernel matrix K ----
     if kernel_type == "cs":
         if normalize:
+            warn_on_zero_norm_rows(X, "dcscore")
             norms = np.linalg.norm(X, axis=1, keepdims=True)
             norms = np.clip(norms, 1e-12, None)
             X_use = X / norms
