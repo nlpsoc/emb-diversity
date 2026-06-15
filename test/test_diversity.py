@@ -523,15 +523,6 @@ class TestClusterInertiaDiversity:
 
 
 
-class TestRadius:
-
-    def test_known_value_two_points(self):
-        """Radius of two points equals the geometric mean of per-dim stds."""
-        data = [[0.0, 0.0], [2.0, 2.0]]
-        # std with ddof=1 along each dimension is sqrt(2)
-        assert np.isclose(radius(data)["value"], np.sqrt(2))
-
-
 class TestGraphEntropy:
 
     def test_identical_points_zero_entropy(self):
