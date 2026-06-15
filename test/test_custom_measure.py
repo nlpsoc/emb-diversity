@@ -28,13 +28,13 @@ class TestCustomMeasure:
     def test_callable_runs_and_is_keyed_by_name(self):
         """A custom measure callable runs and is keyed by its __name__."""
         result = measure_diversity(self._vectors(), measure=my_std)
-        assert set(result) == {"my_std"}
+        assert set(result.keys()) == {"my_std"}
         assert np.isfinite(result["my_std"]["value"])
 
     def test_mixed_list_of_names_and_callables(self):
         """A list may mix built-in names and custom callables."""
         result = measure_diversity(self._vectors(), measure=["mean_pw_dist", my_std])
-        assert set(result) == {"mean_pw_dist", "my_std"}
+        assert set(result.keys()) == {"mean_pw_dist", "my_std"}
 
     def test_unknown_string_name_still_raises(self):
         """An unknown string name still fails fast with the 'Available' KeyError."""
