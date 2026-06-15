@@ -71,11 +71,9 @@ def graph_entropy(data: TensorLike,
 
     n, d = X.shape
     # Graph entropy needs at least 3 nodes to be meaningful. With n == 2 each
-    # node has a single neighbour, so its normalized distance distribution puts
-    # all mass on that one neighbour (f_ij == 1) and its local entropy is
-    # -1 * log(1) == 0 regardless of how far apart the points are — the total is
-    # always exactly 0. A non-degenerate distribution needs >= 2 neighbours per
-    # node, i.e. n >= 3.
+    # node has a single neighbor, so its normalized distance distribution equals 0
+    # and its local entropy is C * log(1) == 0 regardless of how far apart the points are
+    # A reasonable result needs >= 2 neighbors per node, i.e. n >= 3.
     if n < 3:
         raise ValueError("Cannot compute graph entropy for fewer than 3 datapoints")
 
