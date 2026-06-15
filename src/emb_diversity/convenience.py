@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from typing import Callable
 
 from .measures_registry import (
     DEFAULT_MEASURE,
@@ -14,7 +15,7 @@ from .measures_registry import (
 
 def measure_diversity(
     data,
-    measure: str | list[str] | None = None,
+    measure: str | Callable | list | None = None,
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
 ) -> dict[str, dict]:
@@ -30,9 +31,15 @@ def measure_diversity(
         measure: Which measure(s) to run. Options:
             - ``None``: run the default measure(s) (``graph_entropy``)
             - a named set: ``"variety"``, ``"balance"`` or ``"disparity"``
-            - ``"all"``: run every registered measure
+            - ``"all"``: run every built-in measure
             - a measure name like ``"mean_pw_dist"``
             - a list of measure names like ``["mean_pw_dist", "diameter"]``
+            - your own measure callable, or a list mixing names and callables.
+              A custom measure follows the same contract as a built-in: it is
+              called as ``fn(data, diversity_axis=..., embedding_model=...)`` and
+              returns ``{"value": float, "parameters": {...}}``. It is keyed by
+              ``fn.__name__`` in the result. No validation is applied to a custom
+              measure — it is run as given.
         diversity_axis: Registered axis name (default ``"semantic"``).
         embedding_model: Explicit model id; overrides *diversity_axis*.
 
@@ -51,25 +58,26 @@ def measure_diversity(
         >>> measure_diversity(texts, measure="variety")
         {'chamfer_dist': {'value': ..., 'parameters': {...}}, 'sum_bottleneck': {...}, 'mst_dispersion': {...}}
     """
-    # ── Resolve measure names ────────────────────────────────────
-    measure_names = _resolve_measure_names(measure)
+    # ── Resolve measures ─────────────────────────────────────────
+    # Each item is a built-in name or a user-supplied measure callable.
+    items = _resolve_measure_names(measure)
 
-    # ── Validate ─────────────────────────────────────────────────
-    for name in measure_names:
-        if name not in MEASURE_NAMES:
-            raise KeyError(
-                f"Unknown measure {name!r}. Available: {sorted(MEASURE_NAMES)}"
-            )
+    # Resolve every item to a (name, callable) pair outside the compute loop, so
+    # an unknown name fails fast (KeyError) instead of being recorded as a
+    # per-measure NaN. A callable is used as-is and keyed by its ``__name__``.
+    resolved: list[tuple[str, Callable]] = []
+    for item in items:
+        if callable(item):
+            resolved.append((getattr(item, "__name__", "measure"), item))
+        else:
+            resolved.append((item, get_measure(item)))
 
     # ── Compute ──────────────────────────────────────────────────
     # Each measure resolves + embeds its input itself. When *data* is text, the
     # first measure populates the embedding disk cache and the rest hit it, so
     # the model runs only once.
     results: dict[str, dict] = {}
-    for name in measure_names:
-        # Resolve outside the try block so an import failure surfaces as an
-        # error instead of being silently recorded as NaN.
-        measure_fn = get_measure(name)
+    for name, measure_fn in resolved:
         try:
             results[name] = measure_fn(
                 data, diversity_axis=diversity_axis, embedding_model=embedding_model
@@ -87,23 +95,25 @@ def measure_diversity(
     return results
 
 
-def _resolve_measure_names(measure: str | list[str] | None) -> list[str]:
-    """Convert the measure argument into a list of measure names.
+def _resolve_measure_names(measure):
+    """Convert the measure argument into a list of names and/or callables.
 
     Args:
-        measure: None for default, a named set, "all", a single name,
-            or a list of names.
+        measure: None for default; a named set, "all", a single name, or a
+            measure callable; or a list mixing names and callables.
 
     Returns:
-        List of measure name strings.
+        List whose items are measure name strings or measure callables.
     """
     if measure is None:
         return list(DEFAULT_MEASURE)
+    if callable(measure):
+        return [measure]
     if isinstance(measure, str):
         if measure == "all":
             return list(MEASURE_NAMES)
         if measure in MEASURE_SETS:
             return list(MEASURE_SETS[measure])
         return [measure]
-    # It's a list
+    # It's a list (of names and/or callables).
     return list(measure)
