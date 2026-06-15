@@ -25,6 +25,7 @@
 :maxdepth: 2
 
 user-guide/measures
+user-guide/adding-a-measure
 user-guide/vectors
 user-guide/axes
 user-guide/cli
