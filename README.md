@@ -283,21 +283,22 @@ When you add a new measure to `src/emb_diversity/measures/`:
    (`test/test_lazy_import.py` fails if this step is forgotten).
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
 
-A distance-based measure can reuse `compute_pairwise_distances` — the cached
-pairwise-distance helper (a condensed `scipy.pdist` array with an on-disk cache), so
-several measures over the same embeddings reuse the result instead of recomputing:
+A distance-based measure can reuse `_compute_pairwise_distances` from
+`measures/utils.py` — the cached pairwise-distance helper the built-in measures use
+(a condensed `scipy.pdist` array with an on-disk cache), so several measures over the
+same embeddings reuse the result instead of recomputing:
 
 ```python
 import numpy as np
 
-from ..compute_pairwise import compute_pairwise_distances
 from ..embed import resolve_embeddings
 from .types import MeasureResult
+from .utils import _compute_pairwise_distances
 
 
 def mean_cosine_dist(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
-    dists = compute_pairwise_distances(data, metric="cosine")
+    dists = _compute_pairwise_distances(data, metric="cosine")
     return {
         "value": float(np.mean(dists)),
         "parameters": {"metric": "cosine", "embedding_model": embedding_model},
