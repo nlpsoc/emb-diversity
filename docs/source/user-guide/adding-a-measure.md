@@ -6,9 +6,9 @@ passing a function to `measure_diversity()` — no need to modify the package.
 ## The contract
 
 A custom measure is a function called exactly like a built-in: it receives the
-`data` you passed to `measure_diversity()` plus the embedding keywords, and returns a
+`data` you passed to `measure_diversity()` plus the embedding keywords, and should return a
 `{"value": float, "parameters": {...}}` dict. Make `resolve_embeddings` its first
-line — that is the single place input is validated and text is embedded:
+line, that is the single place input is validated and text is embedded:
 
 ```python
 from emb_diversity.embed import resolve_embeddings
@@ -24,9 +24,8 @@ def my_std(data, *, diversity_axis="semantic", embedding_model=None):
 - `resolve_embeddings` — the same helper the built-ins use. It validates the input
   (rejecting a bare string, non-2-D data, fewer than 2 samples, nan/inf), embeds
   text, and returns the vectors plus the resolved embedding-model id (`None` for
-  vector input). Your measure runs as given, so calling it is what gives your measure
-  that validation.
-- returns a dict with a float `"value"` and a `"parameters"` dict recording the
+  vector input). 
+- return a dict with a float `"value"` and a `"parameters"` dict recording the
   configuration used.
 
 ### Reusing built-in helpers
@@ -54,7 +53,7 @@ def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_m
 ## Running it
 
 Pass the function as `measure`. The `data` you give `measure_diversity()` is handed
-to your measure unchanged — it can be a list of text strings (embedded for you) or
+to your measure unchanged. It can be a list of text strings (embedded for you) or
 an `(n, d)` array of vectors, exactly like the built-in measures:
 
 ```python
