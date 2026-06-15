@@ -66,7 +66,13 @@ docs = [
     "myst-parser>=5.0.0",
 ]
 dev = [
-    "datasets~=3.3.2",
+    "datasets>=5.0.0",
+    # dill <0.3.9 monkeypatches pickle.Pickler._batch_setitems with the
+    # pre-3.14 2-arg signature, which TypeErrors on Python 3.14. datasets
+    # pulls dill in transitively but its lower bound still permits the broken
+    # version, so pin a 3.14-compatible dill (and the matching multiprocess).
+    "dill>=0.4.1",
+    "multiprocess>=0.70.17",
     "notebook>=7.0.0",
     "matplotlib~=3.10.0",
     "numpy~=2.3.5",
