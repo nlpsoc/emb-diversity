@@ -29,14 +29,15 @@ def warn_on_zero_norm_rows(X: np.ndarray, measure: str) -> None:
     zero_rows = np.flatnonzero(np.linalg.norm(X, axis=1) == 0)
     if zero_rows.size > 0:
         warnings.warn(
-            f"{measure}: cosine similarity is undefined for all-zero vectors "
-            f"(their norm is 0); data row(s) {zero_rows.tolist()} are all "
-            "zeros and are treated as near-orthogonal to every other point. "
-            "Their contribution to the score is not meaningful — remove these "
-            "rows, set normalize=False, or use a non-cosine kernel_type.",
+            f"{measure}: data row(s) {zero_rows.tolist()} are all-zero vectors. "
+            "Cosine similarity is undefined for them (their norm is 0), but "
+            "instead of failing this measure clips the norm to a tiny value and "
+            "still returns a score. That score is silently affected by these "
+            "clipped zero rows, so it may not reflect your data and you get no "
+            "error to flag it. Remove these rows, set normalize=False, or use a "
+            "non-cosine kernel_type.",
             stacklevel=2,
         )
-
 
 def ensure_cosine_defined(X: np.ndarray, metric) -> None:
     """Raise if *metric* is cosine and *X* contains all-zero rows.
