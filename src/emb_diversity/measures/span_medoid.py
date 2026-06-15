@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
-from ._types import DISTANCE_METRIC, MeasureResult
+from ._types import DistanceMetric, MeasureResult
 from .utils import _compute_pairwise_distances
 
 ### Volume-Based Diversity Measure
@@ -14,7 +14,7 @@ from .utils import _compute_pairwise_distances
 
 def span_medoid(
         data: Sequence[Sequence[float]],
-        metric: DISTANCE_METRIC = "cosine",
+        metric: DistanceMetric = "cosine",
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,

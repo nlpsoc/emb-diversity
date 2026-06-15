@@ -5,7 +5,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from ..embed import resolve_embeddings
-from ._types import DISTANCE_METRIC, MeasureResult
+from ._types import DistanceMetric, MeasureResult
 from .utils import _compute_pairwise_distances
 
 ### Distance-Based Diversity Measure
@@ -13,7 +13,7 @@ from .utils import _compute_pairwise_distances
 
 def mean_pw_dist(
         data: Sequence[Sequence[float]],
-        metric: DISTANCE_METRIC = "cosine",
+        metric: DistanceMetric = "cosine",
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,

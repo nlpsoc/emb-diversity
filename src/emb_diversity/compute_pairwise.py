@@ -29,8 +29,8 @@ from safetensors.numpy import save_file, load_file
 
 from .embeddings._embed_numpy import to_numeric_array
 from .utility.validate import ensure_cosine_defined
+from .measures._types import DistanceMetric
 
-DISTANCE_METRIC = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 DEFAULT_CACHE_DIR = Path(".cache/pdist")
 # how many chunks we feed into the hash function at a time, to keep memory
 # usage constant regardless of input size
@@ -53,7 +53,7 @@ def _fingerprint(X: np.ndarray) -> str:
     return h.hexdigest()
 
 
-def _metric_key(metric: DISTANCE_METRIC, metric_kwargs: dict) -> str:
+def _metric_key(metric: DistanceMetric, metric_kwargs: dict) -> str:
     """Stable, filesystem-safe key for metric + kwargs."""
     if not metric_kwargs and isinstance(metric, str):
         return metric
@@ -76,7 +76,7 @@ def _store_memory(key: str, result: np.ndarray) -> None:
 
 def compute_pairwise_distances(
     data: Sequence[Sequence[float]],
-    metric: DISTANCE_METRIC = "cosine",
+    metric: DistanceMetric = "cosine",
     cache_dir: Path = DEFAULT_CACHE_DIR,
     **metric_kwargs: Any,
 ) -> np.ndarray:
