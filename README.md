@@ -270,7 +270,9 @@ When you add a new measure to `src/emb_diversity/measures/`:
    (no decorator, same name as its file) with the signature
    `def name(data, <params>, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult`.
    Call `data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)`
-   first (it embeds text input and returns the resolved model id), then return
+   first: it embeds text input, returns the resolved model id, and is the single
+   place input is validated — it rejects a bare string, non-2-D data, fewer than 2
+   samples, and nan/inf values. Then return
    `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
    Add a complete docstring following the style guide above.
 2. Add its name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
@@ -280,6 +282,28 @@ When you add a new measure to `src/emb_diversity/measures/`:
    `src/emb_diversity/__init__.py` so IDEs and type checkers see it
    (`test/test_lazy_import.py` fails if this step is forgotten).
 4. **Update `docs/source/user-guide/measures.md`** — add a row for the new measure in the appropriate table.
+
+A distance-based measure can reuse `_compute_pairwise_distances` from
+`measures/utils.py` — it delegates to the cached `compute_pairwise_distances`
+(a condensed `scipy.pdist` array with an on-disk cache), so several measures over the
+same embeddings reuse the result instead of recomputing:
+
+```python
+import numpy as np
+
+from ..embed import resolve_embeddings
+from ._types import MeasureResult
+from .utils import _compute_pairwise_distances
+
+
+def mean_cosine_dist(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    dists = _compute_pairwise_distances(data, metric="cosine")
+    return {
+        "value": float(np.mean(dists)),
+        "parameters": {"metric": "cosine", "embedding_model": embedding_model},
+    }
+```
 
 ### Adding New Diversity Axes
 
