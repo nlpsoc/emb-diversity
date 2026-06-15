@@ -42,6 +42,28 @@ def my_std(data, *, diversity_axis="semantic", embedding_model=None):
 If you only ever pass vectors (never text), you can skip `resolve_embeddings` and
 work with `data` directly.
 
+### Reusing built-in helpers
+
+For distance-based measures you can reuse `compute_pairwise_distances` — the same
+cached helper the built-ins use. It returns the condensed array of all pairwise
+distances (like `scipy.spatial.distance.pdist`) and shares the on-disk distance
+cache, so repeated runs over the same vectors and metric are cheap:
+
+```python
+import numpy as np
+from emb_diversity import compute_pairwise_distances
+from emb_diversity.embed import resolve_embeddings
+
+def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_model=None):
+    """A custom measure: the smallest pairwise distance."""
+    vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
+    dists = compute_pairwise_distances(vectors, metric)
+    return {
+        "value": float(dists.min()),
+        "parameters": {"metric": metric, "embedding_model": model},
+    }
+```
+
 ## Running it
 
 Pass the function as `measure`. The `data` you give `measure_diversity()` is handed
