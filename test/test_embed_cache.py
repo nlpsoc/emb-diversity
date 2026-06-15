@@ -5,12 +5,11 @@ Run directly: python test/test_embed_cache.py
 """
 import time
 import torch
-from pathlib import Path
 
 from emb_diversity.embeddings.embed_text import encode
-from emb_diversity.utility import clear_cache
+from emb_diversity.utility import clear_cache, CACHE_ROOT
 
-CACHE_DIR = Path(".cache/test_embeddings")
+CACHE_DIR = CACHE_ROOT / "test_embeddings"
 MODEL_NAME = "all-MiniLM-L6-v2"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 

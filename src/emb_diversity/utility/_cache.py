@@ -8,7 +8,9 @@ import numpy as np
 import xxhash
 from safetensors.numpy import save_file, load_file
 
-DEFAULT_CACHE_DIR = Path(".cache/embeddings")
+from ._cache_root import CACHE_ROOT
+
+DEFAULT_CACHE_DIR = CACHE_ROOT / "embeddings"
 
 
 def _hash(text: str) -> str:
@@ -77,9 +79,20 @@ def cached_encode(
     return [emb.tolist() for emb in cached]
 
 
+def _assert_within_cache_root(path: Path) -> None:
+    if not path.resolve().is_relative_to(CACHE_ROOT.resolve()):
+        raise ValueError(
+            f"Refusing to delete {path.resolve()!r}: path is outside the "
+            f"emb-diversity cache root ({CACHE_ROOT!r}). "
+            f"Pass a path under {CACHE_ROOT!r}, or set EMB_DIVERSITY_CACHE "
+            f"to a directory that contains your cache."
+        )
+
+
 def clear_cache(model_name: str = None, cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
     """Clear cached embeddings. If model_name given, only that model."""
     import shutil
     target = cache_dir / model_name.replace("/", "_") if model_name is not None else cache_dir
+    _assert_within_cache_root(target)
     if target.exists():
         shutil.rmtree(target)

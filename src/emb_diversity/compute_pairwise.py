@@ -29,9 +29,10 @@ from safetensors.numpy import save_file, load_file
 
 from .embeddings._embed_numpy import to_numeric_array
 from .utility.validate import ensure_cosine_defined
+from .utility._cache_root import CACHE_ROOT
 from .measures._types import DistanceMetric
 
-DEFAULT_CACHE_DIR = Path(".cache/pdist")
+DEFAULT_CACHE_DIR = CACHE_ROOT / "pdist"
 # how many chunks we feed into the hash function at a time, to keep memory
 # usage constant regardless of input size
 _HASH_CHUNK = 1_000_000
@@ -130,6 +131,13 @@ def compute_pairwise_distances(
 def clear_distance_cache(cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
     """Clear both memory and disk caches."""
     import shutil
+    if not cache_dir.resolve().is_relative_to(CACHE_ROOT.resolve()):
+        raise ValueError(
+            f"Refusing to delete {cache_dir.resolve()!r}: path is outside the "
+            f"emb-diversity cache root ({CACHE_ROOT!r}). "
+            f"Pass a path under {CACHE_ROOT!r}, or set EMB_DIVERSITY_CACHE "
+            f"to a directory that contains your cache."
+        )
     _memory.clear()
     if cache_dir.exists():
         shutil.rmtree(cache_dir)

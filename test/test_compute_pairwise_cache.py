@@ -22,8 +22,9 @@ from emb_diversity import (
     energy,
 )
 from emb_diversity.measures.utils import _compute_pairwise_distances
+from emb_diversity.utility import CACHE_ROOT
 
-CACHE_DIR = Path(".cache/pdist_test")
+CACHE_DIR = CACHE_ROOT / "pdist_test"
 
 
 @pytest.fixture(autouse=True)

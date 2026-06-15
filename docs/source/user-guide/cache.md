@@ -31,12 +31,18 @@ Each sentence is cached **individually**. When you pass a list of texts, every s
 By default, embeddings are stored under:
 
 ```
-.cache/embeddings/<model_name>/
+~/.cache/emb-diversity/embeddings/<model_name>/
 ```
 
-Each model gets its own subdirectory, so embeddings from different models never interfere with each other.
+Each model gets its own subdirectory, so embeddings from different models never interfere with each other. The cache is shared across all your projects — running the same texts from two different directories reuses the same cached embeddings.
 
-To use a custom cache directory, pass `cache_dir` to `embed_texts()`:
+To redirect the cache to a different root (for example, a shared scratch disk on an HPC cluster), set the `EMB_DIVERSITY_CACHE` environment variable:
+
+```bash
+export EMB_DIVERSITY_CACHE=/scratch/my_project/cache
+```
+
+To use a custom directory for a single call, pass `cache_dir` to `embed_texts()`:
 
 ```python
 from emb_diversity.embed import embed_texts
@@ -66,7 +72,9 @@ There is no on/off switch for the cache. If you need to force re-embedding (for 
 `clear_cache()` accepts two optional arguments:
 
 - `model_name` — if provided, only the cache for that model is removed. If omitted, the entire cache directory is wiped.
-- `cache_dir` — the root cache directory to clear. Defaults to `.cache/embeddings`.
+- `cache_dir` — the root cache directory to clear. Defaults to `~/.cache/emb-diversity/embeddings`.
+
+For safety, `clear_cache()` refuses to delete any path outside the emb-diversity cache root. If you pass a custom `cache_dir`, it must be a subdirectory of `~/.cache/emb-diversity/` (or wherever `EMB_DIVERSITY_CACHE` points).
 
 ```python
 from emb_diversity.utility import clear_cache
@@ -125,10 +133,12 @@ Two constants control the caching behaviour:
 By default, distance matrices are stored under:
 
 ```
-.cache/pdist/
+~/.cache/emb-diversity/pdist/
 ```
 
-To use a custom directory, pass `cache_dir`:
+To redirect the cache to a different root, set the `EMB_DIVERSITY_CACHE` environment variable (see [Cache Location](#cache-location) above).
+
+To use a custom directory for a single call, pass `cache_dir`:
 
 ```python
 from emb_diversity.compute_pairwise import compute_pairwise_distances
@@ -158,12 +168,14 @@ info = distance_cache_info()
 
 `clear_distance_cache()` clears both the in-memory LRU and the disk cache at once. Unlike the embedding cache, there is no per-metric option — the entire cache directory is removed.
 
+As with `clear_cache()`, the function refuses to delete any path outside the emb-diversity cache root.
+
 ```python
 from emb_diversity.compute_pairwise import clear_distance_cache
 
 # Clear memory and disk cache (default directory)
 clear_distance_cache()
 
-# Clear a custom cache directory
+# Clear a custom cache directory (must be inside ~/.cache/emb-diversity/)
 clear_distance_cache(cache_dir=Path("/my/cache"))
 ```
