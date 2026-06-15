@@ -7,13 +7,15 @@ passing a function to `measure_diversity()` — no need to modify the package.
 
 A custom measure is a function called exactly like a built-in: it receives the
 `data` you passed to `measure_diversity()` plus the embedding keywords, and should return a
-`{"value": float, "parameters": {...}}` dict. Make `resolve_embeddings` its first
-line, that is the single place input is validated and text is embedded:
+`{"value": float, "parameters": {...}}` dict (the `MeasureResult` type). Make
+`resolve_embeddings` its first line, that is the single place input is validated and
+text is embedded:
 
 ```python
+from emb_diversity import MeasureResult
 from emb_diversity.embed import resolve_embeddings
 
-def my_std(data, *, diversity_axis="semantic", embedding_model=None):
+def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the standard deviation of the vectors."""
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
@@ -36,11 +38,10 @@ distances (like `scipy.spatial.distance.pdist`) and shares the on-disk distance
 cache, so repeated runs over the same vectors and metric are cheap:
 
 ```python
-import numpy as np
-from emb_diversity import compute_pairwise_distances
+from emb_diversity import MeasureResult, compute_pairwise_distances
 from emb_diversity.embed import resolve_embeddings
 
-def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_model=None):
+def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the smallest pairwise distance."""
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     dists = compute_pairwise_distances(vectors, metric)

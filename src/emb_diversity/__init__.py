@@ -14,6 +14,8 @@ from .measures_registry import MEASURE_NAMES
 _ATTR_TO_SUBMODULE = {
     # Main entry point
     "measure_diversity": "convenience",
+    # Return type for annotating measures
+    "MeasureResult": "measures._types",
     # Individual measures
     **{name: f"measures.{name}" for name in MEASURE_NAMES},
     # Embedding helper
@@ -56,6 +58,7 @@ if TYPE_CHECKING:
     )
     from .convenience import measure_diversity
     from .embed import embed_texts
+    from .measures._types import MeasureResult
     from .measures.bins_entropy import bins_entropy
     from .measures.bottleneck import bottleneck
     from .measures.chamfer_dist import chamfer_dist

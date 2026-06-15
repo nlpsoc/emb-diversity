@@ -9,11 +9,11 @@ validation is applied to it.
 import numpy as np
 import pytest
 
-from emb_diversity import measure_diversity
+from emb_diversity import MeasureResult, measure_diversity
 from emb_diversity.embed import resolve_embeddings
 
 
-def my_std(data, *, diversity_axis="semantic", embedding_model=None):
+def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A toy custom measure: standard deviation of the (embedded) vectors."""
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(np.std(vectors)), "parameters": {"embedding_model": model}}
