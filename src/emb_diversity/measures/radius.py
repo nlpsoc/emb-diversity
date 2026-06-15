@@ -5,7 +5,7 @@ from typing import Sequence
 import numpy as np
 
 from ..embed import resolve_embeddings
-from ._types import MeasureResult
+from .types import MeasureResult
 
 ### Volume-Based Diversity Measure
 

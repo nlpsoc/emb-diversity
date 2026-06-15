@@ -12,8 +12,8 @@ A custom measure is a function called exactly like a built-in: it receives the
 text is embedded:
 
 ```python
-from emb_diversity import MeasureResult
 from emb_diversity.embed import resolve_embeddings
+from emb_diversity.measures.types import MeasureResult
 
 def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the standard deviation of the vectors."""
@@ -38,8 +38,9 @@ distances (like `scipy.spatial.distance.pdist`) and shares the on-disk distance
 cache, so repeated runs over the same vectors and metric are cheap:
 
 ```python
-from emb_diversity import MeasureResult, compute_pairwise_distances
+from emb_diversity import compute_pairwise_distances
 from emb_diversity.embed import resolve_embeddings
+from emb_diversity.measures.types import MeasureResult
 
 def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the smallest pairwise distance."""

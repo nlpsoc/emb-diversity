@@ -9,8 +9,9 @@ validation is applied to it.
 import numpy as np
 import pytest
 
-from emb_diversity import MeasureResult, measure_diversity
+from emb_diversity import measure_diversity
 from emb_diversity.embed import resolve_embeddings
+from emb_diversity.measures.types import MeasureResult
 
 
 def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:

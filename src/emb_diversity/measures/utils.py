@@ -5,7 +5,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from ..compute_pairwise import compute_pairwise_distances
-from ._types import DistanceMetric
+from .types import DistanceMetric
 
 
 def _compute_pairwise_distances(

@@ -292,7 +292,7 @@ same embeddings reuse the result instead of recomputing:
 import numpy as np
 
 from ..embed import resolve_embeddings
-from ._types import MeasureResult
+from .types import MeasureResult
 from .utils import _compute_pairwise_distances
 
 

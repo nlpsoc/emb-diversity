@@ -7,7 +7,7 @@ from networkx.algorithms.approximation import greedy_tsp, christofides
 from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
-from ._types import DistanceMetric, MeasureResult
+from .types import DistanceMetric, MeasureResult
 from .utils import _compute_pairwise_distances
 
 ### Distance-Based Diversity Measure

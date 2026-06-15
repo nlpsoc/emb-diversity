@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 from ..embed import resolve_embeddings
-from ._types import MeasureResult
+from .types import MeasureResult
 
 ### Distance-Based Diversity Measure
 

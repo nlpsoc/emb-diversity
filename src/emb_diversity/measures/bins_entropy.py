@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..embed import resolve_embeddings
-from ._types import MeasureResult
+from .types import MeasureResult
 
 ### Distribution-Based Diversity Measure
 
