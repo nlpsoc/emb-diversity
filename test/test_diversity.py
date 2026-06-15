@@ -555,6 +555,12 @@ class TestGraphEntropy:
 
         assert not np.isclose(euclidean_ent, cosine_ent)
 
+    def test_two_points_rejected(self):
+        """Two points are rejected: the entropy would be a degenerate 0."""
+        data = np.array([[1, 0], [0, 1]])
+        with pytest.raises(ValueError, match="fewer than 3 datapoints"):
+            graph_entropy(data, metric="euclidean")
+
 
 
 class TestDCScore:

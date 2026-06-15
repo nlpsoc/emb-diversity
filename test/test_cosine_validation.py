@@ -57,8 +57,11 @@ class TestCosineZeroVectorValidation:
     @pytest.mark.parametrize("name", COSINE_MEASURE_NAMES)
     def test_zero_vector_with_cosine_raises(self, name):
         """A zero vector under the default cosine metric raises instead of nan."""
+        # Three points (not two) so graph_entropy, which needs >= 3 datapoints,
+        # reaches the cosine check instead of its own too-few-points guard. The
+        # zero vector stays at row 1 so the expected message is unchanged.
         with pytest.raises(ValueError, match="Cosine distance is undefined.*row\\(s\\) \\[1\\]"):
-            get_measure(name)([[1.0, 1.0], [0.0, 0.0]])
+            get_measure(name)([[1.0, 1.0], [0.0, 0.0], [2.0, 3.0]])
 
     def test_zero_centroid_with_cosine_raises_in_span_centroid(self):
         """Nonzero vectors whose mean is the zero vector raise in span_centroid."""
