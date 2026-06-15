@@ -304,6 +304,14 @@ def mean_cosine_dist(data, *, diversity_axis="semantic", embedding_model=None) -
     }
 ```
 
+The shared type aliases — `MeasureResult` (the `{"value", "parameters"}` return dict),
+`DistanceMetric`, and `TensorLike` — live in `src/emb_diversity/measures/types.py`;
+import them from `.types` in your measure module.
+
+For complete, working examples, copy the shape of an existing measure in
+`src/emb_diversity/measures/` — e.g. `mean_pw_dist.py` for a simple distance-based
+measure, or `vendi_score.py` for one with several parameters.
+
 ### Adding New Diversity Axes
 
 Register a new axis in `src/emb_diversity/axes_registry.py`:
