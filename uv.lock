@@ -673,7 +673,6 @@ name = "emb-diversity"
 version = "0.0.6"
 source = { editable = "." }
 dependencies = [
-    { name = "datasets" },
     { name = "matplotlib" },
     { name = "networkx" },
     { name = "numpy" },
@@ -714,7 +713,6 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "datasets", specifier = ">=3.3" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "networkx", specifier = ">=2.8.8" },
     { name = "numpy", specifier = ">=1.26" },
