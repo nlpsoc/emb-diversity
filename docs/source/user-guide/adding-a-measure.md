@@ -44,15 +44,25 @@ work with `data` directly.
 
 ## Running it
 
-Pass the function as `measure` — on its own, or in a list mixing built-in names and
-your own measures:
+Pass the function as `measure`. The `data` you give `measure_diversity()` is handed
+to your measure unchanged — it can be a list of text strings (embedded for you) or
+an `(n, d)` array of vectors, exactly like the built-in measures:
 
 ```python
+import numpy as np
 from emb_diversity import measure_diversity
 
+# Text input — embedded via the diversity axis / embedding model.
+texts = ["The cat sat on the mat.", "Dogs play fetch.", "A bird sings at dawn."]
 measure_diversity(texts, measure=my_spread)
 # {'my_spread': {'value': ..., 'parameters': {'embedding_model': '...'}}}
 
+# Vector input — used directly; no embedding, so embedding_model is None.
+vectors = np.random.randn(100, 384)
+measure_diversity(vectors, measure=my_spread)
+# {'my_spread': {'value': ..., 'parameters': {'embedding_model': None}}}
+
+# Mixed with built-in measures, in a list:
 measure_diversity(texts, measure=["mean_pw_dist", my_spread])
 # {'mean_pw_dist': {...}, 'my_spread': {...}}
 ```
