@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from ..embed import resolve_embeddings
+from ..utility.validate import kernel_row_norms
 from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
@@ -89,6 +90,12 @@ def renyi_entropy(
             if use_eigendecomp=False with alpha not in {1, 2}.
         NotImplementedError:
             For unknown kernel_type.
+
+    Warns:
+        UserWarning: If ``kernel_type="cs"`` and ``normalize=True`` and the
+            input contains an all-zero row (cosine similarity is undefined for
+            it). The score is still returned, treating the zero row as
+            near-orthogonal to every other point.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     parameters = {
@@ -122,8 +129,7 @@ def renyi_entropy(
     # ---- 1) Build kernel matrix K ----
     if kernel_type == "cs":
         if normalize:
-            norms = np.linalg.norm(X, axis=1, keepdims=True)
-            norms = np.clip(norms, 1e-12, None)
+            norms = kernel_row_norms(X, "renyi_entropy")
             X_use = X / norms
         else:
             X_use = X

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from ..embed import resolve_embeddings
+from ..utility.validate import kernel_row_norms
 from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
@@ -66,6 +67,12 @@ def vendi_score(
         ValueError:
             If input is not 2D, or has fewer than 2 datapoints.
 
+    Warns:
+        UserWarning: If ``normalize=True`` and the input contains an all-zero
+            row (cosine similarity is undefined for it). The score is still
+            returned, treating the zero row as near-orthogonal to every other
+            point. Applies to both the dual and explicit paths.
+
     Note:
         Wraps the official ``vendi_score`` implementation
         (https://github.com/vertaix/Vendi-Score).
@@ -86,6 +93,10 @@ def vendi_score(
     if n < 2:
         raise ValueError("Cannot compute Vendi Score for fewer than 2 datapoints")
 
+    # When normalizing, warn (once) on any all-zero row before either path so
+    # the dual (library-normalized) and explicit branches behave the same.
+    norms = kernel_row_norms(X, "vendi_score") if normalize else None
+
     # Case 1: use dual formulation (recommended when d <= n, or in general for embeddings)
     if use_dual:
         # vendi.score_dual handles normalization internally
@@ -94,8 +105,6 @@ def vendi_score(
     # Case 2: explicitly build similarity matrix K and call score_K
     # Here we use (normalized) dot product as similarity.
     if normalize:
-        norms = np.linalg.norm(X, axis=1, keepdims=True)
-        norms = np.clip(norms, a_min=1e-12, a_max=None)
         X_norm = X / norms
     else:
         X_norm = X
