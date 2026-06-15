@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from ..embed import resolve_embeddings
-from ..utility.validate import kernel_row_norms
+from ..utility.validate import warn_on_zero_norm_rows
 from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
@@ -129,7 +129,9 @@ def renyi_entropy(
     # ---- 1) Build kernel matrix K ----
     if kernel_type == "cs":
         if normalize:
-            norms = kernel_row_norms(X, "renyi_entropy")
+            warn_on_zero_norm_rows(X, "renyi_entropy")
+            norms = np.linalg.norm(X, axis=1, keepdims=True)
+            norms = np.clip(norms, 1e-12, None)
             X_use = X / norms
         else:
             X_use = X

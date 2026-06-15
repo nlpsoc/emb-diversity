@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from ..embed import resolve_embeddings
-from ..utility.validate import kernel_row_norms
+from ..utility.validate import warn_on_zero_norm_rows
 from ._types import MeasureResult
 
 ### Distribution-Based Diversity Measure
@@ -95,7 +95,8 @@ def vendi_score(
 
     # When normalizing, warn (once) on any all-zero row before either path so
     # the dual (library-normalized) and explicit branches behave the same.
-    norms = kernel_row_norms(X, "vendi_score") if normalize else None
+    if normalize:
+        warn_on_zero_norm_rows(X, "vendi_score")
 
     # Case 1: use dual formulation (recommended when d <= n, or in general for embeddings)
     if use_dual:
@@ -105,6 +106,8 @@ def vendi_score(
     # Case 2: explicitly build similarity matrix K and call score_K
     # Here we use (normalized) dot product as similarity.
     if normalize:
+        norms = np.linalg.norm(X, axis=1, keepdims=True)
+        norms = np.clip(norms, a_min=1e-12, a_max=None)
         X_norm = X / norms
     else:
         X_norm = X
