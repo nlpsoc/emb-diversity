@@ -66,7 +66,9 @@ docs = [
     "myst-parser>=5.0.0",
 ]
 dev = [
-    "datasets~=3.3.2",
+    "datasets>=5.0.0",
+    "dill>=0.4.1",
+    "multiprocess>=0.70.17",
     "notebook>=7.0.0",
     "matplotlib~=3.10.0",
     "numpy~=2.3.5",
