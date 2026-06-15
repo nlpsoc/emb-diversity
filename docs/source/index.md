@@ -28,6 +28,7 @@ user-guide/measures
 user-guide/vectors
 user-guide/axes
 user-guide/cli
+user-guide/cache
 user-guide/development-notes
 ```
 
