@@ -33,7 +33,7 @@ the resolved embedding-model id (or `None` for vector input) so you can record i
 import numpy as np
 from emb_diversity.embed import resolve_embeddings
 
-def my_spread(data, *, diversity_axis="semantic", embedding_model=None):
+def my_std(data, *, diversity_axis="semantic", embedding_model=None):
     """A custom measure: the standard deviation of the vectors."""
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
@@ -54,20 +54,20 @@ from emb_diversity import measure_diversity
 
 # Text input — embedded via the diversity axis / embedding model.
 texts = ["The cat sat on the mat.", "Dogs play fetch.", "A bird sings at dawn."]
-measure_diversity(texts, measure=my_spread)
-# {'my_spread': {'value': ..., 'parameters': {'embedding_model': '...'}}}
+measure_diversity(texts, measure=my_std)
+# {'my_std': {'value': ..., 'parameters': {'embedding_model': '...'}}}
 
 # Vector input — used directly; no embedding, so embedding_model is None.
 vectors = np.random.randn(100, 384)
-measure_diversity(vectors, measure=my_spread)
-# {'my_spread': {'value': ..., 'parameters': {'embedding_model': None}}}
+measure_diversity(vectors, measure=my_std)
+# {'my_std': {'value': ..., 'parameters': {'embedding_model': None}}}
 
 # Mixed with built-in measures, in a list:
-measure_diversity(texts, measure=["mean_pw_dist", my_spread])
-# {'mean_pw_dist': {...}, 'my_spread': {...}}
+measure_diversity(texts, measure=["mean_pw_dist", my_std])
+# {'mean_pw_dist': {...}, 'my_std': {...}}
 ```
 
-Your measure is keyed by its function name (`my_spread`) in the result.
+Your measure is keyed by its function name (`my_std`) in the result.
 
 ## Good to know
 
