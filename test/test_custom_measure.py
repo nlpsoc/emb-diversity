@@ -13,7 +13,7 @@ from emb_diversity import measure_diversity
 from emb_diversity.embed import resolve_embeddings
 
 
-def my_spread(data, *, diversity_axis="semantic", embedding_model=None):
+def my_std(data, *, diversity_axis="semantic", embedding_model=None):
     """A toy custom measure: standard deviation of the (embedded) vectors."""
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(np.std(vectors)), "parameters": {"embedding_model": model}}
@@ -27,14 +27,14 @@ class TestCustomMeasure:
 
     def test_callable_runs_and_is_keyed_by_name(self):
         """A custom measure callable runs and is keyed by its __name__."""
-        out = measure_diversity(self._vectors(), measure=my_spread)
-        assert set(out) == {"my_spread"}
-        assert np.isfinite(out["my_spread"]["value"])
+        out = measure_diversity(self._vectors(), measure=my_std)
+        assert set(out) == {"my_std"}
+        assert np.isfinite(out["my_std"]["value"])
 
     def test_mixed_list_of_names_and_callables(self):
         """A list may mix built-in names and custom callables."""
-        out = measure_diversity(self._vectors(), measure=["mean_pw_dist", my_spread])
-        assert set(out) == {"mean_pw_dist", "my_spread"}
+        out = measure_diversity(self._vectors(), measure=["mean_pw_dist", my_std])
+        assert set(out) == {"mean_pw_dist", "my_std"}
 
     def test_unknown_string_name_still_raises(self):
         """An unknown string name still fails fast with KeyError."""
