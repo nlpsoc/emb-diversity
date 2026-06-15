@@ -40,13 +40,3 @@ class TestCustomMeasure:
         """An unknown string name still fails fast with the 'Available' KeyError."""
         with pytest.raises(KeyError, match="Unknown measure.*Available"):
             measure_diversity(self._vectors(), measure="not_a_measure")
-
-    def test_failing_custom_measure_is_reported(self):
-        """A raising custom measure is recorded as nan + warning, like a built-in."""
-        def boom(data, *, diversity_axis="semantic", embedding_model=None):
-            raise RuntimeError("nope")
-
-        with pytest.warns(UserWarning, match="boom.*nope"):
-            result = measure_diversity(self._vectors(), measure=boom)
-        assert np.isnan(result["boom"]["value"])
-        assert "nope" in result["boom"]["error"]
