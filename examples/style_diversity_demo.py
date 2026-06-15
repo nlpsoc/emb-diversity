@@ -1,9 +1,9 @@
 """Demonstrate the diversity measures on style datasets.
 
 A runnable example: it builds style datasets that *should* score low vs. high
-on variety, balance, disparity, or formality diversity, embeds them with the
-package's embedding API (``embed_texts``), and prints how each diversity
-measure orders them.
+on variety, balance, disparity, or formality diversity, and uses the package's
+``measure_diversity`` convenience function with its default measures to check
+that each measure scores the "high" dataset above the "low" one.
 
 Run it with the dev environment (the loaders need the ``datasets`` package)::
 
@@ -22,9 +22,7 @@ import numpy as np
 import pandas as pd
 from datasets import load_dataset
 
-from emb_diversity import (mean_pw_dist, dist_dispersion, cluster_inertia,
-                           convex_hull_volume_2d, evaluate_measures)
-from emb_diversity.embed import embed_texts
+from emb_diversity import measure_diversity
 from emb_diversity.utility import project_root
 
 
@@ -201,90 +199,60 @@ def get_high_disparity():
 
 # ── Demonstrations ────────────────────────────────────────────────────
 
-def style_measures():
-    """Build the measure list used by every demonstration, with display names."""
-    measures = [
-        lambda data: mean_pw_dist(data, metric="euclidean"),
-        lambda data: mean_pw_dist(data, metric="cosine"),
-        lambda data: dist_dispersion(data, metric="cosine"),
-        # convex_hull_volume_2d, --> this takes too long (UMAP fit on high-dim embeddings)
-        cluster_inertia,
-    ]
-    measures[0].__name__ = "mean_pairwise_euclidean"
-    measures[1].__name__ = "mean_pairwise_cosine"
-    measures[2].__name__ = "dist_dispersion_cosine"
-    return measures
+def compare(label, low_texts, high_texts, diversity_axis="style"):
+    """Run the default diversity measures on a low- and a high-diversity dataset
+    and print, per measure, whether the high dataset scores above the low one.
+
+    Uses :func:`emb_diversity.measure_diversity` with its default measure
+    selection — it embeds the texts on *diversity_axis* itself (with caching).
+    """
+    print("=" * 80)
+    print(f"{label}  (diversity_axis={diversity_axis!r})")
+    print("=" * 80)
+
+    low = measure_diversity(low_texts, diversity_axis=diversity_axis)
+    high = measure_diversity(high_texts, diversity_axis=diversity_axis)
+
+    for name in low:
+        low_value = low[name]["value"]
+        high_value = high[name]["value"]
+        ok = "✓" if high_value > low_value else "✗"
+        print(f"  {ok} {name:<14}  low={low_value:.4f}  high={high_value:.4f}  "
+              f"(Δ={high_value - low_value:+.4f})")
+    print()
 
 
 def demo_formality():
     """Style diversity rises when formal and informal sentences are mixed.
 
     The same formality contrast should be (almost) invisible to a *semantic*
-    embedding, so the measures are also run on semantic vectors as a control.
+    embedding, so the comparison is also run on the semantic axis as a control.
     """
-    only_formal_text = create_formal_only()
-    half_formal_text = create_formal_diverse(formal_share=0.5)
+    only_formal = create_formal_only()
+    half_formal = create_formal_diverse(formal_share=0.5)
 
-    measures = style_measures()
-
-    only_formal_style_vectors = embed_texts(only_formal_text, diversity_axis="style")
-    half_formal_style_vectors = embed_texts(half_formal_text, diversity_axis="style")
-
-    only_formal_semantic_vectors = embed_texts(only_formal_text, diversity_axis="semantic")
-    half_formal_semantic_vectors = embed_texts(half_formal_text, diversity_axis="semantic")
-
-    evaluate_measures.evaluate_monotone_order(
-        [only_formal_style_vectors, half_formal_style_vectors], measures,
-        dataset_names=["only formal", "half formal half informal"])
-
-    evaluate_measures.evaluate_almost_same(
-        [only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
-        dataset_names=["only formal semantic", "half formal half informal semantic"],)
+    compare("Formality: only formal vs. half formal/half informal",
+            only_formal, half_formal, diversity_axis="style")
+    compare("Formality (semantic control: expect little change)",
+            only_formal, half_formal, diversity_axis="semantic")
 
 
 def demo_variety():
     """Style diversity rises as more distinct style features are present."""
-    low_variety = get_low_variety()
-    high_variety = get_high_variety()
-
-    measures = style_measures()
-
-    low_variety_sv = embed_texts(low_variety, diversity_axis="style")
-    high_variety_sv = embed_texts(high_variety, diversity_axis="style")
-
-    evaluate_measures.evaluate_monotone_order(
-        [low_variety_sv, high_variety_sv], measures,
-        dataset_names=["low variety style", "high variety style"])
+    compare("Variety: few style features vs. many",
+            get_low_variety(), get_high_variety())
 
 
 def demo_balance():
     """Style diversity rises as style features are more evenly balanced."""
-    low_balance = get_low_balance()
-    high_balance = get_high_balance()
-
-    measures = style_measures()
-
-    low_balance_sv = embed_texts(low_balance, diversity_axis="style")
-    high_balance_sv = embed_texts(high_balance, diversity_axis="style")
-
-    evaluate_measures.evaluate_monotone_order(
-        [low_balance_sv, high_balance_sv], measures,
-        dataset_names=["low balance style", "high balance style"])
+    compare("Balance: one dominant feature vs. evenly balanced",
+            get_low_balance(), get_high_balance())
 
 
 def demo_disparity():
     """Style diversity rises as the style features span more distinct categories."""
-    low_disparity = get_low_disparity()
-    high_disparity = get_high_disparity()
-
-    measures = style_measures()
-
-    low_disparity_sv = embed_texts(low_disparity, diversity_axis="style")
-    high_disparity_sv = embed_texts(high_disparity, diversity_axis="style")
-
-    evaluate_measures.evaluate_monotone_order(
-        [low_disparity_sv, high_disparity_sv], measures,
-        dataset_names=["low disparity style", "high disparity style"])
+    compare("Disparity: one category vs. many distinct categories",
+            get_low_disparity(), get_high_disparity())
 
 
 def main():
