@@ -1,10 +1,13 @@
-"""Style-data demonstrations for the diversity measures.
+"""Demonstrate the diversity measures on style datasets.
 
-These are example/demonstration checks, not part of the pytest suite — the
-``examples/`` directory is excluded from collection (see ``norecursedirs`` in
-``pyproject.toml``). Each test builds style datasets that *should* score low
-vs. high on variety, balance, or disparity, embeds them with the package's
-embedding API, and sanity-checks the measures.
+A runnable example: it builds style datasets that *should* score low vs. high
+on variety, balance, disparity, or formality diversity, embeds them with the
+package's embedding API (``embed_texts``), and prints how each diversity
+measure orders them.
+
+Run it with the dev environment (the loaders need the ``datasets`` package)::
+
+    uv run --group dev python examples/style_diversity_demo.py
 
 The data loaders live here rather than in the installable package: the STEL
 loader reads local ``pilot_datasets/`` files and the SynthSTEL loader pulls a
@@ -198,7 +201,7 @@ def get_high_disparity():
 
 # ── Demonstrations ────────────────────────────────────────────────────
 
-def _style_measures():
+def style_measures():
     """Build the measure list used by every demonstration, with display names."""
     measures = [
         lambda data: mean_pw_dist(data, metric="euclidean"),
@@ -213,65 +216,83 @@ def _style_measures():
     return measures
 
 
-class TestOnSTEL:
+def demo_formality():
+    """Style diversity rises when formal and informal sentences are mixed.
 
-    def test_eval_on_stel(self):
-        """Test the evaluate_measures function on style datasets."""
-        # Load more and less diverse formal/informal dataset
-        only_formal_text = create_formal_only()
-        half_formal_text = create_formal_diverse(formal_share=0.5)
+    The same formality contrast should be (almost) invisible to a *semantic*
+    embedding, so the measures are also run on semantic vectors as a control.
+    """
+    only_formal_text = create_formal_only()
+    half_formal_text = create_formal_diverse(formal_share=0.5)
 
-        measures = _style_measures()
+    measures = style_measures()
 
-        only_formal_style_vectors = embed_texts(only_formal_text, diversity_axis="style")
-        half_formal_style_vectors = embed_texts(half_formal_text, diversity_axis="style")
+    only_formal_style_vectors = embed_texts(only_formal_text, diversity_axis="style")
+    half_formal_style_vectors = embed_texts(half_formal_text, diversity_axis="style")
 
-        only_formal_semantic_vectors = embed_texts(only_formal_text, diversity_axis="semantic")
-        half_formal_semantic_vectors = embed_texts(half_formal_text, diversity_axis="semantic")
+    only_formal_semantic_vectors = embed_texts(only_formal_text, diversity_axis="semantic")
+    half_formal_semantic_vectors = embed_texts(half_formal_text, diversity_axis="semantic")
 
-        evaluate_measures.evaluate_monotone_order(
-            [only_formal_style_vectors, half_formal_style_vectors], measures,
-            dataset_names=["only formal", "half formal half informal"])
+    evaluate_measures.evaluate_monotone_order(
+        [only_formal_style_vectors, half_formal_style_vectors], measures,
+        dataset_names=["only formal", "half formal half informal"])
 
-        evaluate_measures.evaluate_almost_same(
-            [only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
-            dataset_names=["only formal semantic", "half formal half informal semantic"],)
+    evaluate_measures.evaluate_almost_same(
+        [only_formal_semantic_vectors, half_formal_semantic_vectors], measures,
+        dataset_names=["only formal semantic", "half formal half informal semantic"],)
 
-    def test_variety(self):
-        low_variety = get_low_variety()
-        high_variety = get_high_variety()
 
-        measures = _style_measures()
+def demo_variety():
+    """Style diversity rises as more distinct style features are present."""
+    low_variety = get_low_variety()
+    high_variety = get_high_variety()
 
-        low_variety_sv = embed_texts(low_variety, diversity_axis="style")
-        high_variety_sv = embed_texts(high_variety, diversity_axis="style")
+    measures = style_measures()
 
-        evaluate_measures.evaluate_monotone_order(
-            [low_variety_sv, high_variety_sv], measures,
-            dataset_names=["low variety style", "high variety style"])
+    low_variety_sv = embed_texts(low_variety, diversity_axis="style")
+    high_variety_sv = embed_texts(high_variety, diversity_axis="style")
 
-    def test_balance(self):
-        low_balance = get_low_balance()
-        high_balance = get_high_balance()
+    evaluate_measures.evaluate_monotone_order(
+        [low_variety_sv, high_variety_sv], measures,
+        dataset_names=["low variety style", "high variety style"])
 
-        measures = _style_measures()
 
-        low_balance_sv = embed_texts(low_balance, diversity_axis="style")
-        high_balance_sv = embed_texts(high_balance, diversity_axis="style")
+def demo_balance():
+    """Style diversity rises as style features are more evenly balanced."""
+    low_balance = get_low_balance()
+    high_balance = get_high_balance()
 
-        evaluate_measures.evaluate_monotone_order(
-            [low_balance_sv, high_balance_sv], measures,
-            dataset_names=["low balance style", "high balance style"])
+    measures = style_measures()
 
-    def test_disparity(self):
-        low_disparity = get_low_disparity()
-        high_disparity = get_high_disparity()
+    low_balance_sv = embed_texts(low_balance, diversity_axis="style")
+    high_balance_sv = embed_texts(high_balance, diversity_axis="style")
 
-        measures = _style_measures()
+    evaluate_measures.evaluate_monotone_order(
+        [low_balance_sv, high_balance_sv], measures,
+        dataset_names=["low balance style", "high balance style"])
 
-        low_disparity_sv = embed_texts(low_disparity, diversity_axis="style")
-        high_disparity_sv = embed_texts(high_disparity, diversity_axis="style")
 
-        evaluate_measures.evaluate_monotone_order(
-            [low_disparity_sv, high_disparity_sv], measures,
-            dataset_names=["low disparity style", "high disparity style"])
+def demo_disparity():
+    """Style diversity rises as the style features span more distinct categories."""
+    low_disparity = get_low_disparity()
+    high_disparity = get_high_disparity()
+
+    measures = style_measures()
+
+    low_disparity_sv = embed_texts(low_disparity, diversity_axis="style")
+    high_disparity_sv = embed_texts(high_disparity, diversity_axis="style")
+
+    evaluate_measures.evaluate_monotone_order(
+        [low_disparity_sv, high_disparity_sv], measures,
+        dataset_names=["low disparity style", "high disparity style"])
+
+
+def main():
+    demo_formality()
+    demo_variety()
+    demo_balance()
+    demo_disparity()
+
+
+if __name__ == "__main__":
+    main()
