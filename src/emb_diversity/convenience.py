@@ -69,6 +69,10 @@ def measure_diversity(
     for item in items:
         if callable(item):
             resolved.append((getattr(item, "__name__", "measure"), item))
+        elif item not in MEASURE_NAMES:
+            raise KeyError(
+                f"Unknown measure {item!r}. Available: {sorted(MEASURE_NAMES)}"
+            )
         else:
             resolved.append((item, get_measure(item)))
 

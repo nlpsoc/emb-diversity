@@ -37,8 +37,8 @@ class TestCustomMeasure:
         assert set(out) == {"mean_pw_dist", "my_std"}
 
     def test_unknown_string_name_still_raises(self):
-        """An unknown string name still fails fast with KeyError."""
-        with pytest.raises(KeyError):
+        """An unknown string name still fails fast with the 'Available' KeyError."""
+        with pytest.raises(KeyError, match="Unknown measure.*Available"):
             measure_diversity(self._vectors(), measure="not_a_measure")
 
     def test_failing_custom_measure_is_reported(self):
