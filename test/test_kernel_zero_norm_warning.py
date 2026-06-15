@@ -51,14 +51,14 @@ class TestKernelZeroNormWarning:
         """Valid input does not warn."""
         data = np.random.RandomState(1).randn(20, 8)
         with warnings.catch_warnings():
-            warnings.simplefilter("error")
+            warnings.simplefilter("error")  # throw errors for warnings
             KERNEL_MEASURES[name](data)
 
     @pytest.mark.parametrize("name", sorted(KERNEL_MEASURES))
     def test_normalize_false_does_not_warn(self, name):
         """With normalize=False no row normalization happens, so no warning."""
         with warnings.catch_warnings():
-            warnings.simplefilter("error")
+            warnings.simplefilter("error")  # throw errors for warnings
             KERNEL_MEASURES[name](self._data(), normalize=False)
 
     def test_vendi_explicit_path_also_warns(self):
@@ -71,5 +71,5 @@ class TestKernelZeroNormWarning:
     def test_non_cosine_kernel_does_not_warn(self, kernel_type):
         """Non-cosine kernels are defined on zero vectors, so they do not warn."""
         with warnings.catch_warnings():
-            warnings.simplefilter("error")
+            warnings.simplefilter("error")  # throw errors for warnings
             dcscore(self._data(), kernel_type=kernel_type)
