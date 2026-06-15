@@ -38,7 +38,8 @@ def graph_entropy(data: TensorLike,
     Args:
         data:
             Iterable/array-like of (embedding) vectors with shape (n, d), or raw
-            text strings. Must contain at least 2 samples.
+            text strings. Must contain at least 3 samples: with only 2 each
+            node has a single neighbour, so the entropy is degenerately 0.
         metric:
             Distance metric name or callable accepted by
             scipy.spatial.distance.pdist, used as edge weights. Defaults to
@@ -52,7 +53,7 @@ def graph_entropy(data: TensorLike,
         records the configuration used.
 
     Raises:
-        ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
+        ValueError: If input is not 2D, empty, or has fewer than 3 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
 
@@ -69,8 +70,12 @@ def graph_entropy(data: TensorLike,
         raise ValueError(f"Expected shape (n, d), got {X.shape}")
 
     n, d = X.shape
-    if n < 2:
-        raise ValueError("Cannot compute graph entropy for fewer than 2 datapoints")
+    # Graph entropy needs at least 3 nodes to be meaningful. With n == 2 each
+    # node has a single neighbor, so its normalized distance distribution equals 0
+    # and its local entropy is C * log(1) == 0 regardless of how far apart the points are
+    # A reasonable result needs >= 2 neighbors per node, i.e. n >= 3.
+    if n < 3:
+        raise ValueError("Cannot compute graph entropy for fewer than 3 datapoints")
 
     # calulate essentials
 
