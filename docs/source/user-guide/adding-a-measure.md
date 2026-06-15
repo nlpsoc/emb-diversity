@@ -6,33 +6,11 @@ passing a function to `measure_diversity()` — no need to modify the package.
 ## The contract
 
 A custom measure is a function called exactly like a built-in: it receives the
-`data` you passed to `measure_diversity()`, plus the embedding keywords, and
-returns a `{"value": float, "parameters": {...}}` dict.
+`data` you passed to `measure_diversity()` plus the embedding keywords, and returns a
+`{"value": float, "parameters": {...}}` dict. Make `resolve_embeddings` its first
+line — that is the single place input is validated and text is embedded:
 
 ```python
-def my_measure(data, *, diversity_axis="semantic", embedding_model=None):
-    ...
-    return {"value": score, "parameters": {...}}
-```
-
-- `data` — whatever you pass to `measure_diversity()`: a list of text strings, or
-  an `(n, d)` array of vectors.
-- `diversity_axis` / `embedding_model` — forwarded by `measure_diversity()`; use
-  them to embed text input (see below).
-- returns a dict with a float `"value"` and a `"parameters"` dict recording the
-  configuration used.
-
-### Validating and embedding the input
-
-Make `resolve_embeddings` the first line of your measure — it is the same helper the
-built-in measures use, and the single place input validation happens. It rejects bad
-input (a bare string, non-2-D data, fewer than 2 samples, nan/inf), embeds text, and
-returns the resolved embedding-model id (or `None` for vector input) so you can
-record it. Your measure runs as given, so calling `resolve_embeddings` is what gives
-it the same validation — and the same text/vector handling — as the built-ins:
-
-```python
-import numpy as np
 from emb_diversity.embed import resolve_embeddings
 
 def my_std(data, *, diversity_axis="semantic", embedding_model=None):
@@ -40,6 +18,16 @@ def my_std(data, *, diversity_axis="semantic", embedding_model=None):
     vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
     return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
 ```
+
+- `data` — what you pass to `measure_diversity()`: a list of text strings, or an
+  `(n, d)` array of vectors.
+- `resolve_embeddings` — the same helper the built-ins use. It validates the input
+  (rejecting a bare string, non-2-D data, fewer than 2 samples, nan/inf), embeds
+  text, and returns the vectors plus the resolved embedding-model id (`None` for
+  vector input). Your measure runs as given, so calling it is what gives your measure
+  that validation.
+- returns a dict with a float `"value"` and a `"parameters"` dict recording the
+  configuration used.
 
 ### Reusing built-in helpers
 
