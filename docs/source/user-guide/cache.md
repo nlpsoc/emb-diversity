@@ -18,8 +18,6 @@ from emb_diversity.embed import embed_texts
 vectors = embed_texts(["sentence one", "sentence two"])
 ```
 
----
-
 ### Per-Sentence Caching
 
 Each sentence is cached **individually**. When you pass a list of texts, every sentence is hashed and looked up in the cache separately. This means:
@@ -27,8 +25,6 @@ Each sentence is cached **individually**. When you pass a list of texts, every s
 - If you add one new sentence to a previously embedded list, only that sentence is sent to the model.
 - All other sentences are served from disk instantly.
 - Reordering or extending your dataset never causes a full re-embedding.
-
----
 
 ### Cache Location
 
@@ -49,8 +45,6 @@ from pathlib import Path
 vectors = embed_texts(texts, cache_dir=Path("/my/custom/cache"))
 ```
 
----
-
 ### Embedding Pipeline
 
 When a list of texts is passed to `embed_texts()`, the following steps are taken:
@@ -64,8 +58,6 @@ When a list of texts is passed to `embed_texts()`, the following steps are taken
 4. **Save new embeddings** — the freshly computed embeddings are written to disk so future calls can reuse them.
 
 5. **Preserve order** — results are assembled back in the original input order, regardless of which sentences were cached and which were freshly computed. The output always corresponds positionally to the input list.
-
----
 
 ### Disabling the Cache
 
@@ -97,8 +89,6 @@ clear_cache()
 
 Most measures internally compute pairwise distances between embedding vectors using `scipy.pdist`. When multiple measures are run on the same dataset, this computation would otherwise be repeated for each measure. `compute_pairwise_distances()` in `emb_diversity.compute_pairwise` wraps `scipy.pdist` with a two-level cache to avoid that.
 
----
-
 ### Three-Level Lookup
 
 Every call to `compute_pairwise_distances()` goes through the following levels in order:
@@ -109,8 +99,6 @@ Every call to `compute_pairwise_distances()` goes through the following levels i
 
 3. **Compute (Level 3)** — if neither cache has the result, `scipy.pdist` is called. The result is written to both memory and disk before returning.
 
----
-
 ### Cache Key
 
 The cache key is a combination of:
@@ -118,8 +106,6 @@ The cache key is a combination of:
 - **Matrix fingerprint** — a full-content `xxhash64` of the embedding matrix, including its shape and dtype. The matrix is hashed in chunks to keep memory usage constant regardless of size.
 - **Metric** — the distance metric name (e.g. `"cosine"`, `"euclidean"`) or a callable.
 - **Metric kwargs** — any extra keyword arguments passed to `scipy.pdist` are folded into the key. This means `cosine` and `euclidean` on the same data, or the same metric with different kwargs, never collide in cache.
-
----
 
 ### Constants
 
@@ -133,8 +119,6 @@ Two constants control the caching behaviour:
   import emb_diversity.compute_pairwise as pw
   pw._MEMORY_MAX = 0
   ```
-
----
 
 ### Cache Location
 
@@ -153,8 +137,6 @@ from pathlib import Path
 distances = compute_pairwise_distances(vectors, metric="cosine", cache_dir=Path("/my/cache"))
 ```
 
----
-
 ### Cache Statistics
 
 To inspect how much memory and disk the cache is using:
@@ -171,8 +153,6 @@ info = distance_cache_info()
 #   "disk_mb": 1.2,
 # }
 ```
-
----
 
 ### Clearing the Cache
 
