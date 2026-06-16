@@ -118,7 +118,6 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
   - [Building and publishing a release](#building-and-publishing-a-release)
-  - [Configuration](#configuration)
 - [Funding](#funding)
 - [Citation](#citation)
 
@@ -379,39 +378,6 @@ uvx twine check dist/*   # validate metadata + that the README renders on PyPI
 `uv build` only *adds* to `dist/`, so clear it first when building a new version —
 otherwise old artifacts linger and an upload would try (and fail) to re-publish
 them. CI doesn't need this: each run starts from a clean checkout.
-
-### Configuration
-
-<!-- docs-config-progress-start -->
-**Progress spinner.** `emb-diversity` shows a progress spinner while an embedding
-model is downloaded and prepared — the first call that needs a model can take a
-while and print a lot of HuggingFace output, which the spinner replaces. Control
-it with the `EMB_DIVERSITY_PROGRESS` environment variable:
-
-- By default the spinner appears only in interactive sessions (a terminal or a
-  notebook) and stays silent in scripts, pipes, and CI.
-- Set `EMB_DIVERSITY_PROGRESS` to `1`, `true`, `yes`, or `on` to always show it,
-  or `0`, `false`, `no`, or `off` to never show it.
-
-Set it before the first call that loads a model. From the shell:
-
-```bash
-export EMB_DIVERSITY_PROGRESS=0
-```
-
-From Python or a notebook cell:
-
-```python
-import os
-os.environ["EMB_DIVERSITY_PROGRESS"] = "1"
-```
-<!-- docs-config-progress-end -->
-
-<!-- docs-config-memory-start -->
-**Memory use.** The command-line interface loads all input texts into memory at
-once. This is fine for small- to medium-sized datasets but will not scale to
-very large files.
-<!-- docs-config-memory-end -->
 
 ## Funding
 

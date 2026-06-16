@@ -12,7 +12,5 @@ progress
 
 ## Memory use
 
-```{include} ../../../README.md
-:start-after: <!-- docs-config-memory-start -->
-:end-before: <!-- docs-config-memory-end -->
-```
+The command-line interface loads all input texts into memory at once. This is
+fine for small- to medium-sized datasets but will not scale to very large files.
