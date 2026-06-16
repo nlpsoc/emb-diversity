@@ -118,6 +118,7 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Adding New Measures](#adding-new-measures)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
   - [Building and publishing a release](#building-and-publishing-a-release)
+- [Open TODOs](#open-todos)
 - [Funding](#funding)
 - [Citation](#citation)
 
@@ -378,6 +379,12 @@ uvx twine check dist/*   # validate metadata + that the README renders on PyPI
 `uv build` only *adds* to `dist/`, so clear it first when building a new version —
 otherwise old artifacts linger and an upload would try (and fail) to re-publish
 them. CI doesn't need this: each run starts from a clean checkout.
+
+## Open TODOs
+
+- **Memory use.** The command-line interface loads all input texts into memory
+  at once. This is fine for small- to medium-sized datasets but will not scale
+  to very large files — streaming or chunked input is not yet implemented.
 
 ## Funding
 

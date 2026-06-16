@@ -9,8 +9,3 @@ caches and how it reports progress.
 cache
 progress
 ```
-
-## Memory use
-
-The command-line interface loads all input texts into memory at once. This is
-fine for small- to medium-sized datasets but will not scale to very large files.
