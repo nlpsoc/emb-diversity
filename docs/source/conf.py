@@ -28,8 +28,8 @@ autodoc_mock_imports = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'emb-diversity'
-copyright = '2026, Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
-author = 'Cantao Su, Anna Wegmann, Menan Velayuthan, Dong Nguyen, Esther Ploeger'
+copyright = '2026, Cantao Su, Menan Velayuthan, Esther Ploeger, Dong Nguyen, Anna Wegmann'
+author = 'Cantao Su, Menan Velayuthan, Esther Ploeger, Dong Nguyen, Anna Wegmann'
 
 # Read the version from the installed package metadata so the docs never drift
 # from pyproject.toml.
