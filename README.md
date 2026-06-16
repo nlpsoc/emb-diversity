@@ -382,7 +382,7 @@ them. CI doesn't need this: each run starts from a clean checkout.
 
 ### Configuration
 
-<!-- docs-config-start -->
+<!-- docs-config-progress-start -->
 **Progress spinner.** `emb-diversity` shows a progress spinner while an embedding
 model is downloaded and prepared — the first call that needs a model can take a
 while and print a lot of HuggingFace output, which the spinner replaces. Control
@@ -405,11 +405,13 @@ From Python or a notebook cell:
 import os
 os.environ["EMB_DIVERSITY_PROGRESS"] = "1"
 ```
+<!-- docs-config-progress-end -->
 
+<!-- docs-config-memory-start -->
 **Memory use.** The command-line interface loads all input texts into memory at
 once. This is fine for small- to medium-sized datasets but will not scale to
 very large files.
-<!-- docs-config-end -->
+<!-- docs-config-memory-end -->
 
 ## Funding
 

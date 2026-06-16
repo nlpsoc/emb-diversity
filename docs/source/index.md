@@ -19,13 +19,6 @@
 :end-before: <!-- docs-quickstart-end -->
 ```
 
-## Configuration
-
-```{include} ../../README.md
-:start-after: <!-- docs-config-start -->
-:end-before: <!-- docs-config-end -->
-```
-
 ## User Guide
 
 ```{toctree}
@@ -36,7 +29,7 @@ user-guide/adding-a-measure
 user-guide/vectors
 user-guide/axes
 user-guide/cli
-user-guide/cache
+user-guide/configuration
 ```
 
 ## API Reference
