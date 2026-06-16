@@ -25,7 +25,7 @@ log_determinant(texts, diversity_axis="semantic")
 Measures writing style diversity. Texts written in different styles (formal vs. informal, simple vs. complex) will score high.
 
 - **Default model:** `AnnaWegmann/Style-Embedding`
-- **Alternatives:** `rrivera1849/LUAR-MUD`
+- **Alternatives:** `StyleDistance/styledistance`, `rrivera1849/LUAR-MUD`, `AIDA-UPM/star`
 
 ```python
 log_determinant(texts, diversity_axis="style")
