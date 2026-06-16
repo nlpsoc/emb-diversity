@@ -17,6 +17,12 @@ Install the latest release from PyPI:
 pip install emb-diversity
 ```
 
+or within a uv project:
+
+```bash
+uv add emb-diversity
+```
+
 The first time you measure diversity, the default embedding model
 (`all-mpnet-base-v2`, ~420 MB) is downloaded from the Hugging Face Hub and
 cached locally, so later runs are fast and work offline.
