@@ -114,8 +114,8 @@ Note that most measures return unbounded values that cannot be compared for data
   - [Development setup](#development-setup)
   - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
   - [Working with uv](#working-with-uv)
-  - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Measures](#adding-new-measures)
+  - [Docstring Style Guide](#docstring-style-guide)
   - [Adding New Diversity Axes](#adding-new-diversity-axes)
   - [Building and publishing a release](#building-and-publishing-a-release)
   - [Configuration](#configuration)
@@ -205,70 +205,6 @@ uv lock -U
 
 This updates your `uv.lock` file to ensure all versions are consistent and everything is in sync.
 
-### Docstring Style Guide
-
-This project uses **Google-style docstrings** which are automatically parsed by the Sphinx Napoleon extension.
-
-#### Functions and Methods
-
-```python
-def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureResult:
-    """Calculate diversity score for a set of vectors.
-
-    This function computes various diversity metrics for vector representations.
-    The default method uses the Vendi Score which is based on matrix entropy.
-
-    References:
-        Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
-
-    Args:
-        vectors: Array of shape (n_samples, n_features) containing the vectors.
-        method: Diversity calculation method. Options are "vendi", "entropy",
-            or "distinctness". Defaults to "vendi".
-
-    Returns:
-        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        diversity score (higher means more diverse; scores are unbounded, not
-        limited to [0, 1]) and ``parameters`` records the configuration used.
-
-    Raises:
-        ValueError: If vectors array is empty or method is not recognized.
-
-    Example:
-        >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> result = calculate_diversity(vectors)
-        >>> print(f"Diversity: {result['value']:.2f}")
-        Diversity: 1.73
-    """
-    pass
-```
-
-#### Key Points
-
-- **One-line summary**: Start with a brief summary in imperative mood ("Calculate", not "Calculates")
-- **Blank line**: After the summary, add a blank line before any detailed description
-- **References**: Add related papers
-- **Args**: Document each parameter with type information
-- **Returns**: Describe what the function returns
-- **Raises**: Document exceptions that might be raised
-- **Example**: Include usage examples when helpful
-- **Type hints**: Use type hints in function signatures AND document them in docstrings
-
-#### Section Headers
-
-Use these section headers in docstrings:
-- `References:` Related papers
-- `Args:` — Function/method parameters
-- `Returns:` — Return value description
-- `Raises:` — Exceptions that may be raised
-- `Yields:` — For generators
-- `Attributes:` — For class attributes
-- `Example:` or `Examples:` — Usage examples
-- `Note:` — Important notes
-- `Warning:` — Warnings about usage
-
-Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) · [Sphinx Napoleon docs](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
-
 ### Adding New Measures
 
 When you add a new measure to `src/emb_diversity/measures/`:
@@ -281,7 +217,7 @@ When you add a new measure to `src/emb_diversity/measures/`:
    place input is validated — it rejects a bare string, non-2-D data, fewer than 2
    samples, and nan/inf values. Then return
    `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
-   Add a complete docstring following the style guide above.
+   Add a complete docstring following the style guide below.
 2. Add its name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
    The public API (`emb_diversity.<name>`), the CLI, and `measure_diversity`
    all pick it up from there.
@@ -319,6 +255,96 @@ import them from `.types` in your measure module.
 For complete, working examples, copy the shape of an existing measure in
 `src/emb_diversity/measures/` — e.g. `mean_pw_dist.py` for a simple distance-based
 measure, or `vendi_score.py` for one with several parameters.
+
+### Docstring Style Guide
+
+This project uses **Google-style docstrings**, parsed by the Sphinx Napoleon
+extension. For example, here is the built-in `mean_pw_dist` measure:
+
+#### Functions and Methods
+
+```python
+def mean_pw_dist(
+        data: Sequence[Sequence[float]],
+        metric: DistanceMetric = "cosine",
+        *,
+        diversity_axis: str = "semantic",
+        embedding_model: str | None = None,
+        **metric_kwargs: Any,
+) -> MeasureResult:
+    """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; the upper bound depends on ``metric`` (e.g. [0, 2] for cosine distance).
+
+    Compute the average of all pairwise distances between datapoints.
+
+    1) Compute all unique pairwise distances between datapoints.
+    2) Return their mean.
+
+    References:
+        Guy Tevet and Jonathan Berant. 2021. Evaluating the Evaluation of Diversity in Natural Language Generation. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume, pages 326–346, Online. Association for Computational Linguistics.
+        Tianhui Zhang, Bei Peng, and Danushka Bollegala. 2024. Improving Diversity of Commonsense Generation by Large Language Models via In-Context Learning. In Findings of the Association for Computational Linguistics: EMNLP 2024, pages 9226–9242, Miami, Florida, USA. Association for Computational Linguistics.
+        Miranda, Brando, Alycia Lee, Sudharsan Sundar, Allison Casasola, Rylan Schaeffer, Elyas Obbad, and Sanmi Koyejo. "Beyond scale: The diversity coefficient as a data quality metric for variability in natural language data." arXiv preprint arXiv:2306.13840 (2023).
+        Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021.
+
+    Args:
+        data:
+            Iterable/array-like of (embedding) vectors with shape (n, d), or raw
+            text strings. Must contain at least 2 samples.
+        metric:
+            Distance metric name or callable accepted by
+            scipy.spatial.distance.pdist. Defaults to "cosine".
+        diversity_axis: Registered axis used to embed text input (default "semantic").
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
+        **metric_kwargs:
+            Extra keyword arguments forwarded to pdist for the selected metric.
+
+    Returns:
+        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
+        average pairwise distance across all unique pairs and ``parameters``
+        records the configuration used.
+
+    Raises:
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
+
+    Example:
+        >>> from emb_diversity import mean_pw_dist
+        >>> mean_pw_dist(["The cat sat.", "Dogs play fetch.", "A bird sings at dawn."])
+        {'value': 0.95..., 'parameters': {'metric': 'cosine', 'embedding_model': 'all-mpnet-base-v2'}}
+    """
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    return {
+        "value": float(np.mean(dists)),
+        "parameters": {"metric": metric, "embedding_model": embedding_model, **metric_kwargs},
+    }
+```
+
+#### Key Points
+
+- **Interpretation & Range**: Measures lead with bold **Interpretation of values** and **Range** lines so a reader can tell how to read the score at a glance
+- **One-line summary**: After those, give a brief summary in imperative mood ("Compute", not "Computes")
+- **Blank line**: After the summary, add a blank line before any detailed description
+- **References**: Add related papers
+- **Args**: Document each parameter with type information
+- **Returns**: Describe what the function returns
+- **Raises**: Document exceptions that might be raised
+- **Example**: Include usage examples when helpful
+- **Type hints**: Use type hints in function signatures AND document them in docstrings
+
+#### Section Headers
+
+Use these section headers in docstrings:
+- `References:` Related papers
+- `Args:` — Function/method parameters
+- `Returns:` — Return value description
+- `Raises:` — Exceptions that may be raised
+- `Yields:` — For generators
+- `Attributes:` — For class attributes
+- `Example:` or `Examples:` — Usage examples
+- `Note:` — Important notes
+- `Warning:` — Warnings about usage
+
+Further reading: [Google Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) · [Sphinx Napoleon docs](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
 
 ### Adding New Diversity Axes
 
