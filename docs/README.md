@@ -1,192 +1,91 @@
 # Documentation
 
-This folder contains the Sphinx documentation for the Diversity Measurement package.
+This folder holds the [Sphinx](https://www.sphinx-doc.org/) documentation for
+emb-diversity. The rendered site is published at
+<https://nlpsoc.github.io/Diversity-Measurement/>.
 
-## Building the Documentation
+## Publishing is automatic
 
-### Prerequisites
+You do **not** need to build or commit anything for the live site to update.
+The [`docs.yml`](../.github/workflows/docs.yml) workflow ("Deploy Docs to
+GitHub Pages") runs on every push to `main` and:
 
-Make sure you have installed the development dependencies:
+1. installs `uv` and Python, then `uv sync --only-group docs` (just the Sphinx
+   toolchain — the `emb-diversity` package itself is **not** installed);
+2. runs `make apidoc` then `make html` inside `docs/`;
+3. uploads `docs/build/html/` and deploys it to GitHub Pages.
+
+So merging a PR into `main` is what updates the published docs.
+
+## Building locally (to preview before merging)
 
 ```bash
-uv sync --group dev
-```
+uv sync --group dev      # the dev group includes the docs toolchain
+                         # (or: uv sync --only-group docs, exactly like CI)
 
-### Building HTML Documentation
-
-To build the HTML documentation, follow these two steps:
-
-```bash
 cd docs
+make apidoc              # regenerate the API-reference .rst from the source
+make html                # build the HTML into build/html/
 
-# Step 1: Generate API documentation RST files from source code
-make apidoc
-
-# Step 2: Build HTML from the RST files
-make html
+open build/html/index.html   # macOS — or open that file in any browser
 ```
 
-The generated HTML files will be in `docs/build/html/`. Open `docs/build/html/index.html` in your browser to view the documentation.
+### Make targets
 
-### Available Make Commands
+- `make apidoc` — run `sphinx-apidoc` over `../src/emb_diversity/` and write the
+  API-reference `.rst` files.
+- `make html` — build the HTML site into `build/html/`.
+- `make clean` — remove `build/`.
+- `make cleanall` — remove `build/` **and** the generated API `.rst` files.
 
-- `make apidoc` - Generate API documentation RST files from source code (discovers all modules including utility, embeddings, etc.)
-- `make html` - Build HTML documentation from RST files
-- `make clean` - Remove built documentation files
-- `make cleanall` - Remove both built documentation AND generated API RST files
+Run `make apidoc` whenever you add, rename, or move a module; run `make html`
+after editing any docstring or page.
 
-## Workflow: Documentation Generation from Code
+## What is hand-written vs generated
 
-This project uses `sphinx-apidoc` to generate documentation from source code. You should NOT manually edit `modules.rst` or any generated `emb_diversity*.rst` files - they are auto-generated.
+**Hand-written — committed, edit these:**
 
-### How It Works
+- `source/index.md` — the landing page and the `toctree` that wires the site
+  together. It pulls the intro, install, quickstart, configuration, and citation
+  text out of the **root [`README.md`](../README.md)** via MyST `{include}`
+  markers (e.g. `docs-quickstart-start`/`-end`), so that content lives in one
+  place and is not duplicated here.
+- `source/user-guide/*.md` — the user guide pages (`measures`,
+  `adding-a-measure`, `vectors`, `axes`, `cli`, `cache`), written in MyST
+  Markdown.
+- `source/conf.py` — the Sphinx configuration.
+- `Makefile` — the `apidoc`/`html`/`clean` targets above.
 
-1. **Run `make apidoc`** to scan your source code in `../src/emb_diversity/`
-2. `sphinx-apidoc` discovers all Python modules and submodules (measures, two_d, utility, embeddings, etc.)
-3. It generates RST files with a **flat structure** using the `--no-headings` flag
-   - All modules appear as `emb_diversity.module_name`
-   - No hierarchical "Submodules" or "Subpackages" sections
-4. **Run `make html`** to build the HTML documentation
-5. Sphinx reads the RST files and extracts docstrings from your Python code
+**Generated — git-ignored, never edit or commit (see [`.gitignore`](../.gitignore)):**
 
-### When to Run Each Command
+- `source/emb_diversity*.rst` and `source/modules.rst` — the API reference,
+  produced by `make apidoc` from the docstrings in `src/emb_diversity/`. The
+  "API Reference" `toctree` in `index.md` points at the generated
+  `emb_diversity` page. Because these are regenerated on every build (including
+  in CI), there is no need to keep them in git.
+- `build/` — the rendered HTML output.
 
-- **Run `make apidoc`** when:
-  - You add new Python modules or packages
-  - You restructure your code (move/rename modules)
-  - Starting fresh or the RST files are missing
+## How the build fits together
 
-- **Run `make html`** when:
-  - You update docstrings in existing code
-  - After running `make apidoc`
-  - You modify `source/index.rst` or other manual RST files
+`make apidoc` runs `sphinx-apidoc --no-headings` over `../src/emb_diversity/`,
+producing one flat `emb_diversity.<subpackage>.rst` file per package plus a
+`modules.rst` index.
 
-### Why This Approach?
+`make html` then runs Sphinx, which reads `conf.py`, the Markdown pages, and the
+generated `.rst`, and renders HTML with the `sphinx_rtd_theme`. A few details
+worth knowing, all configured in `conf.py`:
 
-- **No manual maintenance** - New modules are automatically discovered
-- **Always accurate** - Documentation reflects actual code structure
-- **Clean structure** - Flat module listing without confusing hierarchies
-- **Explicit control** - Separate `apidoc` and `html` steps
-- **DRY principle** - Documentation lives in code as docstrings
+- **Docstrings** are extracted by the `autodoc` extension and parsed in
+  Google style by `napoleon` (with `sphinx_autodoc_typehints` for type hints
+  and `myst_parser` so the Markdown pages are understood).
+- **Heavy runtime dependencies** (`numpy`, `scipy`, `torch`, `sentence_transformers`,
+  …) are listed in `autodoc_mock_imports`, so the build can import the package
+  for its docstrings without those packages installed. `sys.path` is pointed at
+  `../../src`, so `autodoc` imports `emb_diversity` straight from the source tree
+  — the package does not need to be installed.
+- **The version** shown in the docs is read directly from `pyproject.toml`, so it
+  always matches the package (and works in the Pages build, where the package
+  itself is not installed).
 
-## Documentation Structure
-
-- `source/conf.py` - Sphinx configuration file
-- `source/index.rst` - Main documentation page (manually maintained)
-- `source/modules.rst` - Auto-generated API reference (DO NOT EDIT MANUALLY)
-- `source/emb_diversity*.rst` - Auto-generated module docs (DO NOT EDIT MANUALLY)
-- `build/` - Generated documentation (gitignored)
-
-## Writing Docstrings
-
-This project uses **Google-style docstrings** which are automatically parsed by Sphinx Napoleon extension.
-
-### Docstring Style Guide
-
-#### Functions and Methods
-
-```python
-def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureResult:
-    """Calculate diversity score for a set of vectors.
-
-    This function computes various diversity metrics for vector representations.
-    The default method uses the Vendi Score which is based on matrix entropy.
-
-    Args:
-        vectors: Array of shape (n_samples, n_features) containing the vectors.
-        method: Diversity calculation method. Options are "vendi", "entropy",
-            or "distinctness". Defaults to "vendi".
-
-    Returns:
-        A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        diversity score (higher means more diverse; scores are unbounded, not
-        limited to [0, 1]) and ``parameters`` records the configuration used.
-
-    Raises:
-        ValueError: If vectors array is empty or method is not recognized.
-
-    Example:
-        >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> result = calculate_diversity(vectors)
-        >>> print(f"Diversity: {result['value']:.2f}")
-        Diversity: 1.73
-    """
-    pass
-```
-
-#### Classes
-
-```python
-class DiversityMeasure:
-    """A class for measuring diversity in vector representations.
-
-    This class provides multiple methods for calculating diversity scores
-    from vector embeddings, including entropy-based and distance-based metrics.
-
-    Attributes:
-        method: The diversity calculation method to use.
-        normalize: Whether to normalize the diversity scores.
-
-    Example:
-        >>> measure = DiversityMeasure(method="vendi")
-        >>> score = measure.compute(vectors)
-    """
-
-    def __init__(self, method: str = "vendi", normalize: bool = True):
-        """Initialize the DiversityMeasure.
-
-        Args:
-            method: Diversity calculation method. Defaults to "vendi".
-            normalize: Whether to normalize scores. Defaults to True.
-        """
-        pass
-```
-
-#### Modules
-
-At the top of each module file:
-
-```python
-"""Utility functions for project path management.
-
-This module provides helper functions to locate the project root directory
-and resolve paths relative to the project structure.
-"""
-```
-
-### Key Points
-
-- **One-line summary**: Start with a brief summary (imperative mood: "Calculate", not "Calculates")
-- **Blank line**: After the summary, add a blank line before detailed description
-- **Args**: Document each parameter with type information
-- **Returns**: Describe what the function returns
-- **Raises**: Document exceptions that might be raised
-- **Example**: Include usage examples when helpful
-- **Type hints**: Use type hints in function signatures AND document them in docstrings
-
-### Section Headers
-
-Use these section headers in docstrings:
-- `Args:` - Function/method parameters
-- `Returns:` - Return value description
-- `Raises:` - Exceptions that may be raised
-- `Yields:` - For generators
-- `Attributes:` - For class attributes
-- `Example:` or `Examples:` - Usage examples
-- `Note:` - Important notes
-- `Warning:` - Warnings about usage
-
-### References
-
-- [Google Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
-- [Sphinx Napoleon Documentation](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
-
-## Viewing the Documentation
-
-After building, you can view the documentation by opening:
-
-```
-docs/build/html/index.html
-```
-
-in your web browser.
+For docstring conventions (the Google-style layout the measures use), see the
+**Docstring Style Guide** in the root [`README.md`](../README.md#docstring-style-guide).
