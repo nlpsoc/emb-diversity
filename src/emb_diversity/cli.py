@@ -30,7 +30,7 @@ def default(
             "Measure to run. Use -m name for one, repeat for several: "
             "-m mean_pw_dist -m diameter. "
             "Use -m variety|balance|disparity for a named set, -m all for all. "
-            "Default: graph_entropy."
+            "Default: graph_entropy, vendi_score, mean_pw_dist."
         ),
     ),
     axis: str = typer.Option(
@@ -63,7 +63,7 @@ def measure_cmd(
             "Measure to run. Use -m name for one, repeat for several: "
             "-m mean_pw_dist -m diameter. "
             "Use -m variety|balance|disparity for a named set, -m all for all. "
-            "Default: graph_entropy."
+            "Default: graph_entropy, vendi_score, mean_pw_dist."
         ),
     ),
     axis: str = typer.Option(

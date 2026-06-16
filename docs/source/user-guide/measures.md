@@ -2,6 +2,7 @@
 
 emb-diversity provides 21 diversity measures across four categories.
 All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
+The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
 
 ## Interpreting the scores
 
@@ -29,7 +30,7 @@ scores:
 
 | Function | Description |
 |---|---|
-| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | Average pairwise distance between all datapoints |
+| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | Average pairwise distance between all datapoints -- **default** |
 | {func}`dist_dispersion <emb_diversity.measures.dist_dispersion.dist_dispersion>` | Sum of all pairwise distances |
 | {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two instances |
 | {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two instances |
@@ -43,10 +44,10 @@ scores:
 
 | Function | Description |
 |---|---|
-| {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | Vendi Score -- effective number of distinct items (Friedman & Dieng, 2023) |
+| {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | Vendi Score -- effective number of distinct items (Friedman & Dieng, 2023) -- **default** |
 | {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy |
 | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
-| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph -- **default measure** |
+| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph -- **default** |
 
 ## Geometry-based
 

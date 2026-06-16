@@ -29,7 +29,8 @@ def measure_diversity(
     Args:
         data: A list of text strings, or embedding vectors (n, d).
         measure: Which measure(s) to run. Options:
-            - ``None``: run the default measure(s) (``graph_entropy``)
+            - ``None``: run the default measures (``graph_entropy``,
+              ``vendi_score``, ``mean_pw_dist``)
             - a named set: ``"variety"``, ``"balance"`` or ``"disparity"``
             - ``"all"``: run every built-in measure
             - a measure name like ``"mean_pw_dist"``
