@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 from typing import Callable
+from pathlib import Path
 
 from .measures_registry import (
     DEFAULT_MEASURE,
@@ -18,6 +19,7 @@ def measure_diversity(
     measure: str | Callable | list | None = None,
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
+    cache_dir: str | Path | None = None,
 ) -> dict[str, dict]:
     """Measure diversity of texts or embeddings.
 

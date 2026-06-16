@@ -7,7 +7,7 @@ from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Distance-Based Diversity Measure
 
@@ -66,7 +66,7 @@ def sum_bottleneck(
         raise ValueError("SumBottleneck requires at least 2 datapoints")
 
     # condensed pairwise distances -> square matrix
-    condensed = _compute_pairwise_distances(X, metric=metric, **metric_kwargs)
+    condensed = compute_pairwise_distances(X, metric=metric, **metric_kwargs)
     dist_mat = squareform(condensed)
 
     # exclude self-distance when taking per-row minima

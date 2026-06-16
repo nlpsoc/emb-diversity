@@ -7,7 +7,7 @@ from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Distance-Based Diversity Measure
 
@@ -60,7 +60,7 @@ def chamfer_dist(
         raise ValueError("Cannot compute chamfer distance for fewer than 2 datapoints")
 
     # compute all pairwise distances
-    dist_vec = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    dist_vec = compute_pairwise_distances(data, metric, **metric_kwargs)
     dist_mat = squareform(dist_vec)
 
     # set the diagonal to inf, to force exclude j = i
