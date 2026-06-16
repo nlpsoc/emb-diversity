@@ -5,7 +5,8 @@
 
 import os
 import sys
-from importlib.metadata import PackageNotFoundError, version as _get_version
+import tomllib
+from pathlib import Path
 sys.path.insert(0, os.path.abspath('../../src'))
 
 # Mock imports for packages that might not be available during docs build
@@ -31,12 +32,11 @@ project = 'emb-diversity'
 copyright = '2026, Cantao Su, Menan Velayuthan, Esther Ploeger, Dong Nguyen, Anna Wegmann'
 author = 'Cantao Su, Menan Velayuthan, Esther Ploeger, Dong Nguyen, Anna Wegmann'
 
-# Read the version from the installed package metadata so the docs never drift
-# from pyproject.toml.
-try:
-    release = _get_version('emb-diversity')
-except PackageNotFoundError:
-    release = '0.0.0'
+# Read the version straight from pyproject.toml so the docs never drift from the
+# package — and so it still works in the GitHub Pages build, where only the docs
+# dependency group is installed (the package itself is not).
+_pyproject = Path(__file__).resolve().parents[2] / 'pyproject.toml'
+release = tomllib.loads(_pyproject.read_text(encoding='utf-8'))['project']['version']
 version = release
 
 # -- General configuration ---------------------------------------------------
