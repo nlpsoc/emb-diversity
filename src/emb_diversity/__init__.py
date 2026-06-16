@@ -21,9 +21,9 @@ _ATTR_TO_SUBMODULE = {
     # Axes registry
     "axes": "axes_registry",
     # Pairwise distance caching
-    "compute_pairwise_distances": "compute_pairwise",
-    "clear_distance_cache": "compute_pairwise",
-    "distance_cache_info": "compute_pairwise",
+    "compute_pairwise_distances": "measures.utils",
+    "clear_distance_cache": "measures.utils",
+    "distance_cache_info": "measures.utils",
 }
 
 __all__ = list(_ATTR_TO_SUBMODULE)
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     # Static-only mirror of the lazy attributes above, so IDEs and type
     # checkers can resolve `from emb_diversity import <name>`.
     from .axes_registry import axes
-    from .compute_pairwise import (
+    from .measures.utils import (
         clear_distance_cache,
         compute_pairwise_distances,
         distance_cache_info,

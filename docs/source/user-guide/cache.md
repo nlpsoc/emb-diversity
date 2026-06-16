@@ -87,7 +87,7 @@ clear_cache()
 
 ### Why
 
-Most measures internally compute pairwise distances between embedding vectors using `scipy.pdist`. When multiple measures are run on the same dataset, this computation would otherwise be repeated for each measure. `compute_pairwise_distances()` in `emb_diversity.compute_pairwise` wraps `scipy.pdist` with a two-level cache to avoid that.
+Most measures internally compute pairwise distances between embedding vectors using `scipy.pdist`. When multiple measures are run on the same dataset, this computation would otherwise be repeated for each measure. `compute_pairwise_distances()` in `emb_diversity.measures.utils` wraps `scipy.pdist` with a two-level cache to avoid that.
 
 ### Three-Level Lookup
 
@@ -116,7 +116,7 @@ Two constants control the caching behaviour:
 - **`_MEMORY_MAX = 4`** — the maximum number of distance matrices held in the in-memory LRU cache at once. When a fifth matrix is computed, the oldest one is evicted. Set to `0` to disable memory caching entirely and rely only on disk:
 
   ```python
-  import emb_diversity.compute_pairwise as pw
+  from emb_diversity.measures import utils as pw
   pw._MEMORY_MAX = 0
   ```
 
@@ -131,7 +131,7 @@ By default, distance matrices are stored under:
 To use a custom directory, pass `cache_dir`:
 
 ```python
-from emb_diversity.compute_pairwise import compute_pairwise_distances
+from emb_diversity.measures.utils import compute_pairwise_distances
 from pathlib import Path
 
 distances = compute_pairwise_distances(vectors, metric="cosine", cache_dir=Path("/my/cache"))
@@ -142,7 +142,7 @@ distances = compute_pairwise_distances(vectors, metric="cosine", cache_dir=Path(
 To inspect how much memory and disk the cache is using:
 
 ```python
-from emb_diversity.compute_pairwise import distance_cache_info
+from emb_diversity.measures.utils import distance_cache_info
 
 info = distance_cache_info()
 # {
@@ -159,7 +159,7 @@ info = distance_cache_info()
 `clear_distance_cache()` clears both the in-memory LRU and the disk cache at once. Unlike the embedding cache, there is no per-metric option — the entire cache directory is removed.
 
 ```python
-from emb_diversity.compute_pairwise import clear_distance_cache
+from emb_diversity.measures.utils import clear_distance_cache
 
 # Clear memory and disk cache (default directory)
 clear_distance_cache()

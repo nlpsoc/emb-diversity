@@ -8,7 +8,7 @@ from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Distance-Based Diversity Measure
 
@@ -74,7 +74,7 @@ def hamdiv(
         raise ValueError(f"solver must be one of {valid_solvers}, got '{solver}'")
 
     # Compute pairwise distances
-    condensed = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    condensed = compute_pairwise_distances(data, metric, **metric_kwargs)
 
     # Convert to full distance matrix
     dist_matrix = squareform(condensed)

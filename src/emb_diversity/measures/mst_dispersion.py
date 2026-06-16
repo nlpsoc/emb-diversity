@@ -8,7 +8,7 @@ from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult, TensorLike
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Graph-Based Diversity Measure
 
@@ -71,7 +71,7 @@ def mst_dispersion(data: TensorLike,
 
     # now we create and adjacency matrix with a specified pairwise distance metric
     # by default its cosine distance
-    dist_condensed = _compute_pairwise_distances(X, metric=metric)
+    dist_condensed = compute_pairwise_distances(X, metric=metric)
     # need to convert it to square form
     # we use this as our adjacency matrix of a complete graph formed by all datapoints
     dist_square = squareform(dist_condensed)

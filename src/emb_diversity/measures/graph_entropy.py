@@ -7,7 +7,7 @@ from scipy.spatial.distance import squareform
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult, TensorLike
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Graph-Based Diversity Measure
 
@@ -83,7 +83,7 @@ def graph_entropy(data: TensorLike,
     # only issue with pairwise distances is that it returns a condensed matrix
     # (basically a flattened upper triangular matrix)
     # need to write logic to get a particular distance from the condensed matrix
-    dist_condensed = _compute_pairwise_distances(X, metric=metric)
+    dist_condensed = compute_pairwise_distances(X, metric=metric)
 
     # 2.lets get the square matrix from the condensed matrix
     dist_square = squareform(dist_condensed)

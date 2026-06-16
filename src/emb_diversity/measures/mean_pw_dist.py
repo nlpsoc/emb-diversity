@@ -6,7 +6,7 @@ import numpy as np
 
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
-from .utils import _compute_pairwise_distances
+from .utils import compute_pairwise_distances
 
 ### Distance-Based Diversity Measure
 
@@ -54,7 +54,7 @@ def mean_pw_dist(
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
-    dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
+    dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     return {
         "value": float(np.mean(dists)),
         "parameters": {"metric": metric, "embedding_model": embedding_model, **metric_kwargs},

@@ -3,7 +3,7 @@ Pytest tests for the pairwise distance cache.
 
 Validates correctness of the cache (same input -> same output, different
 inputs -> different cache slots), that the disk cache is reused across
-calls, and that the integration with measures/utils._compute_pairwise_distances
+calls, and that the integration with measures/utils.compute_pairwise_distances
 actually routes through the cache.
 """
 import shutil
@@ -14,14 +14,13 @@ import pytest
 from scipy.spatial.distance import pdist
 
 from emb_diversity import (
-    compute_pairwise_distances,
     clear_distance_cache,
     distance_cache_info,
     mean_pw_dist,
     diameter,
     energy,
 )
-from emb_diversity.measures.utils import _compute_pairwise_distances
+from emb_diversity.measures.utils import compute_pairwise_distances
 
 CACHE_DIR = Path(".cache/pdist_test")
 
@@ -132,7 +131,7 @@ class TestMemoryLayer:
     def test_lru_eviction_respects_memory_max(self):
         """More distinct entries than _MEMORY_MAX are computed; the dict
         must stay bounded and contain only the most recent entries."""
-        from emb_diversity import compute_pairwise as cp_module
+        from emb_diversity.measures import utils as cp_module
         max_entries = cp_module._MEMORY_MAX
         # Generate one more dataset than the cap, so we know eviction must happen
         for seed in range(max_entries + 1):
@@ -150,7 +149,7 @@ class TestMemoryLayer:
 
 
 class TestMeasuresAreCached:
-    """Integration: measures/utils._compute_pairwise_distances now routes
+    """Integration: measures/utils.compute_pairwise_distances now routes
     through the cache, so multiple measures on the same data share one
     cached pdist computation."""
 
@@ -166,13 +165,13 @@ class TestMeasuresAreCached:
         def _patched(data, metric="cosine", **kwargs):
             return compute_pairwise_distances(data, metric=metric, cache_dir=CACHE_DIR, **kwargs)
 
-        monkeypatch.setattr(measures_utils, "_compute_pairwise_distances", _patched)
+        monkeypatch.setattr(measures_utils, "compute_pairwise_distances", _patched)
         # Re-bind in each measure module that imported it
         mpd = importlib.import_module("emb_diversity.measures.mean_pw_dist")
         dia = importlib.import_module("emb_diversity.measures.diameter")
         ene = importlib.import_module("emb_diversity.measures.energy")
         for mod in (mpd, dia, ene):
-            monkeypatch.setattr(mod, "_compute_pairwise_distances", _patched)
+            monkeypatch.setattr(mod, "compute_pairwise_distances", _patched)
 
         data = _data(n=30, d=8)
         v1 = mpd.mean_pw_dist(data, metric="cosine")["value"]
@@ -186,7 +185,7 @@ class TestMeasuresAreCached:
 
     def test_helper_returns_same_as_pdist(self):
         data = _data()
-        helper = _compute_pairwise_distances(data, metric="cosine")
+        helper = compute_pairwise_distances(data, metric="cosine")
         direct = pdist(data, metric="cosine")
         assert np.allclose(helper, direct)
         # Clean up the default cache that the helper just populated
