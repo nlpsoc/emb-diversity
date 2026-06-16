@@ -5,17 +5,19 @@ on variety, balance, disparity, or formality diversity, and uses the package's
 ``measure_diversity`` convenience function with its default measures to check
 that each measure scores the "high" dataset above the "low" one.
 
-Run it with the dev environment (the loaders need the ``datasets`` package)::
+Install the package together with the ``datasets`` HuggingFace loader, then run
+this script from its own folder::
 
-    uv run --group dev python examples/style_diversity_demo.py
+    pip install emb-diversity datasets
+    python style_diversity_demo.py
 
-The data loaders live here rather than in the installable package: the STEL
-loader reads local ``pilot_datasets/`` files and the SynthSTEL loader pulls a
-HuggingFace dataset (the ``datasets`` package, a dev-only dependency). Keeping
-them out of ``emb_diversity`` lets the published package stay free of both.
+The STEL loader reads the ``_quad_stel-dimensions_formal-815_complex-815.tsv``
+file shipped alongside this script; the SynthSTEL loader pulls a HuggingFace
+dataset via the ``datasets`` package.
 """
 import re
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -23,13 +25,11 @@ import pandas as pd
 from datasets import load_dataset
 
 from emb_diversity import measure_diversity
-from emb_diversity.utility import project_root
 
 
-# ── STEL formality pairs (local pilot dataset) ────────────────────────
+# ── STEL formality pairs (local file shipped with this script) ────────
 
-STEL_path = (project_root.find() / "pilot_datasets" / "style_diversity" / "original_data" /
-             "_quad_stel-dimensions_formal-815_complex-815.tsv")
+STEL_path = Path(__file__).resolve().parent / "_quad_stel-dimensions_formal-815_complex-815.tsv"
 
 
 def get_formal_informal_STEL_pairs(tsv_file_path=STEL_path):
