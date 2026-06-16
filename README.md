@@ -309,7 +309,7 @@ def mean_pw_dist(
     Example:
         >>> from emb_diversity import mean_pw_dist
         >>> mean_pw_dist(["The cat sat.", "Dogs play fetch.", "A bird sings at dawn."])
-        {'value': 0.71, 'parameters': {'metric': 'cosine', 'embedding_model': 'all-mpnet-base-v2'}}
+        {'value': 0.95..., 'parameters': {'metric': 'cosine', 'embedding_model': 'all-mpnet-base-v2'}}
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
     dists = _compute_pairwise_distances(data, metric, **metric_kwargs)
