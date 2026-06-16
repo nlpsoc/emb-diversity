@@ -2,81 +2,6 @@
 
 This folder contains the Sphinx documentation for the Diversity Measurement package.
 
-## Building the Documentation
-
-### Prerequisites
-
-Make sure you have installed the development dependencies:
-
-```bash
-uv sync --group dev
-```
-
-### Building HTML Documentation
-
-To build the HTML documentation, follow these two steps:
-
-```bash
-cd docs
-
-# Step 1: Generate API documentation RST files from source code
-make apidoc
-
-# Step 2: Build HTML from the RST files
-make html
-```
-
-The generated HTML files will be in `docs/build/html/`. Open `docs/build/html/index.html` in your browser to view the documentation.
-
-### Available Make Commands
-
-- `make apidoc` - Generate API documentation RST files from source code (discovers all modules including utility, embeddings, etc.)
-- `make html` - Build HTML documentation from RST files
-- `make clean` - Remove built documentation files
-- `make cleanall` - Remove both built documentation AND generated API RST files
-
-## Workflow: Documentation Generation from Code
-
-This project uses `sphinx-apidoc` to generate documentation from source code. You should NOT manually edit `modules.rst` or any generated `emb_diversity*.rst` files - they are auto-generated.
-
-### How It Works
-
-1. **Run `make apidoc`** to scan your source code in `../src/emb_diversity/`
-2. `sphinx-apidoc` discovers all Python modules and submodules (measures, two_d, utility, embeddings, etc.)
-3. It generates RST files with a **flat structure** using the `--no-headings` flag
-   - All modules appear as `emb_diversity.module_name`
-   - No hierarchical "Submodules" or "Subpackages" sections
-4. **Run `make html`** to build the HTML documentation
-5. Sphinx reads the RST files and extracts docstrings from your Python code
-
-### When to Run Each Command
-
-- **Run `make apidoc`** when:
-  - You add new Python modules or packages
-  - You restructure your code (move/rename modules)
-  - Starting fresh or the RST files are missing
-
-- **Run `make html`** when:
-  - You update docstrings in existing code
-  - After running `make apidoc`
-  - You modify `source/index.rst` or other manual RST files
-
-### Why This Approach?
-
-- **No manual maintenance** - New modules are automatically discovered
-- **Always accurate** - Documentation reflects actual code structure
-- **Clean structure** - Flat module listing without confusing hierarchies
-- **Explicit control** - Separate `apidoc` and `html` steps
-- **DRY principle** - Documentation lives in code as docstrings
-
-## Documentation Structure
-
-- `source/conf.py` - Sphinx configuration file
-- `source/index.rst` - Main documentation page (manually maintained)
-- `source/modules.rst` - Auto-generated API reference (DO NOT EDIT MANUALLY)
-- `source/emb_diversity*.rst` - Auto-generated module docs (DO NOT EDIT MANUALLY)
-- `build/` - Generated documentation (gitignored)
-
 ## Writing Docstrings
 
 This project uses **Google-style docstrings** which are automatically parsed by Sphinx Napoleon extension.
@@ -85,61 +10,48 @@ This project uses **Google-style docstrings** which are automatically parsed by 
 
 #### Functions and Methods
 
-```python
-def calculate_diversity(vectors: np.ndarray, method: str = "vendi") -> MeasureResult:
-    """Calculate diversity score for a set of vectors.
+The package is function-based (there are no public classes). A diversity measure
+leads with bold **Interpretation of values** and **Range** lines so a reader can
+tell how to read the score at a glance, then follows the usual
+`Args`/`Returns`/`Raises` structure — for example the `diameter` measure:
 
-    This function computes various diversity metrics for vector representations.
-    The default method uses the Vendi Score which is based on matrix entropy.
+```python
+def diameter(
+    data: Sequence[Sequence[float]],
+    metric: DistanceMetric = "cosine",
+    *,
+    diversity_axis: str = "semantic",
+    embedding_model: str | None = None,
+    **metric_kwargs: Any,
+) -> MeasureResult:
+    """**Interpretation of values:** larger value = more diverse.
+    **Range:** >= 0; the upper bound depends on ``metric`` (e.g. [0, 2] for cosine distance).
+
+    Compute the maximum pairwise distance in a set of vectors (the diameter).
 
     Args:
-        vectors: Array of shape (n_samples, n_features) containing the vectors.
-        method: Diversity calculation method. Options are "vendi", "entropy",
-            or "distinctness". Defaults to "vendi".
+        data: Array-like of (embedding) vectors with shape (n, d), or raw text
+            strings. Must contain at least 2 samples.
+        metric: Distance metric name or callable accepted by
+            ``scipy.spatial.distance.pdist``. Defaults to ``"cosine"``.
+        diversity_axis: Registered axis used to embed text input (default
+            ``"semantic"``).
+        embedding_model: Explicit embedding model id; overrides *diversity_axis*.
+        **metric_kwargs: Extra keyword arguments forwarded to ``pdist``.
 
     Returns:
         A dict ``{"value": float, "parameters": {...}}`` where ``value`` is the
-        diversity score (higher means more diverse; scores are unbounded, not
-        limited to [0, 1]) and ``parameters`` records the configuration used.
+        maximum distance across all unique pairs and ``parameters`` records the
+        configuration used.
 
     Raises:
-        ValueError: If vectors array is empty or method is not recognized.
+        ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
 
     Example:
-        >>> vectors = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> result = calculate_diversity(vectors)
-        >>> print(f"Diversity: {result['value']:.2f}")
-        Diversity: 1.73
+        >>> from emb_diversity import diameter
+        >>> diameter(["The cat sat.", "Dogs play fetch.", "A bird sings at dawn."])
+        {'value': 0.94, 'parameters': {'metric': 'cosine', 'embedding_model': 'all-mpnet-base-v2'}}
     """
-    pass
-```
-
-#### Classes
-
-```python
-class DiversityMeasure:
-    """A class for measuring diversity in vector representations.
-
-    This class provides multiple methods for calculating diversity scores
-    from vector embeddings, including entropy-based and distance-based metrics.
-
-    Attributes:
-        method: The diversity calculation method to use.
-        normalize: Whether to normalize the diversity scores.
-
-    Example:
-        >>> measure = DiversityMeasure(method="vendi")
-        >>> score = measure.compute(vectors)
-    """
-
-    def __init__(self, method: str = "vendi", normalize: bool = True):
-        """Initialize the DiversityMeasure.
-
-        Args:
-            method: Diversity calculation method. Defaults to "vendi".
-            normalize: Whether to normalize scores. Defaults to True.
-        """
-        pass
 ```
 
 #### Modules
@@ -180,13 +92,3 @@ Use these section headers in docstrings:
 
 - [Google Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
 - [Sphinx Napoleon Documentation](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
-
-## Viewing the Documentation
-
-After building, you can view the documentation by opening:
-
-```
-docs/build/html/index.html
-```
-
-in your web browser.
