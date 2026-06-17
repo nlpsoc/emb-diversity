@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,27 @@ import numpy as np
 from .embeddings._embed_numpy import to_numeric_array
 from .axes_registry import axes
 from .embeddings.embed_text import encode
+
+# Several measures build an O(n^2) pairwise / n*n Gram intermediate, so a large
+# dataset can be slow or exhaust memory (a 10k x 10k float64 matrix is ~800 MB;
+# 100k would be ~80 GB). Above this many samples, a warning is emitted — the
+# computation still proceeds. Support for large datasets is planned for a future
+# release.
+LARGE_DATASET_WARN_THRESHOLD = 10_000
+
+
+def _warn_if_large(data) -> None:
+    """Warn if *data* is large enough that a measure may be slow or run out of memory."""
+    n = len(data)
+    if n > LARGE_DATASET_WARN_THRESHOLD:
+        warnings.warn(
+            f"Dataset has {n} samples, above {LARGE_DATASET_WARN_THRESHOLD}. "
+            "Several measures build an O(n^2) matrix, so this may be slow or run "
+            "out of memory. Support for large datasets is planned for a future "
+            "release.",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def resolve_model_name(
@@ -63,7 +85,10 @@ def resolve_embeddings(
     vectors. Numeric input (already embeddings) is converted to a float numpy
     array and returned with a ``None`` model id, since no embedding happened.
     Every measure resolves its data through this function, so the numeric
-    validation here covers the whole API.
+    validation here — and the large-input warning — covers the whole API.
+
+    Input larger than ``LARGE_DATASET_WARN_THRESHOLD`` triggers a warning; the
+    computation still proceeds on the full input.
 
     Args:
         data: A list of text strings, or embedding vectors (n, d).
@@ -83,12 +108,19 @@ def resolve_embeddings(
             (nan or inf).
     """
     if _is_text_input(data):
+        # Warn before embedding (a bare string is excluded: it passes
+        # _is_text_input but its length is a character count — leave the helpful
+        # ValueError in embed_texts to fire instead).
+        if not isinstance(data, str):
+            _warn_if_large(data)
         # Resolve the model id once so it can be reported back, then pass it
         # down explicitly: embed_texts is the single embedding code path
         # (and runs the embedded vectors through to_numeric_array itself).
         model_name = resolve_model_name(diversity_axis, embedding_model)
         return embed_texts(data, embedding_model=model_name), model_name
-    return to_numeric_array(data), None
+    X = to_numeric_array(data)
+    _warn_if_large(X)
+    return X, None
 
 
 def embed_texts(
