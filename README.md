@@ -1,7 +1,7 @@
 # emb-diversity
 
 <!-- docs-intro-start -->
-A Python package for measuring data diversity on small- to medium-sized text datasets. All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
+A Python package for measuring data diversity on small- to medium-sized text datasets (RAM-restricted, usually up to size 10k). All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
 
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
