@@ -79,12 +79,25 @@ def measure_diversity(
         else:
             resolved.append((item, get_measure(item)))
 
-    # ── Compute ──────────────────────────────────────────────────
-    # Each measure resolves + embeds its input itself. When *data* is text, the
-    # first measure populates the embedding disk cache and the rest hit it, so
-    # the model runs only once.
+    # ── Embed once, up front ─────────────────────────────────────
+    # Each measure embeds its input itself and they share the disk cache, so the
+    # model runs only once anyway. Warming the cache here means the model-load
+    # spinner shows during embedding, and the per-measure compute spinners below
+    # then wrap only the calculation (the in-loop embed is a fast cache hit) —
+    # the two spinners run sequentially instead of nesting. Guarded so it never
+    # changes behaviour: a bad input still surfaces as a per-measure error below.
+    from .embed import _is_text_input, embed_texts
     from .utility._progress import computing_spinner
 
+    if _is_text_input(data):
+        try:
+            embed_texts(
+                data, diversity_axis=diversity_axis, embedding_model=embedding_model
+            )
+        except Exception:
+            pass
+
+    # ── Compute ──────────────────────────────────────────────────
     results: dict[str, dict] = {}
     for name, measure_fn in resolved:
         try:
