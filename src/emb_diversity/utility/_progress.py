@@ -169,6 +169,28 @@ class _Stage:
         self._set(f"[bold cyan]{verb} model[/] '{model_name}'…")
 
 
+def announce_calculation(measure: str) -> None:
+    """Print a one-line notice that a (possibly slow) measure calculation starts.
+
+    Shown only in interactive sessions (see :func:`progress_enabled`), so
+    scripts, pipes, and CI logs stay clean. Never raises — a display failure
+    just means the notice is skipped.
+
+    Args:
+        measure: Name of the measure being calculated.
+    """
+    if not progress_enabled():
+        return
+    try:
+        from rich.console import Console
+
+        Console(stderr=True).print(
+            f"[bold cyan]Calculating[/] measure '{measure}'… (this might take a while)"
+        )
+    except Exception:
+        pass
+
+
 def load_with_spinner(model_name: str, load_fn: Callable[["_Stage"], T]) -> T:
     """Run *load_fn* while showing a staged spinner, in interactive sessions only.
 

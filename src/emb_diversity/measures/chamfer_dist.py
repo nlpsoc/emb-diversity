@@ -53,7 +53,7 @@ def chamfer_dist(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="chamfer_dist")
     X = np.asarray(data, dtype=float)
     n = X.shape[0]
     if n < 2:

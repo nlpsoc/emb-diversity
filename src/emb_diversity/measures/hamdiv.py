@@ -64,7 +64,7 @@ def hamdiv(
         ValueError:
             If data is empty or contains fewer than 2 datapoints, or if solver is invalid.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="hamdiv")
     if len(data) < 2:
         raise ValueError("hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit")
 

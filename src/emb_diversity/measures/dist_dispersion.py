@@ -51,7 +51,7 @@ def dist_dispersion(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="dist_dispersion")
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     return {
         "value": float(np.sum(dists)),

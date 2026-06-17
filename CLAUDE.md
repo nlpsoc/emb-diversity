@@ -84,7 +84,9 @@ measure that is not registered, which catches typos.
        diversity_axis: str = "semantic",
        embedding_model: str | None = None,
    ) -> MeasureResult:
-       data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+       data, embedding_model = resolve_embeddings(
+           data, diversity_axis, embedding_model, measure="<name>"
+       )
        ...
        return {
            "value": float(score),
@@ -94,9 +96,11 @@ measure that is not registered, which catches typos.
 
    `resolve_embeddings` (from `..embed`) embeds text input and returns the
    resolved model id (`None` for vector input); `MeasureResult` is from
-   `.types`. Embedding args are keyword-only (after `*`). Add a Google-style
-   docstring. The file and the function must share the measure's name — the
-   registry and the package's lazy attribute access rely on that convention.
+   `.types`. Embedding args are keyword-only (after `*`). Pass `measure="<name>"`
+   so an interactive "Calculating measure '<name>'…" notice is shown once
+   embedding finishes, before the calculation. Add a Google-style docstring. The
+   file and the function must share the measure's name — the registry and the
+   package's lazy attribute access rely on that convention.
 
    Calling `resolve_embeddings` first is what gives the measure the shared
    input validation (string rejection, 2-D shape check, nan/inf rejection)

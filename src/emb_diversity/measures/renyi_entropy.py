@@ -98,7 +98,7 @@ def renyi_entropy(
             it). The score is still returned, treating the zero row as
             near-orthogonal to every other point.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="renyi_entropy")
     parameters = {
         "alpha": alpha,
         "kernel_type": kernel_type,

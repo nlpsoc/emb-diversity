@@ -72,7 +72,7 @@ def convex_hull_volume_2d(
         ``random_state``). Fix ``random_state`` and compare within a single
         experiment.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="convex_hull_volume_2d")
     parameters = {"random_state": random_state, "embedding_model": embedding_model}
 
     # Convert first, so numpy-array inputs don't trigger the ambiguous-truth-value

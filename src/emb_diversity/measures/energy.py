@@ -67,7 +67,7 @@ def energy(
         multiplied by -1 so that larger values correspond to more diverse
         datasets.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="energy")
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     # The metric can blow up when the distance is 0 (e.g., duplicates, or vectors
     # pointing in the same direction). Add a small constant epsilon to

@@ -10,6 +10,7 @@ import warnings
 from .embeddings._embed_numpy import to_numeric_array
 from .axes_registry import axes
 from .embeddings.embed_text import encode
+from .utility._progress import announce_calculation
 
 LARGE_DATASET_THRESHOLD = 10_000
 SLOW_DATASET_THRESHOLD = 1_000
@@ -60,6 +61,7 @@ def resolve_embeddings(
     data,
     diversity_axis: str | None = "semantic",
     embedding_model: str | None = None,
+    measure: str | None = None,
 ):
     """Turn raw text into vectors, reporting the model that was used.
 
@@ -73,6 +75,9 @@ def resolve_embeddings(
         data: A list of text strings, or embedding vectors (n, d).
         diversity_axis: Registered axis name (default ``"semantic"``).
         embedding_model: Explicit model id; overrides *diversity_axis*.
+        measure: Name of the calling measure. When given, an interactive notice
+            ("Calculating measure '<measure>'…") is printed once embedding is
+            done, just before the measure's calculation begins.
 
     Returns:
         Tuple ``(vectors, resolved_model_or_None)``.
@@ -109,8 +114,15 @@ def resolve_embeddings(
         # down explicitly: embed_texts is the single embedding code path
         # (and runs the embedded vectors through to_numeric_array itself).
         model_name = resolve_model_name(diversity_axis, embedding_model)
-        return embed_texts(data, embedding_model=model_name), model_name
-    return to_numeric_array(data), None
+        vectors, resolved_model = embed_texts(data, embedding_model=model_name), model_name
+    else:
+        vectors, resolved_model = to_numeric_array(data), None
+
+    # Embedding is done; the calculation is what follows in the caller. Announce
+    # it now so a slow measure does not look like a hang.
+    if measure is not None:
+        announce_calculation(measure)
+    return vectors, resolved_model
 
 
 def embed_texts(
