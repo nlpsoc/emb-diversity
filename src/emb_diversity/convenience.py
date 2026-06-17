@@ -83,12 +83,15 @@ def measure_diversity(
     # Each measure resolves + embeds its input itself. When *data* is text, the
     # first measure populates the embedding disk cache and the rest hit it, so
     # the model runs only once.
+    from .utility._progress import computing_spinner
+
     results: dict[str, dict] = {}
     for name, measure_fn in resolved:
         try:
-            results[name] = measure_fn(
-                data, diversity_axis=diversity_axis, embedding_model=embedding_model
-            )
+            with computing_spinner(f"[bold cyan]Computing[/] {name}…"):
+                results[name] = measure_fn(
+                    data, diversity_axis=diversity_axis, embedding_model=embedding_model
+                )
         except Exception as exc:
             # A failing measure must not abort the others (e.g. measure="all"),
             # but the failure has to stay visible: warn and record the message.

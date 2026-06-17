@@ -31,6 +31,12 @@ _TRUE = {"1", "true", "yes", "on"}
 _FALSE = {"0", "false", "no", "off"}
 
 
+# rich permits only one live display at a time. This module-level flag lets the
+# spinners cooperate: whichever starts first owns the display, and any spinner
+# that would nest inside it degrades to a no-op instead of raising a LiveError.
+_status_active = False
+
+
 def _env_override() -> bool | None:
     """Return the forced on/off state from the environment, or None if unset."""
     raw = os.environ.get(_ENV_VAR)
@@ -169,6 +175,40 @@ class _Stage:
         self._set(f"[bold cyan]{verb} model[/] '{model_name}'…")
 
 
+@contextlib.contextmanager
+def computing_spinner(message: str):
+    """Show a transient spinner while a block runs, in interactive sessions only.
+
+    Used to signal that a (possibly slow) measure calculation is in progress.
+    No-op when progress is disabled or when another spinner is already active
+    (rich permits a single live display), so it is always safe to nest. If the
+    display cannot be created the block still runs, plainly.
+
+    Args:
+        message: Spinner text (rich markup allowed).
+    """
+    global _status_active
+    if not progress_enabled() or _status_active:
+        yield
+        return
+
+    try:
+        from rich.console import Console
+
+        console = Console(stderr=True)
+        status = console.status(message, spinner="dots")
+    except Exception:
+        yield
+        return
+
+    _status_active = True
+    try:
+        with status:
+            yield
+    finally:
+        _status_active = False
+
+
 def load_with_spinner(model_name: str, load_fn: Callable[["_Stage"], T]) -> T:
     """Run *load_fn* while showing a staged spinner, in interactive sessions only.
 
@@ -182,6 +222,13 @@ def load_with_spinner(model_name: str, load_fn: Callable[["_Stage"], T]) -> T:
     """
     if not progress_enabled():
         return load_fn(_Stage())
+
+    # Another spinner already owns the display (e.g. a measure-compute spinner
+    # wrapping the call that triggered this load). Don't nest a second live
+    # display; load plainly, but still suppress the HuggingFace noise.
+    if _status_active:
+        with _quiet_huggingface():
+            return load_fn(_Stage())
 
     # Set up the display defensively; if it cannot be created, load plainly so a
     # cosmetic failure never blocks real work. Errors raised by load_fn itself
