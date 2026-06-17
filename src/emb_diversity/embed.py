@@ -99,7 +99,7 @@ def resolve_embeddings(
     elif len(data) > SLOW_DATASET_THRESHOLD:
         warnings.warn(
             f"Dataset has {len(data)} samples, above {SLOW_DATASET_THRESHOLD}. "
-            "Several measures build an O(n^2) matrix, so this may be slow."
+            "Several measures build an O(n^2) matrix, so this may be slow. "
             "Support for large datasets is planned for a future release.",
             UserWarning,
             stacklevel=3,
