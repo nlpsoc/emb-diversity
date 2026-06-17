@@ -25,6 +25,11 @@ class TestResolveModelName:
         with pytest.raises(ValueError):
             resolve_model_name(diversity_axis=None, embedding_model=None)
 
+    def test_unknown_axis_raises_value_error(self):
+        """An unregistered axis raises ValueError listing the available axes."""
+        with pytest.raises(ValueError, match="Unknown diversity_axis 'adkj'"):
+            resolve_model_name(diversity_axis="adkj")
+
 
 class TestResolveEmbeddingsVectorInput:
     """Vector input goes through resolve_embeddings without touching any model."""

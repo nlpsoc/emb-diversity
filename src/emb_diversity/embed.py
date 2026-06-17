@@ -27,10 +27,20 @@ def resolve_model_name(
 
     Returns:
         The resolved model id string.
+
+    Raises:
+        ValueError: If *diversity_axis* is not a registered axis, or if
+            neither *diversity_axis* nor *embedding_model* is provided.
     """
     if embedding_model is not None:
         return embedding_model
     if diversity_axis is not None:
+        if diversity_axis not in axes:
+            available = ", ".join(sorted(axes.keys())) or "(none)"
+            raise ValueError(
+                f"Unknown diversity_axis {diversity_axis!r}. "
+                f"Available axes: {available}."
+            )
         return axes.get(diversity_axis).default_model
     raise ValueError(
         "Either diversity_axis or embedding_model must be provided"
