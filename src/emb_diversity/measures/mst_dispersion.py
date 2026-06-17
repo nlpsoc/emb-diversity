@@ -51,7 +51,7 @@ def mst_dispersion(data: TensorLike,
     Raises:
         ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="mst_dispersion")
 
     # normalize input to numpy array; torch is checked via sys.modules so that
     # accepting tensor input does not force the (slow) torch import — if torch

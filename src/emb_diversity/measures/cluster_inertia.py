@@ -50,7 +50,7 @@ def cluster_inertia(
     Raises:
         ValueError: If data is empty or contains fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="cluster_inertia")
 
     X = np.asarray(data, dtype=float)
     if X.size == 0:

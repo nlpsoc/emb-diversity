@@ -78,7 +78,7 @@ def vendi_score(
         Wraps the official ``vendi_score`` implementation
         (https://github.com/vertaix/Vendi-Score).
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="vendi_score")
     parameters = {
         "q": q,
         "normalize": normalize,

@@ -51,7 +51,7 @@ def radius(
         the input vectors, so it is not comparable across differently scaled
         embeddings.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="radius")
     X = np.asarray(data, dtype=float)
     n, d = X.shape
 

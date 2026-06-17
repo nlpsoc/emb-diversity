@@ -77,7 +77,7 @@ def bins_entropy(
         ImportError: If projection is "umap" but UMAP is not installed.
         ValueError: If input shape, bins, projection, or normalization is invalid.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="bins_entropy")
 
     # Normalize input to numpy array
     X = np.asarray(data, dtype=float)
