@@ -88,7 +88,9 @@ def measure_diversity(
     results: dict[str, dict] = {}
     for name, measure_fn in resolved:
         try:
-            with computing_spinner(f"[bold cyan]Computing[/] {name}…"):
+            with computing_spinner(
+                f"[bold cyan]Computing[/] {name}… (this might take a while)"
+            ):
                 results[name] = measure_fn(
                     data, diversity_axis=diversity_axis, embedding_model=embedding_model
                 )
