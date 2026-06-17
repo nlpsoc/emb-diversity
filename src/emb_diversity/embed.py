@@ -12,6 +12,7 @@ from .axes_registry import axes
 from .embeddings.embed_text import encode
 
 LARGE_DATASET_THRESHOLD = 10_000
+SLOW_DATASET_THRESHOLD = 1_000
 
 
 def resolve_model_name(
@@ -90,7 +91,16 @@ def resolve_embeddings(
             f"Dataset has {len(data)} samples, above {LARGE_DATASET_THRESHOLD}. "
             "Several measures build an O(n^2) matrix, so this may be slow or run "
             "out of memory. Support for large datasets is planned for a future "
-            "release.",
+            f"release. For now, we recommend repeated calculation on subsamples "
+            f"of size up to {LARGE_DATASET_THRESHOLD}.",
+            UserWarning,
+            stacklevel=3,
+        )
+    elif len(data) > SLOW_DATASET_THRESHOLD:
+        warnings.warn(
+            f"Dataset has {len(data)} samples, above {SLOW_DATASET_THRESHOLD}. "
+            "Several measures build an O(n^2) matrix, so this may be slow."
+            "Support for large datasets is planned for a future release.",
             UserWarning,
             stacklevel=3,
         )
