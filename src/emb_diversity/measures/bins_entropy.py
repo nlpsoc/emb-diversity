@@ -139,7 +139,7 @@ def bins_entropy(
             from umap import UMAP
         except ImportError:
             raise ImportError("UMAP is not installed.")
-        from _umap import fit_transform_umap
+        from ._umap import fit_transform_umap
         umap_kwargs.setdefault("random_state", 42)
         reducer = UMAP(n_components=2, **umap_kwargs)
         Y = fit_transform_umap(reducer, X)

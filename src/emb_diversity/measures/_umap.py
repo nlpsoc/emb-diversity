@@ -14,6 +14,8 @@ import numpy as np
 # pass-through branch (re-emitted verbatim) rather than crashing.
 _SMALL_DATASET_MARKER = "n_neighbors is larger than the dataset size"
 
+_PARALLELISM_MARKER = "n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism."
+
 
 def fit_transform_umap(reducer, X: np.ndarray) -> np.ndarray:
     """Run ``reducer.fit_transform(X)``, rewording UMAP's small-dataset warning.
@@ -40,10 +42,14 @@ def fit_transform_umap(reducer, X: np.ndarray) -> np.ndarray:
     for w in caught:
         if _SMALL_DATASET_MARKER in str(w.message):
             warnings.warn(
-                f"Dataset is too small for UMAP ({X.shape[0]} points); "
-                "using a bigger dataset will fix this.",
+                f"Dataset is too small for UMAP default settings which needs 16 datapoints. "
+                f"Resorting to different settings (n_neighbors={X.shape[0]}). Using a bigger dataset will remove this warning.",
                 UserWarning,
             )
+        elif _PARALLELISM_MARKER in str(w.message):
+            # UMAP emits this warning when random_state is set.
+            # We are currently not aiming for parallelism, so we ignore it.
+            pass
         else:
             warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
 

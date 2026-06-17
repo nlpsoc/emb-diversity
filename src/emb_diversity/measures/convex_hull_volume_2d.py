@@ -105,7 +105,7 @@ def _reduce_to_2d(X: np.ndarray, random_state: int = 42) -> np.ndarray:
 
     try:
         import umap as umap_lib
-        from _umap import fit_transform_umap
+        from ._umap import fit_transform_umap
         reducer = umap_lib.UMAP(n_components=2, random_state=random_state)
         return fit_transform_umap(reducer,X)
     except Exception as e:
