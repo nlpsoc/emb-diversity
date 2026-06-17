@@ -5,10 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import warnings
 
 from .embeddings._embed_numpy import to_numeric_array
 from .axes_registry import axes
 from .embeddings.embed_text import encode
+
+LARGE_DATASET_THRESHOLD = 10_000
 
 
 def resolve_model_name(
@@ -82,6 +85,16 @@ def resolve_embeddings(
             if the vectors (given or embedded) contain non-finite values
             (nan or inf).
     """
+    if len(data) > LARGE_DATASET_THRESHOLD:
+        warnings.warn(
+            f"Dataset has {len(data)} samples, above {LARGE_DATASET_THRESHOLD}. "
+            "Several measures build an O(n^2) matrix, so this may be slow or run "
+            "out of memory. Support for large datasets is planned for a future "
+            "release.",
+            UserWarning,
+            stacklevel=3,
+        )
+
     if _is_text_input(data):
         # Resolve the model id once so it can be reported back, then pass it
         # down explicitly: embed_texts is the single embedding code path
