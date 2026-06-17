@@ -17,9 +17,12 @@ text is embedded:
 from emb_diversity.embed import resolve_embeddings
 from emb_diversity.measures.types import MeasureResult
 
+
 def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the standard deviation of the vectors."""
-    vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
+    vectors, model = resolve_embeddings(
+        data, diversity_axis, embedding_model, measure="my_std"
+    )
     return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
 ```
 
@@ -28,7 +31,11 @@ def my_std(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureR
 - `resolve_embeddings` — the same helper the built-ins use. It validates the input
   (rejecting a bare string, non-2-D data, fewer than 2 samples, nan/inf), embeds
   text, and returns the vectors plus the resolved embedding-model id (`None` for
-  vector input). 
+  vector input).
+- `measure="my_std"` — optional. When given, an interactive
+  "Calculating measure 'my_std'…" notice is printed once embedding finishes, just
+  before your calculation runs (shown only in interactive sessions). Leave it out
+  and the measure works the same, just without the notice.
 - return a dict with a float `"value"` and a `"parameters"` dict recording the
   configuration used.
 
@@ -44,9 +51,12 @@ from emb_diversity import compute_pairwise_distances
 from emb_diversity.embed import resolve_embeddings
 from emb_diversity.measures.types import MeasureResult
 
+
 def my_min_dist(data, metric="cosine", *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
     """A custom measure: the smallest pairwise distance."""
-    vectors, model = resolve_embeddings(data, diversity_axis, embedding_model)
+    vectors, model = resolve_embeddings(
+        data, diversity_axis, embedding_model, measure="my_min_dist"
+    )
     dists = compute_pairwise_distances(vectors, metric)
     return {
         "value": float(dists.min()),
