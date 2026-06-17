@@ -169,6 +169,27 @@ class _Stage:
         self._set(f"[bold cyan]{verb} model[/] '{model_name}'…")
 
 
+def announce_embedding(n_texts: int) -> None:
+    """Print a one-line notice that text embedding is starting.
+
+    Shown only in interactive sessions (see :func:`progress_enabled`), so
+    scripts, pipes, and CI logs stay clean. Never raises.
+
+    Args:
+        n_texts: Number of texts about to be embedded.
+    """
+    if not progress_enabled():
+        return
+    try:
+        from rich.console import Console
+
+        Console(stderr=True).print(
+            f"[bold cyan]Embedding[/] {n_texts} texts…"
+        )
+    except Exception:
+        pass
+
+
 def announce_calculation(measure: str) -> None:
     """Print a one-line notice that a (possibly slow) measure calculation starts.
 
