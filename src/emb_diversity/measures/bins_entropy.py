@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ..embed import resolve_embeddings
+from ._umap import fit_transform_umap
 from .types import MeasureResult
 
 ### Distribution-Based Diversity Measure
@@ -140,10 +141,10 @@ def bins_entropy(
             raise ImportError("UMAP is not installed.")
         umap_kwargs.setdefault("random_state", 42)
         reducer = UMAP(n_components=2, **umap_kwargs)
+        Y = fit_transform_umap(reducer, X)  # shape (n, 2)
     else:
         reducer = PCA(n_components=2, **pca_kwargs)
-
-    Y = reducer.fit_transform(X)  # shape (n, 2)
+        Y = reducer.fit_transform(X)  # shape (n, 2)
 
     # Compute bounds and ranges for binning
     min_x, min_y = Y.min(axis=0)
