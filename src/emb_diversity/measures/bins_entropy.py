@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 
 from ..embed import resolve_embeddings
 from .types import MeasureResult
@@ -101,11 +102,11 @@ def bins_entropy(
     # UMAP's spectral initialization needs more points than its output
     # dimensionality and fails with cryptic internal errors below this.
     if projection == "umap" and n < 4:
-        raise ValueError(
-            f"bins_entropy with projection='umap' requires at least 4 "
-            f"datapoints (got {n}); use projection='pca' for very small "
-            "inputs or provide more data."
-        )
+            raise ValueError(
+                f"bins_entropy with projection='umap' requires at least 4 "
+                f"datapoints (got {n}); use projection='pca' for very small "
+                "inputs or provide more data."
+            )
 
     # Projection kwargs 
     if pca_kwargs is None:
@@ -138,12 +139,15 @@ def bins_entropy(
             from umap import UMAP
         except ImportError:
             raise ImportError("UMAP is not installed.")
+        from _umap import fit_transform_umap
         umap_kwargs.setdefault("random_state", 42)
         reducer = UMAP(n_components=2, **umap_kwargs)
+        Y = fit_transform_umap(reducer, X)
     else:
         reducer = PCA(n_components=2, **pca_kwargs)
 
-    Y = reducer.fit_transform(X)  # shape (n, 2)
+        Y = reducer.fit_transform(X)  # shape (n, 2)
+
 
     # Compute bounds and ranges for binning
     min_x, min_y = Y.min(axis=0)
