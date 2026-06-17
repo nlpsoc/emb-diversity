@@ -44,5 +44,5 @@ class TestStringVectorRejection:
         It heads for embedding instead of the numeric validation (this stays
         cheap to assert: a fake axis fails before any model loads).
         """
-        with pytest.raises(KeyError, match="no-such-axis"):
+        with pytest.raises(ValueError, match="no-such-axis"):
             mean_pw_dist(["a text", "another text"], diversity_axis="no-such-axis")
