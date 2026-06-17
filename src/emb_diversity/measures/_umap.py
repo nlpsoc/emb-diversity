@@ -44,7 +44,7 @@ def fit_transform_umap(reducer, X: np.ndarray) -> np.ndarray:
             warnings.warn(
                 f"Dataset is too small for UMAP default settings which needs 16 datapoints. "
                 f"Resorting to different settings (n_neighbors={X.shape[0]}). Using a bigger dataset will remove this warning.",
-                UserWarning,
+                UserWarning, stacklevel=2
             )
         elif _PARALLELISM_MARKER in str(w.message):
             # UMAP emits this warning when random_state is set.
