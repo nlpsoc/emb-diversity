@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sys
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -83,8 +85,24 @@ def measure_cmd(
     _run_measure(input_file, measures, axis, model, column, output_format)
 
 
+def _concise_formatwarning(message, category, filename, lineno, line=None):
+    """One-line warning format with a short (basename) path.
+
+    Python's default prints the full absolute path into the virtualenv plus the
+    triggering source line, which is long and points at third-party internals
+    (e.g. UMAP's small-dataset warnings). This keeps the useful part — file
+    basename, line number, category, and message — on a single line.
+    """
+    return f"{os.path.basename(filename)}:{lineno}: {category.__name__}: {message}\n"
+
+
 def _run_measure(input_file, measures, axis, model, column, output_format):
     """Shared logic for the measure command."""
+    # Tidy how warnings render for the CLI process only. Installed here (the one
+    # path that runs measures) rather than at import time, so importing the
+    # library never changes global warning formatting for other callers.
+    warnings.formatwarning = _concise_formatwarning
+
     from .convenience import measure_diversity
 
     # ── Read texts ───────────────────────────────────────────────
