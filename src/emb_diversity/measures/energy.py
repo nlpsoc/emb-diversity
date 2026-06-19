@@ -19,6 +19,7 @@ def energy(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value (closer to 0) = more diverse.
@@ -67,7 +68,7 @@ def energy(
         multiplied by -1 so that larger values correspond to more diverse
         datasets.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="energy")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="energy", chunking_kwargs=chunking_kwargs)
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     # The metric can blow up when the distance is 0 (e.g., duplicates, or vectors
     # pointing in the same direction). Add a small constant epsilon to

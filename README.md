@@ -237,13 +237,15 @@ When you add a new measure to `src/emb_diversity/measures/`:
 
 1. Create a new file named after the measure. A measure is a plain function
    (no decorator, same name as its file) with the signature
-   `def name(data, <params>, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult`.
-   Call `data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="name")`
+   `def name(data, <params>, *, diversity_axis="semantic", embedding_model=None, chunking_kwargs=None) -> MeasureResult`.
+   Call `data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="name", chunking_kwargs=chunking_kwargs)`
    first: it embeds text input, returns the resolved model id, and is the single
    place input is validated — it rejects a bare string, non-2-D data, fewer than 2
    samples, and nan/inf values. Passing `measure="name"` prints an interactive
    "Calculating measure 'name'…" notice once embedding finishes, just before the
-   calculation. Then return
+   calculation. `chunking_kwargs` forwards long-text options
+   (`chunking`/`chunks`/`pooling`) to the embedding step — thread it through
+   unchanged. Then return
    `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
    Add a complete docstring following the style guide below.
 2. Add its name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
@@ -267,9 +269,11 @@ from .types import MeasureResult
 from .utils import compute_pairwise_distances
 
 
-def mean_cosine_dist(data, *, diversity_axis="semantic", embedding_model=None) -> MeasureResult:
+def mean_cosine_dist(data, *, diversity_axis="semantic", embedding_model=None,
+                     chunking_kwargs=None) -> MeasureResult:
     data, embedding_model = resolve_embeddings(
-        data, diversity_axis, embedding_model, measure="mean_cosine_dist"
+        data, diversity_axis, embedding_model, measure="mean_cosine_dist",
+        chunking_kwargs=chunking_kwargs,
     )
     dists = compute_pairwise_distances(data, metric="cosine")
     return {

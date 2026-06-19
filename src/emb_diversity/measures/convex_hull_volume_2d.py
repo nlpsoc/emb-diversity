@@ -18,6 +18,7 @@ def convex_hull_volume_2d(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** >= 0, unbounded above (0 if the projected points are collinear).
@@ -72,7 +73,7 @@ def convex_hull_volume_2d(
         ``random_state``). Fix ``random_state`` and compare within a single
         experiment.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="convex_hull_volume_2d")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="convex_hull_volume_2d", chunking_kwargs=chunking_kwargs)
     parameters = {"random_state": random_state, "embedding_model": embedding_model}
 
     # Convert first, so numpy-array inputs don't trigger the ambiguous-truth-value

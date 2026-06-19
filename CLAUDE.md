@@ -83,9 +83,11 @@ measure that is not registered, which catches typos.
        *,
        diversity_axis: str = "semantic",
        embedding_model: str | None = None,
+       chunking_kwargs: dict | None = None,
    ) -> MeasureResult:
        data, embedding_model = resolve_embeddings(
-           data, diversity_axis, embedding_model, measure="<name>"
+           data, diversity_axis, embedding_model, measure="<name>",
+           chunking_kwargs=chunking_kwargs,
        )
        ...
        return {
@@ -98,9 +100,11 @@ measure that is not registered, which catches typos.
    resolved model id (`None` for vector input); `MeasureResult` is from
    `.types`. Embedding args are keyword-only (after `*`). Pass `measure="<name>"`
    so an interactive "Calculating measure '<name>'…" notice is shown once
-   embedding finishes, before the calculation. Add a Google-style docstring. The
-   file and the function must share the measure's name — the registry and the
-   package's lazy attribute access rely on that convention.
+   embedding finishes, before the calculation. `chunking_kwargs` forwards
+   long-text handling options (`chunking`/`chunks`/`pooling`) through to the
+   embedding step; thread it through unchanged. Add a Google-style docstring.
+   The file and the function must share the measure's name — the registry and
+   the package's lazy attribute access rely on that convention.
 
    Calling `resolve_embeddings` first is what gives the measure the shared
    input validation (string rejection, 2-D shape check, nan/inf rejection)

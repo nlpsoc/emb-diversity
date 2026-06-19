@@ -62,6 +62,7 @@ def resolve_embeddings(
     diversity_axis: str | None = "semantic",
     embedding_model: str | None = None,
     measure: str | None = None,
+    chunking_kwargs: dict | None = None,
 ):
     """Turn raw text into vectors, reporting the model that was used.
 
@@ -78,6 +79,10 @@ def resolve_embeddings(
         measure: Name of the calling measure. When given, an interactive notice
             ("Calculating measure '<measure>'…") is printed once embedding is
             done, just before the measure's calculation begins.
+        chunking_kwargs: Long-text handling options forwarded to
+            :func:`embed_texts` / :func:`encode` for text input — e.g.
+            ``{"chunking": True, "chunks": 5, "pooling": "mean"}``. Ignored for
+            numeric (already-embedded) input.
 
     Returns:
         Tuple ``(vectors, resolved_model_or_None)``.
@@ -114,7 +119,8 @@ def resolve_embeddings(
         # down explicitly: embed_texts is the single embedding code path
         # (and runs the embedded vectors through to_numeric_array itself).
         model_name = resolve_model_name(diversity_axis, embedding_model)
-        vectors, resolved_model = embed_texts(data, embedding_model=model_name), model_name
+        vectors = embed_texts(data, embedding_model=model_name, **(chunking_kwargs or {}))
+        resolved_model = model_name
     else:
         vectors, resolved_model = to_numeric_array(data), None
 

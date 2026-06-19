@@ -18,6 +18,7 @@ def mst_dispersion(data: TensorLike,
                    *,
                    diversity_axis: str = "semantic",
                    embedding_model: str | None = None,
+                   chunking_kwargs: dict | None = None,
                    ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** >= 0, grows with n; bounded by (n-1) times the largest edge under ``metric``.
@@ -51,7 +52,7 @@ def mst_dispersion(data: TensorLike,
     Raises:
         ValueError: If input is not 2D, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="mst_dispersion")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="mst_dispersion", chunking_kwargs=chunking_kwargs)
 
     # normalize input to numpy array; torch is checked via sys.modules so that
     # accepting tensor input does not force the (slow) torch import — if torch

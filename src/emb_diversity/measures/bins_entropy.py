@@ -23,6 +23,7 @@ def bins_entropy(
     *,
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
+    chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** [0, 1] with the default ``"effective"`` normalization; with ``"bins"`` it may be < 1.
@@ -77,7 +78,7 @@ def bins_entropy(
         ImportError: If projection is "umap" but UMAP is not installed.
         ValueError: If input shape, bins, projection, or normalization is invalid.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="bins_entropy")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="bins_entropy", chunking_kwargs=chunking_kwargs)
 
     # Normalize input to numpy array
     X = np.asarray(data, dtype=float)

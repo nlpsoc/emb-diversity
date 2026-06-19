@@ -15,6 +15,7 @@ def radius(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** >= 0, unbounded above.
@@ -51,7 +52,7 @@ def radius(
         the input vectors, so it is not comparable across differently scaled
         embeddings.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="radius")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="radius", chunking_kwargs=chunking_kwargs)
     X = np.asarray(data, dtype=float)
     n, d = X.shape
 

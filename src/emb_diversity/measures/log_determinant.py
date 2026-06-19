@@ -26,6 +26,7 @@ def log_determinant(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse (can be negative; less negative = more diverse).
     **Range:** unbounded, (-inf, +inf); can be negative.
@@ -92,7 +93,7 @@ def log_determinant(
             it). The score is still returned, treating the zero row as
             near-orthogonal to every other point.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="log_determinant")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="log_determinant", chunking_kwargs=chunking_kwargs)
     parameters = {
         "kernel_type": kernel_type,
         "tau": tau,

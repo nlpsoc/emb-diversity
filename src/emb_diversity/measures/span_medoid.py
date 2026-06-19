@@ -18,6 +18,7 @@ def span_medoid(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
@@ -54,7 +55,7 @@ def span_medoid(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="span_medoid")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="span_medoid", chunking_kwargs=chunking_kwargs)
     # 1) pairwise distances (condensed) -> full matrix (n, n)
     dist_vec = compute_pairwise_distances(data, metric, **metric_kwargs)
     dist_mat = squareform(dist_vec)  # symmetric, zeros on diagonal
