@@ -88,3 +88,13 @@ class TestIntegration:
         assert isinstance(vectors, np.ndarray)
         assert isinstance(model_name, str)
         assert vectors.shape[0] == len(SENTENCES)
+
+    def test_chunking_kwargs_passthrough(self):
+        """embed_texts forwards chunking kwargs to encode(): a long text embedded
+        with chunking differs from the truncated default."""
+        long_text = ("Diversity in natural language matters for many reasons. " * 120).strip()
+        texts = [long_text, "A short control sentence."]
+        truncated = embed_texts(texts)
+        chunked = embed_texts(texts, chunking=True, chunks=5)
+        assert chunked.shape == truncated.shape
+        assert not np.allclose(chunked[0], truncated[0], atol=1e-4)

@@ -4,15 +4,20 @@ Uses the actual encode() function and SentenceTransformer model.
 Run directly: python test/test_embed_cache.py
 """
 import time
+import numpy as np
 import torch
 from pathlib import Path
 
-from emb_diversity.embeddings.embed_text import encode
+from emb_diversity.embeddings.embed_text import encode, _window_size, _actual_chunks
 from emb_diversity.utility import clear_cache
 
 CACHE_DIR = Path(".cache/test_embeddings")
 MODEL_NAME = "all-MiniLM-L6-v2"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+# A text long enough to span several windows of the model's max sequence length,
+# so chunking yields more than one chunk and differs from plain truncation.
+LONG_TEXT = ("Diversity in natural language matters for many reasons. " * 120).strip()
 
 SENTENCES = [
     "The quick brown fox jumps over the lazy dog.",
@@ -51,6 +56,12 @@ def _time(fn) -> tuple:
     t0 = time.perf_counter()
     result = fn()
     return result, time.perf_counter() - t0
+
+
+def _count_cache_files() -> int:
+    """Number of cached embedding files for MODEL_NAME on disk."""
+    model_cache = CACHE_DIR / MODEL_NAME.replace("/", "_")
+    return len(list(model_cache.glob("*.safetensors")))
 
 
 def test_all_sentences_encoded_on_first_call():
@@ -199,6 +210,104 @@ def test_different_models_use_separate_namespaces():
     print(f"PASS: separate namespaces  model-a dim={len(result_a[0])} ({t_a:.3f}s)  model-b dim={len(result_b[0])} ({t_b:.3f}s)")
 
 
+# ── Chunking / long-text handling ────────────────────────────────────
+
+
+def _encode_chunked(sentences, chunks=10, pooling="mean"):
+    return encode(sentences, model_name=MODEL_NAME, cache_dir=CACHE_DIR,
+                  chunking=True, chunks=chunks, pooling=pooling)
+
+
+def test_chunked_differs_from_truncated():
+    _reset()
+    truncated, t_trunc = _time(lambda: _encode([LONG_TEXT]))
+    chunked, t_chunk = _time(lambda: _encode_chunked([LONG_TEXT]))
+    assert len(chunked[0]) == len(truncated[0]), "FAIL: chunking changed the embedding dim"
+    assert not np.allclose(chunked[0], truncated[0], atol=1e-4), \
+        "FAIL: chunked long text matched truncated — chunking captured no extra content"
+    print(f"PASS: chunked long text differs from truncated  "
+          f"trunc={t_trunc:.3f}s  chunk={t_chunk:.3f}s")
+
+
+def test_short_text_single_chunk_matches_truncation():
+    _reset()
+    short = SENTENCES[0]
+    window = _window_size(MODEL_NAME, "st")
+    assert _actual_chunks(short, MODEL_NAME, "st", window, 10) == 1, \
+        "FAIL: short sentence unexpectedly spans multiple windows"
+    truncated = _encode([short])
+    chunked = _encode_chunked([short])
+    assert np.allclose(chunked[0], truncated[0], atol=1e-4), \
+        "FAIL: single-window chunk did not match the truncated embedding"
+    print("PASS: short text → 1 window, pooled vector matches truncation")
+
+
+def test_chunked_and_truncated_cached_separately():
+    _reset()
+    _encode([LONG_TEXT])              # truncation → 1 file
+    n_after_trunc = _count_cache_files()
+    _encode_chunked([LONG_TEXT])      # chunking → distinct key → +1 file
+    n_after_chunk = _count_cache_files()
+    assert n_after_trunc == 1, f"FAIL: expected 1 truncation file, got {n_after_trunc}"
+    assert n_after_chunk == 2, f"FAIL: chunking did not write a separate file (got {n_after_chunk})"
+    print("PASS: truncated and chunked embeddings live in separate cache entries")
+
+
+def test_actual_chunk_count_dedup():
+    _reset()
+    window = _window_size(MODEL_NAME, "st")
+    actual = _actual_chunks(LONG_TEXT, MODEL_NAME, "st", window, 100)
+    assert 2 <= actual <= 7, \
+        f"FAIL: test needs LONG_TEXT to span 2–7 windows, got {actual} (adjust LONG_TEXT)"
+
+    _encode_chunked([LONG_TEXT], chunks=10)     # caps above `actual` → key chunk={actual}
+    n10 = _count_cache_files()
+    _encode_chunked([LONG_TEXT], chunks=8)      # still >= actual → same key → cache hit
+    n8 = _count_cache_files()
+    assert n8 == n10, "FAIL: caps above the actual count should share one cache entry"
+
+    _encode_chunked([LONG_TEXT], chunks=1)      # below actual → different key → new file
+    n1 = _count_cache_files()
+    assert n1 == n10 + 1, "FAIL: a smaller cap that uses fewer windows should be a new entry"
+    print(f"PASS: actual-chunk keying — cap10/cap8 shared (actual={actual}), cap1 distinct")
+
+
+def test_pooling_methods_differ():
+    _reset()
+    mean = _encode_chunked([LONG_TEXT], pooling="mean")
+    mx = _encode_chunked([LONG_TEXT], pooling="max")
+    first = _encode_chunked([LONG_TEXT], pooling="first")
+    assert not np.allclose(mean[0], mx[0]), "FAIL: mean and max pooling gave identical vectors"
+    assert not np.allclose(mean[0], first[0]), "FAIL: mean and first pooling gave identical vectors"
+    print("PASS: mean / max / first pooling produce distinct vectors")
+
+
+def test_unknown_pooling_raises():
+    _reset()
+    try:
+        _encode_chunked([LONG_TEXT], pooling="nonsense")
+    except ValueError as e:
+        assert "pooling" in str(e).lower(), f"FAIL: unexpected message: {e}"
+        print("PASS: unknown pooling raises ValueError")
+        return
+    raise AssertionError("FAIL: unknown pooling did not raise ValueError")
+
+
+def test_chunking_preserves_order_and_length():
+    _reset()
+    texts = [SENTENCES[0], LONG_TEXT, SENTENCES[1]]
+    result = _encode_chunked(texts)
+    assert len(result) == len(texts), f"FAIL: expected {len(texts)} vectors, got {len(result)}"
+    dim = len(result[0])
+    assert all(len(v) == dim for v in result), "FAIL: chunked vectors have inconsistent dims"
+    # The two short sentences, embedded standalone with chunking, must land at
+    # their original positions unchanged.
+    standalone = _encode_chunked([SENTENCES[0], SENTENCES[1]])
+    assert np.allclose(result[0], standalone[0], atol=1e-4), "FAIL: position 0 changed"
+    assert np.allclose(result[2], standalone[1], atol=1e-4), "FAIL: position 2 changed"
+    print("PASS: chunking preserves output order and length")
+
+
 if __name__ == "__main__":
     print(f"Running on: {DEVICE.upper()}")
     print(f"Sentences: {len(SENTENCES)}\n")
@@ -217,6 +326,13 @@ if __name__ == "__main__":
         test_cache_survives_between_calls,
         test_clear_cache_removes_files,
         test_different_models_use_separate_namespaces,
+        test_chunked_differs_from_truncated,
+        test_short_text_single_chunk_matches_truncation,
+        test_chunked_and_truncated_cached_separately,
+        test_actual_chunk_count_dedup,
+        test_pooling_methods_differ,
+        test_unknown_pooling_raises,
+        test_chunking_preserves_order_and_length,
     ]
 
     passed, failed = 0, 0

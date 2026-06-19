@@ -59,6 +59,43 @@ When a list of texts is passed to `embed_texts()`, the following steps are taken
 
 5. **Preserve order** — results are assembled back in the original input order, regardless of which sentences were cached and which were freshly computed. The output always corresponds positionally to the input list.
 
+### Long Texts: Truncation vs Chunking
+
+By default, a text longer than the embedding model's maximum sequence length is
+**truncated** — tokens past the limit are dropped before embedding. To use the
+whole text instead, enable **chunking** on `encode()` or `embed_texts()`:
+
+```python
+from emb_diversity.embed import embed_texts
+
+# Truncation (default)
+vectors = embed_texts(texts)
+
+# Chunking: split each text into up to `chunks` windows of the model's max
+# sequence length, embed every window, and pool them into one vector per text.
+vectors = embed_texts(texts, chunking=True, chunks=5, pooling="mean")
+```
+
+Chunking options:
+
+- `chunking` — set `True` to chunk instead of truncate. Default `False`.
+- `chunks` — the maximum number of windows per text. Texts shorter than this
+  use fewer windows; texts longer than `chunks × max_seq_length` tokens are
+  truncated at the cap. Default `10`.
+- `pooling` — how the per-window vectors are combined into one vector:
+  `"mean"` (default), `"max"`, or `"first"`.
+
+The cache key folds in the chunking mode **and the actual number of windows a
+text was split into**, so:
+
+- truncated and chunked embeddings of the same text never collide;
+- two calls with different `chunks` caps that happen to produce the same number
+  of windows share one cache entry, while a smaller cap that genuinely uses
+  fewer windows is stored separately.
+
+Chunking is currently available only through `encode()` and `embed_texts()`.
+The diversity measures and `measure_diversity()` continue to use truncation.
+
 ### Disabling the Cache
 
 There is no on/off switch for the cache. If you need to force re-embedding (for example, after updating a model), clear the cache manually using `clear_cache()` from `emb_diversity.utility`.
