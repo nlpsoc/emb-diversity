@@ -218,7 +218,7 @@ def encode(
         chunks: Maximum number of windows per text when chunking. Texts shorter
             than this use fewer windows; longer texts are truncated at this cap.
         pooling: How to combine per-window vectors when chunking. One of
-            "mean" (default), "max", or "first".
+            "mean" (default) or "max".
 
     Returns:
         List of embedding vectors as lists of floats.
