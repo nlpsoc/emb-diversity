@@ -35,6 +35,9 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 | `--model` | *(none)* | Explicit embedding model (overrides `--axis`) |
 | `-c`, `--column` | `text` | Column name for CSV/TSV files |
 | `-f`, `--format` | `table` | Output format: `table`, `json`, `csv` |
+| `--chunking` | off | Chunk long texts instead of truncating them to the model's max length |
+| `--chunks` | `10` | Max windows per text when `--chunking` is set |
+| `--pooling` | `mean` | How to combine chunk vectors when `--chunking` is set: `mean`, `max`, or `first` |
 
 **Examples:**
 
@@ -56,6 +59,9 @@ emb-diversity measure texts.txt --axis style
 
 # Custom embedding model
 emb-diversity measure texts.txt --model all-MiniLM-L6-v2
+
+# Chunk long texts instead of truncating (5 windows per text, mean-pooled)
+emb-diversity measure texts.txt -m mean_pw_dist --chunking --chunks 5 --pooling mean
 
 # CSV with custom column
 emb-diversity measure reviews.csv --column review_text

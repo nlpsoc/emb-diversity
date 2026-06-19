@@ -40,6 +40,23 @@ def custom_measure(data, *, diversity_axis="semantic", embedding_model=None) -> 
 - return a dict with a float `"value"` and a `"parameters"` dict recording the
   configuration used.
 
+If you want your custom measure to support long-text **chunking** (passed as
+`measure_diversity(..., chunking_kwargs={...})`), accept a `chunking_kwargs`
+argument and forward it to `resolve_embeddings`:
+
+```python
+def custom_measure(data, *, diversity_axis="semantic", embedding_model=None,
+                   chunking_kwargs=None) -> MeasureResult:
+    vectors, model = resolve_embeddings(
+        data, diversity_axis, embedding_model, measure="custom_measure",
+        chunking_kwargs=chunking_kwargs,
+    )
+    return {"value": float(vectors.std()), "parameters": {"embedding_model": model}}
+```
+
+`measure_diversity` only forwards `chunking_kwargs` when the caller sets it, so a
+custom measure without this argument still works for the default (truncation) path.
+
 ### Reusing built-in helpers
 
 For distance-based measures you can reuse `compute_pairwise_distances` — the same

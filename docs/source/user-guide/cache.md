@@ -93,8 +93,34 @@ text was split into**, so:
   of windows share one cache entry, while a smaller cap that genuinely uses
   fewer windows is stored separately.
 
-Chunking is currently available only through `encode()` and `embed_texts()`.
-The diversity measures and `measure_diversity()` continue to use truncation.
+Chunking is available throughout the API. At the embedding entry points
+(`encode()` and `embed_texts()`) the options are plain keyword arguments, as
+above. At the measure layer they travel as a single `chunking_kwargs` dict, so
+they never clash with a measure's own keyword arguments:
+
+```python
+from emb_diversity import measure_diversity, mean_pw_dist
+
+# Main entry point
+measure_diversity(
+    texts,
+    measure="mean_pw_dist",
+    chunking_kwargs={"chunking": True, "chunks": 5, "pooling": "mean"},
+)
+
+# A single measure called directly
+mean_pw_dist(texts, chunking_kwargs={"chunking": True, "chunks": 5})
+```
+
+From the CLI, use the `--chunking`, `--chunks`, and `--pooling` flags:
+
+```bash
+emb-diversity measure texts.txt -m mean_pw_dist --chunking --chunks 5 --pooling mean
+```
+
+The keys inside `chunking_kwargs` are exactly the `encode()` options
+(`chunking`, `chunks`, `pooling`); the dict is forwarded down to the embedding
+step unchanged, and omitted keys fall back to the defaults above.
 
 ### Disabling the Cache
 
