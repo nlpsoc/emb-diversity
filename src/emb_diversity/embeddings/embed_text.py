@@ -24,8 +24,7 @@ DEFAULT_POOLING = "mean"
 # of shape (n_chunks, dim)) into a single vector of shape (dim,).
 _POOLERS = {
     "mean": lambda M: M.mean(axis=0),
-    "max": lambda M: M.max(axis=0),
-    "first": lambda M: M[0],  # CLS-style: keep the first chunk
+    "max": lambda M: M.max(axis=0)
 }
 
 
