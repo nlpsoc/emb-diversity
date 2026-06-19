@@ -20,6 +20,7 @@ def measure_diversity(
     diversity_axis: str = "semantic",
     embedding_model: str | None = None,
     cache_dir: str | Path | None = None,
+    chunking_kwargs: dict | None = None,
 ) -> dict[str, dict]:
     """Measure diversity of texts or embeddings.
 
@@ -45,6 +46,10 @@ def measure_diversity(
               measure — it is run as given.
         diversity_axis: Registered axis name (default ``"semantic"``).
         embedding_model: Explicit model id; overrides *diversity_axis*.
+        chunking_kwargs: Long-text handling options forwarded to each measure's
+            embedding step — e.g. ``{"chunking": True, "chunks": 5, "pooling":
+            "mean"}``. Only forwarded when set; a custom measure must accept a
+            ``chunking_kwargs`` argument to be used together with this option.
 
     Returns:
         Dict mapping each measure name to its result, a dict of the form
@@ -83,11 +88,17 @@ def measure_diversity(
     # Each measure resolves + embeds its input itself. When *data* is text, the
     # first measure populates the embedding disk cache and the rest hit it, so
     # the model runs only once.
+    
+    # Only forward chunking_kwargs when the caller set it, so existing custom
+    # measures that don't declare the argument keep working by default.
+    extra = {} if chunking_kwargs is None else {"chunking_kwargs": chunking_kwargs}
+
     results: dict[str, dict] = {}
     for name, measure_fn in resolved:
         try:
             results[name] = measure_fn(
-                data, diversity_axis=diversity_axis, embedding_model=embedding_model
+                data, diversity_axis=diversity_axis, embedding_model=embedding_model,
+                **extra,
             )
         except Exception as exc:
             # A failing measure must not abort the others (e.g. measure="all"),

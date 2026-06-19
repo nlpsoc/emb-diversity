@@ -17,6 +17,7 @@ def graph_entropy(data: TensorLike,
                   *,
                   diversity_axis: str = "semantic",
                   embedding_model: str | None = None,
+                  chunking_kwargs: dict | None = None,
                   ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** >= 0, grows with n (a sum of per-node entropies, each <= log(n-1)).
@@ -55,7 +56,7 @@ def graph_entropy(data: TensorLike,
     Raises:
         ValueError: If input is not 2D, empty, or has fewer than 3 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="graph_entropy")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="graph_entropy", chunking_kwargs=chunking_kwargs)
 
     # normalize input to numpy array; torch is checked via sys.modules so that
     # accepting tensor input does not force the (slow) torch import — if torch

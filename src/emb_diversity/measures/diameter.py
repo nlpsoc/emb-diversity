@@ -17,6 +17,7 @@ def diameter(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
@@ -51,7 +52,7 @@ def diameter(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="diameter")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="diameter", chunking_kwargs=chunking_kwargs)
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     return {
         "value": float(np.max(dists)),

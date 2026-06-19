@@ -20,6 +20,7 @@ def hamdiv(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
@@ -64,7 +65,7 @@ def hamdiv(
         ValueError:
             If data is empty or contains fewer than 2 datapoints, or if solver is invalid.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="hamdiv")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="hamdiv", chunking_kwargs=chunking_kwargs)
     if len(data) < 2:
         raise ValueError("hamdiv requires at least 2 datapoints to compute a Hamiltonian circuit")
 

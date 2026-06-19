@@ -22,6 +22,7 @@ def vendi_score(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** [1, n] (the effective number of unique elements).
@@ -78,7 +79,7 @@ def vendi_score(
         Wraps the official ``vendi_score`` implementation
         (https://github.com/vertaix/Vendi-Score).
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="vendi_score")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="vendi_score", chunking_kwargs=chunking_kwargs)
     parameters = {
         "q": q,
         "normalize": normalize,

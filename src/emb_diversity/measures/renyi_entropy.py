@@ -27,6 +27,7 @@ def renyi_entropy(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** [0, log(n)] (natural log / nats).
@@ -98,7 +99,7 @@ def renyi_entropy(
             it). The score is still returned, treating the zero row as
             near-orthogonal to every other point.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="renyi_entropy")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="renyi_entropy", chunking_kwargs=chunking_kwargs)
     parameters = {
         "alpha": alpha,
         "kernel_type": kernel_type,

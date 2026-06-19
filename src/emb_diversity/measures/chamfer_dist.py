@@ -18,6 +18,7 @@ def chamfer_dist(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
@@ -53,7 +54,7 @@ def chamfer_dist(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="chamfer_dist")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="chamfer_dist", chunking_kwargs=chunking_kwargs)
     X = np.asarray(data, dtype=float)
     n = X.shape[0]
     if n < 2:

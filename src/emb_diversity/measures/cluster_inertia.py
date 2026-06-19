@@ -17,6 +17,7 @@ def cluster_inertia(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** >= 0, unbounded above.
@@ -50,7 +51,7 @@ def cluster_inertia(
     Raises:
         ValueError: If data is empty or contains fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="cluster_inertia")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="cluster_inertia", chunking_kwargs=chunking_kwargs)
 
     X = np.asarray(data, dtype=float)
     if X.size == 0:

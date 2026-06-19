@@ -19,6 +19,7 @@ def span_centroid(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
         **metric_kwargs: Any,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
@@ -58,7 +59,7 @@ def span_centroid(
             datapoints — or, under the cosine metric, if a datapoint or the
             centroid is the zero vector (cosine distance is undefined there).
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="span_centroid")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="span_centroid", chunking_kwargs=chunking_kwargs)
     X = np.asarray(data, dtype=float)
     if X.ndim != 2:
         raise ValueError(f"Expected 2D array of shape (n, d), got shape {X.shape}")

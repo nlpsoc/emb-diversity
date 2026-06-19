@@ -23,6 +23,7 @@ def dcscore(
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
+        chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse.
     **Range:** [1, n] (1 when all points are identical; approaches n when each row's softmax is concentrated on the diagonal).
@@ -76,7 +77,7 @@ def dcscore(
             it). The score is still returned, treating the zero row as
             near-orthogonal to every other point.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="dcscore")
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="dcscore", chunking_kwargs=chunking_kwargs)
 
     # ---- Validate inputs ----
     if kernel_type not in _KERNEL_TYPES:

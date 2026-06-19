@@ -45,9 +45,21 @@ def default(
     output_format: str = typer.Option(
         "table", "--format", "-f", help="Output format: table, json, csv."
     ),
+    chunking: bool = typer.Option(
+        False, "--chunking",
+        help="Chunk long texts instead of truncating them to the model's max length.",
+    ),
+    chunks: int = typer.Option(
+        10, "--chunks", help="Max windows per text when --chunking is set."
+    ),
+    pooling: str = typer.Option(
+        "mean", "--pooling",
+        help="How to combine chunk vectors when --chunking is set: mean, max, or first.",
+    ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
-    _run_measure(input_file, measures, axis, model, column, output_format)
+    _run_measure(input_file, measures, axis, model, column, output_format,
+                 chunking, chunks, pooling)
 
 
 @app.command("measure")
@@ -78,12 +90,25 @@ def measure_cmd(
     output_format: str = typer.Option(
         "table", "--format", "-f", help="Output format: table, json, csv."
     ),
+    chunking: bool = typer.Option(
+        False, "--chunking",
+        help="Chunk long texts instead of truncating them to the model's max length.",
+    ),
+    chunks: int = typer.Option(
+        10, "--chunks", help="Max windows per text when --chunking is set."
+    ),
+    pooling: str = typer.Option(
+        "mean", "--pooling",
+        help="How to combine chunk vectors when --chunking is set: mean, max, or first.",
+    ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
-    _run_measure(input_file, measures, axis, model, column, output_format)
+    _run_measure(input_file, measures, axis, model, column, output_format,
+                 chunking, chunks, pooling)
 
 
-def _run_measure(input_file, measures, axis, model, column, output_format):
+def _run_measure(input_file, measures, axis, model, column, output_format,
+                 chunking=False, chunks=10, pooling="mean"):
     """Shared logic for the measure command."""
     from .convenience import measure_diversity
 
@@ -105,11 +130,18 @@ def _run_measure(input_file, measures, axis, model, column, output_format):
     else:
         measure_arg = measures
 
+    # Bundle the long-text flags into the dict the Python API expects; only set
+    # it when chunking is enabled so the default path stays truncation.
+    chunking_kwargs = (
+        {"chunking": True, "chunks": chunks, "pooling": pooling} if chunking else None
+    )
+
     # ── Compute ──────────────────────────────────────────────────
     typer.echo(f"Measuring diversity of {len(texts)} texts...", err=True)
     try:
         results = measure_diversity(
             texts, measure=measure_arg, diversity_axis=axis, embedding_model=model,
+            chunking_kwargs=chunking_kwargs,
         )
     except KeyError as exc:
         # measure_diversity() raises KeyError for unknown measure names
