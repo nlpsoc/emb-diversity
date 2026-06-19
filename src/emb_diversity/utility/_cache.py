@@ -2,7 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, List, Sequence
+from typing import Callable, List, Optional, Sequence
 
 import numpy as np
 import xxhash
@@ -11,8 +11,8 @@ from safetensors.numpy import save_file, load_file
 DEFAULT_CACHE_DIR = Path(".cache/embeddings")
 
 
-def _hash(text: str) -> str:
-    return xxhash.xxh128(text.encode("utf-8")).hexdigest()
+def _hash(text: str, key_suffix: str = "") -> str:
+    return xxhash.xxh128(f"{text}\x00{key_suffix}".encode("utf-8")).hexdigest()
 
 
 def _load(path: Path) -> np.ndarray | None:
@@ -31,6 +31,7 @@ def cached_encode(
     model_name: str,
     cache_dir: Path = DEFAULT_CACHE_DIR,
     max_workers: int = 8,
+    key_suffixes: Optional[Sequence[str]] = None,
 ) -> List[List[float]]:
     """
     Wrapper that adds disk caching to any encode function.
@@ -43,6 +44,10 @@ def cached_encode(
                     get different cache folders).
         cache_dir: Root cache directory.
         max_workers: Threads for parallel I/O.
+        key_suffixes: Optional per-text suffix folded into each cache key,
+            aligned positionally with ``texts``. Distinguishes embeddings of
+            the same text produced under different settings (e.g. truncation
+            vs chunking). When ``None``, every suffix is empty.
 
     Returns:
         List of embedding vectors as lists of floats.
@@ -53,7 +58,9 @@ def cached_encode(
     model_cache = cache_dir / model_name.replace("/", "_")
     model_cache.mkdir(parents=True, exist_ok=True)
 
-    hashes = [_hash(t) for t in texts]
+    if key_suffixes is None:
+        key_suffixes = [""] * len(texts)
+    hashes = [_hash(t, s) for t, s in zip(texts, key_suffixes)]
     paths = [model_cache / f"{h}.safetensors" for h in hashes]
 
     # Parallel cache lookup

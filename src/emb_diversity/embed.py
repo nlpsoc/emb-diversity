@@ -130,6 +130,7 @@ def embed_texts(
     diversity_axis: str | None = "semantic",
     embedding_model: str | None = None,
     cache_dir: Path | None = None,
+    **chunking_kwargs,
 ) -> np.ndarray:
     """Embed a list of texts into vectors, with disk caching.
 
@@ -145,6 +146,12 @@ def embed_texts(
         diversity_axis: Registered axis name (default ``"semantic"``).
         embedding_model: Explicit HuggingFace / SentenceTransformer model id;
             overrides *diversity_axis*.
+        cache_dir: Override the disk cache directory.
+        **chunking_kwargs: Long-text handling options forwarded to
+            :func:`encode` — ``chunking`` (bool), ``chunks`` (int), and
+            ``pooling`` (str). By default texts are truncated to the model's
+            max sequence length; pass ``chunking=True`` to chunk and pool
+            instead.
 
     Returns:
         numpy array of shape ``(len(texts), embedding_dim)``.
@@ -168,7 +175,7 @@ def embed_texts(
     # to_numeric_array is the shared exit gate for measure data: embedded
     # vectors get the same validation (>= 2 samples, finite) as vector
     # input, with no extra guards here.
-    kwargs = {"model_name": model_name}
+    kwargs = {"model_name": model_name, **chunking_kwargs}
     if cache_dir is not None:
         kwargs["cache_dir"] = cache_dir
     return to_numeric_array(encode(texts, **kwargs))
