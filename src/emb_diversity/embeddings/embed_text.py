@@ -69,12 +69,19 @@ def _load_hf(model_name: str):
 
 
 @lru_cache(maxsize=None)
-def _get_tokenizer(model_name: str):
-    """Load just the tokenizer for *model_name*, memoized.
+def _get_tokenizer(model_name: str, backend: str):
+    """Tokenizer for *model_name*, memoized, resolved per backend.
 
-    The tokenizer is a small artifact independent of the heavy model weights,
-    so token counting / windowing for the HF backend never loads the model.
+    - **ST**: taken from the loaded SentenceTransformer (``model.tokenizer``).
+      ST accepts shortcut names like ``all-MiniLM-L6-v2`` that are *not* valid
+      HuggingFace repo ids, so ``AutoTokenizer`` cannot resolve them directly —
+      the model does the resolution. The model is memoized and reused for
+      encoding, so this adds no extra load.
+    - **HF**: loaded standalone via ``AutoTokenizer`` (HF models are full repo
+      ids), so token counting never loads the heavy model.
     """
+    if backend == "st":
+        return _load_st(model_name).tokenizer
     from transformers import AutoTokenizer
 
     return AutoTokenizer.from_pretrained(model_name)
@@ -97,15 +104,17 @@ def _window_size(model_name: str, backend: str) -> int:
     if backend == "st":
         n = int(_load_st(model_name).max_seq_length)
     else:
-        n = int(_get_tokenizer(model_name).model_max_length)
+        n = int(_get_tokenizer(model_name, backend).model_max_length)
         # HF uses a huge sentinel (e.g. 1e30) when the limit is unset.
         n = n if 0 < n <= 100_000 else 512
     return max(1, n - _SPECIAL_TOKEN_MARGIN)
 
 
-def _actual_chunks(text: str, model_name: str, window: int, cap: int) -> int:
+def _actual_chunks(text: str, model_name: str, backend: str, window: int, cap: int) -> int:
     """Number of windows *text* is split into, capped at *cap* (>= 1)."""
-    n_tokens = len(_get_tokenizer(model_name).encode(text, add_special_tokens=False))
+    n_tokens = len(
+        _get_tokenizer(model_name, backend).encode(text, add_special_tokens=False)
+    )
     return max(1, min(math.ceil(n_tokens / window), cap))
 
 
@@ -139,13 +148,13 @@ def _raw_encode(texts: List[str], model_name: str, backend: str) -> List[List[fl
     return _raw_encode_st(texts, model_name)
 
 
-def _chunk_strings(text: str, model_name: str, window: int, cap: int) -> List[str]:
+def _chunk_strings(text: str, model_name: str, backend: str, window: int, cap: int) -> List[str]:
     """Split *text* into up to *cap* windows of *window* tokens, as strings.
 
     Tokenizes once, slices the token-ids into windows, and decodes each window
     back to text so it can be re-embedded through either backend.
     """
-    tokenizer = _get_tokenizer(model_name)
+    tokenizer = _get_tokenizer(model_name, backend)
     ids = tokenizer.encode(text, add_special_tokens=False)
     windows = [ids[i:i + window] for i in range(0, len(ids), window)][:cap]
     if not windows:  # empty text → keep a single (empty) chunk
@@ -168,7 +177,7 @@ def _encode_chunked(
     flat_chunks: List[str] = []
     spans: List[tuple[int, int]] = []
     for text in texts:
-        chunks = _chunk_strings(text, model_name, window, cap)
+        chunks = _chunk_strings(text, model_name, backend, window, cap)
         spans.append((len(flat_chunks), len(flat_chunks) + len(chunks)))
         flat_chunks.extend(chunks)
 
@@ -229,7 +238,7 @@ def encode(
         # Per-text suffix records the *actual* chunk count, not the cap, so two
         # calls with different caps that produce the same windows share a key.
         key_suffixes: Optional[List[str]] = [
-            f"chunk={_actual_chunks(t, model_name, window, chunks)}|pool={pooling}"
+            f"chunk={_actual_chunks(t, model_name, backend, window, chunks)}|pool={pooling}"
             for t in texts
         ]
         encode_fn = lambda t: _encode_chunked(t, model_name, backend, chunks, pooling)

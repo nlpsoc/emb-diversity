@@ -233,7 +233,7 @@ def test_short_text_single_chunk_matches_truncation():
     _reset()
     short = SENTENCES[0]
     window = _window_size(MODEL_NAME, "st")
-    assert _actual_chunks(short, MODEL_NAME, window, 10) == 1, \
+    assert _actual_chunks(short, MODEL_NAME, "st", window, 10) == 1, \
         "FAIL: short sentence unexpectedly spans multiple windows"
     truncated = _encode([short])
     chunked = _encode_chunked([short])
@@ -256,7 +256,7 @@ def test_chunked_and_truncated_cached_separately():
 def test_actual_chunk_count_dedup():
     _reset()
     window = _window_size(MODEL_NAME, "st")
-    actual = _actual_chunks(LONG_TEXT, MODEL_NAME, window, 100)
+    actual = _actual_chunks(LONG_TEXT, MODEL_NAME, "st", window, 100)
     assert 2 <= actual <= 7, \
         f"FAIL: test needs LONG_TEXT to span 2–7 windows, got {actual} (adjust LONG_TEXT)"
 
