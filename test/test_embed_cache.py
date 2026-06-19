@@ -276,10 +276,8 @@ def test_pooling_methods_differ():
     _reset()
     mean = _encode_chunked([LONG_TEXT], pooling="mean")
     mx = _encode_chunked([LONG_TEXT], pooling="max")
-    first = _encode_chunked([LONG_TEXT], pooling="first")
     assert not np.allclose(mean[0], mx[0]), "FAIL: mean and max pooling gave identical vectors"
-    assert not np.allclose(mean[0], first[0]), "FAIL: mean and first pooling gave identical vectors"
-    print("PASS: mean / max / first pooling produce distinct vectors")
+    print("PASS: mean / max pooling produce distinct vectors")
 
 
 def test_unknown_pooling_raises():

@@ -54,7 +54,7 @@ def default(
     ),
     pooling: str = typer.Option(
         "mean", "--pooling",
-        help="How to combine chunk vectors when --chunking is set: mean, max, or first.",
+        help="How to combine chunk vectors when --chunking is set: mean or max.",
     ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
@@ -99,7 +99,7 @@ def measure_cmd(
     ),
     pooling: str = typer.Option(
         "mean", "--pooling",
-        help="How to combine chunk vectors when --chunking is set: mean, max, or first.",
+        help="How to combine chunk vectors when --chunking is set: mean or max.",
     ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""

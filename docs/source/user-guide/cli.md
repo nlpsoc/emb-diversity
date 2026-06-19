@@ -37,7 +37,7 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 | `-f`, `--format` | `table` | Output format: `table`, `json`, `csv` |
 | `--chunking` | off | Chunk long texts instead of truncating them to the model's max length |
 | `--chunks` | `10` | Max windows per text when `--chunking` is set |
-| `--pooling` | `mean` | How to combine chunk vectors when `--chunking` is set: `mean`, `max`, or `first` |
+| `--pooling` | `mean` | How to combine chunk vectors when `--chunking` is set: `mean` or `max` |
 
 **Examples:**
 

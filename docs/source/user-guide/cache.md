@@ -83,7 +83,7 @@ Chunking options:
   use fewer windows; texts longer than `chunks × max_seq_length` tokens are
   truncated at the cap. Default `10`.
 - `pooling` — how the per-window vectors are combined into one vector:
-  `"mean"` (default), `"max"`, or `"first"`.
+  `"mean"` (default) or `"max"`.
 
 The cache key folds in the chunking mode **and the actual number of windows a
 text was split into**, so:
