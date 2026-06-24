@@ -194,7 +194,7 @@ def plot_pca(human_texts: list[str], ai_texts: list[str], out: Path) -> None:
         ax.legend(markerscale=2, framealpha=0.9)
 
     fig.suptitle(
-        f"GEDE — Human vs LLM, content-matched ({len(human_texts)} texts/class)",
+        f"GEDE — Human vs LLM, topic-matched ({len(human_texts)} texts/class)",
         fontsize=14,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.97))
