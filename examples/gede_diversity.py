@@ -23,8 +23,9 @@ import sys
 import tarfile
 from pathlib import Path
 
-# GEDE dataset download (Google Drive). Used when no data path is given.
-GEDE_URL = "https://drive.google.com/file/d/1c3x_CR44ZCUqHf1dHVPm7K04ZIbTSYoD/view?usp=drive_link"
+# GEDE dataset on Google Drive — the file id from the share URL
+# https://drive.google.com/file/d/1c3x_CR44ZCUqHf1dHVPm7K04ZIbTSYoD/view
+GEDE_FILE_ID = "1c3x_CR44ZCUqHf1dHVPm7K04ZIbTSYoD"
 DATA_DIR = Path("gede_essay_detection")
 TARBALL = Path("gede_essay_detection.tar.gz")
 
@@ -44,12 +45,11 @@ def ensure_dataset() -> Path:
         except ImportError:
             sys.exit(
                 "Downloading the dataset needs gdown (the 'examples' extra). "
-                "Install it with `pip install emb-diversity[examples]` (or "
-                "`uv run --extra examples python examples/gede_diversity.py`), or "
-                "pass the path to an existing gede_essays.json as the first argument."
+                "Install it with `pip install emb-diversity[examples]`, or run "
+                "`uv run --extra examples python examples/gede_diversity.py`."
             )
         print("Downloading gede_essay_detection...")
-        gdown.download(GEDE_URL, str(TARBALL), fuzzy=True)
+        gdown.download(id=GEDE_FILE_ID, output=str(TARBALL))
         with tarfile.open(TARBALL, "r:gz") as tar:
             tar.extractall(filter="data")
         TARBALL.unlink()
