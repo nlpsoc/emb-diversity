@@ -1,13 +1,13 @@
 """Measure human-vs-LLM essay diversity on the GEDE dataset.
 
-Fourth step of a small example comparing the diversity of human- vs LLM-written
+Final step of a small example comparing the diversity of human- vs LLM-written
 essays on the GEDE dataset (from "Assessing LLM Text Detection in Educational
 Contexts", https://arxiv.org/abs/2508.08096). It downloads the dataset (step 1),
 loads the human essays and the LLM ``Task`` essays — written from the prompt
 alone, the way a human answers it — matches them on ``question_id`` and
-downsamples to equal size, prints the dataset stats, measures the semantic and
-style diversity of each class, and prints the results as a table. The last step
-adds a plot.
+downsamples to equal size, prints the dataset stats, reports the semantic and
+style diversity of each class as a table, and saves a PCA scatter of the
+embeddings on both axes.
 
 The download needs the ``examples`` extra (``gdown``); install it with
 ``pip install emb-diversity[examples]`` or, from a checkout,
@@ -25,7 +25,14 @@ import tarfile
 from collections import defaultdict
 from pathlib import Path
 
-from emb_diversity import measure_diversity
+import matplotlib
+
+matplotlib.use("Agg")  # save to a file without needing a display
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.decomposition import PCA
+
+from emb_diversity import embed_texts, measure_diversity
 
 # GEDE dataset on Google Drive — the file id from the share URL
 # https://drive.google.com/file/d/1c3x_CR44ZCUqHf1dHVPm7K04ZIbTSYoD/view
@@ -158,6 +165,43 @@ def print_results_table(results: dict[str, dict[str, dict]], n_per_class: int) -
             print(f"{axis:<10}{measure:<15}{human:>11.4f}{llm:>11.4f}{llm - human:>+14.4f}")
 
 
+# ── Plot ─────────────────────────────────────────────────────────────────────
+# Marker colours for the two classes in the scatter.
+COLORS = {"Human": "#3B6FB0", "LLM": "#E0723C"}
+
+
+def plot_pca(human_texts: list[str], ai_texts: list[str], out: Path) -> None:
+    """Save a PCA scatter of the embeddings, one panel per axis.
+
+    PCA preserves scale, so the relative spread of the two classes is faithful:
+    on the style axis the LLM essays form a tight cluster while the human essays
+    stay spread out.
+    """
+    fig, axes = plt.subplots(1, len(AXES), figsize=(13, 6))
+    for ax, axis in zip(axes, AXES):
+        embeddings = {
+            "Human": embed_texts(human_texts, diversity_axis=axis),
+            "LLM": embed_texts(ai_texts, diversity_axis=axis),
+        }
+        pca = PCA(n_components=2).fit(np.vstack(list(embeddings.values())))
+        for label, emb in embeddings.items():
+            xy = pca.transform(emb)
+            ax.scatter(xy[:, 0], xy[:, 1], s=8, alpha=0.45,
+                       c=COLORS[label], edgecolors="none", label=label)
+        ax.set_title(f"{axis} — PCA of embeddings")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.legend(markerscale=2, framealpha=0.9)
+
+    fig.suptitle(
+        f"GEDE — Human vs LLM, content-matched ({len(human_texts)} texts/class)",
+        fontsize=14,
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    fig.savefig(out, dpi=140, bbox_inches="tight")
+    print(f"\nwrote {out}")
+
+
 # ── Entry point ──────────────────────────────────────────────────────────────
 def main() -> None:
     path = ensure_dataset()
@@ -167,6 +211,8 @@ def main() -> None:
 
     results = measure_human_ai(human_texts, ai_texts)
     print_results_table(results, len(human_texts))
+
+    plot_pca(human_texts, ai_texts, Path("gede_diversity_pca.png"))
 
 
 if __name__ == "__main__":
