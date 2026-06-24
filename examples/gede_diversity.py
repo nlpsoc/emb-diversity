@@ -137,7 +137,7 @@ def measure_human_ai(
     return {
         axis: {
             "Human": measure_diversity(human_texts, measure=list(MEASURES), diversity_axis=axis),
-            "AI": measure_diversity(ai_texts, measure=list(MEASURES), diversity_axis=axis),
+            "LLM": measure_diversity(ai_texts, measure=list(MEASURES), diversity_axis=axis),
         }
         for axis in AXES
     }
@@ -154,8 +154,8 @@ def main() -> None:
     for axis in AXES:
         for measure in MEASURES:
             human_value = results[axis]["Human"][measure]["value"]
-            ai_value = results[axis]["AI"][measure]["value"]
-            print(f"{axis:<9}{measure:<15}Human={human_value:.4f}  AI={ai_value:.4f}")
+            ai_value = results[axis]["LLM"][measure]["value"]
+            print(f"{axis:<9}{measure:<15}Human={human_value:.4f}  LLM={ai_value:.4f}")
 
 
 if __name__ == "__main__":
