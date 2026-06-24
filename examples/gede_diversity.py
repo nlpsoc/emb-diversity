@@ -15,9 +15,13 @@ scatter of the embeddings on both axes.
 
 Run it with::
 
-    uv run python examples/gede_diversity.py path/to/gede_essays.json
+    uv run --with gdown python examples/gede_diversity.py
 
-If no path is given it looks for ``gede_essays.json`` in the current directory.
+With no argument it downloads the GEDE dataset (via ``gdown``, into
+``gede_essay_detection/`` in the current directory) if it is not already
+present. Pass a path to an existing ``gede_essays.json`` to skip the download::
+
+    uv run python examples/gede_diversity.py path/to/gede_essays.json
 """
 
 from __future__ import annotations
@@ -26,6 +30,7 @@ import json
 import math
 import random
 import sys
+import tarfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -39,6 +44,11 @@ from sklearn.decomposition import PCA
 from emb_diversity import embed_texts, measure_diversity
 
 SEED = 0  # for the downsampling, so runs are reproducible
+
+# GEDE dataset download (Google Drive). Used when no data path is given.
+GEDE_URL = "https://drive.google.com/file/d/1c3x_CR44ZCUqHf1dHVPm7K04ZIbTSYoD/view?usp=drive_link"
+DATA_DIR = Path("gede_essay_detection")
+TARBALL = Path("gede_essay_detection.tar.gz")
 MEASURES = ["graph_entropy", "vendi_score", "mean_pw_dist"]
 # Axis -> embed/measure kwargs. Both use the registered axis defaults
 # (semantic: all-mpnet-base-v2; style: the Style-Embedding model).
@@ -47,6 +57,36 @@ AXES = {
     "style": {"diversity_axis": "style"},
 }
 COLORS = {"Human": "#3B6FB0", "AI": "#E0723C"}
+
+
+def ensure_dataset() -> Path:
+    """Download and extract the GEDE dataset if missing; return the JSON path.
+
+    Mirrors the shell recipe: if ``gede_essay_detection/`` is absent, fetch the
+    tarball from Google Drive with ``gdown``, extract it, and remove the
+    tarball. Returns the path to ``gede_essays.json`` inside the dataset.
+    """
+    if DATA_DIR.exists():
+        print(f"Skipping download ({DATA_DIR}/ already exists)")
+    else:
+        try:
+            import gdown
+        except ImportError:
+            sys.exit(
+                "Downloading the dataset needs gdown. Run with "
+                "`uv run --with gdown python examples/gede_diversity.py`, or pass "
+                "the path to an existing gede_essays.json as the first argument."
+            )
+        print("Downloading gede_essay_detection...")
+        gdown.download(GEDE_URL, str(TARBALL), fuzzy=True)
+        with tarfile.open(TARBALL, "r:gz") as tar:
+            tar.extractall(filter="data")
+        TARBALL.unlink()
+
+    matches = sorted(DATA_DIR.rglob("gede_essays.json"))
+    if not matches:
+        sys.exit(f"Could not find gede_essays.json under {DATA_DIR}/ after download.")
+    return matches[0]
 
 
 def load_task_split(path: Path) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
@@ -139,12 +179,12 @@ def plot_pca(human_texts: list[str], ai_texts: list[str], out: Path) -> None:
 
 
 def main() -> None:
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("gede_essays.json")
-    if not path.exists():
-        sys.exit(
-            f"Could not find {path}. Pass the path to the GEDE essays JSON, e.g.:\n"
-            "  uv run python examples/gede_diversity.py path/to/gede_essays.json"
-        )
+    if len(sys.argv) > 1:
+        path = Path(sys.argv[1])
+        if not path.exists():
+            sys.exit(f"Could not find {path}.")
+    else:
+        path = ensure_dataset()
 
     human, ai = load_task_split(path)
     human_texts, ai_texts = balance_by_prompt(human, ai)
