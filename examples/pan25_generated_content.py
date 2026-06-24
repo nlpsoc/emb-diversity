@@ -15,8 +15,9 @@ The script:
 2. prints how many texts fall in each class and how they break down by genre,
 3. balances the two classes within each genre so they have equal counts (see
    ``balance_per_genre``),
-4. measures the semantic diversity of each balanced class with
-   ``measure_diversity`` and prints the scores side by side.
+4. measures the diversity of each balanced class with ``measure_diversity``
+   along both registered axes — ``semantic`` (meaning) and ``style`` (writing
+   style) — and prints the scores side by side.
 
 Run it with::
 
@@ -36,6 +37,11 @@ from emb_diversity import measure_diversity
 
 # Seed for the (re)sampling in ``balance_per_genre`` so runs are reproducible.
 SEED = 0
+
+# Diversity axes to measure, each with its own embedding model (see
+# ``emb_diversity.axes_registry``): "semantic" captures meaning, "style"
+# captures writing style.
+AXES = ("semantic", "style")
 
 
 def load_split(path: Path) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
@@ -167,12 +173,16 @@ def main() -> None:
     print()
     print_stats(bal_human, bal_ai, "Balanced per genre (max of the two)")
 
-    print("\nMeasuring semantic diversity (this embeds every text once)...")
-    human_results = measure_diversity(flatten(bal_human))
-    ai_results = measure_diversity(flatten(bal_ai))
+    human_texts = flatten(bal_human)
+    ai_texts = flatten(bal_ai)
 
-    print_diversity("Human-written", human_results)
-    print_diversity("AI-generated", ai_results)
+    for axis in AXES:
+        print(f"\nMeasuring {axis} diversity (this embeds every text once)...")
+        human_results = measure_diversity(human_texts, diversity_axis=axis)
+        ai_results = measure_diversity(ai_texts, diversity_axis=axis)
+
+        print_diversity(f"Human-written [{axis}]", human_results)
+        print_diversity(f"AI-generated [{axis}]", ai_results)
 
 
 if __name__ == "__main__":
