@@ -66,7 +66,7 @@ def ensure_dataset() -> Path:
 
 
 # ── Loading & prompt-matching ────────────────────────────────────────────────
-def load_task_split(path: Path) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
+def load_human_ai_split(path: Path) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
     """Group human and LLM ``Task`` essays by their prompt (``question_id``).
 
     Returns ``(human, ai)``, each a dict ``question_id -> [essay texts]``; ``ai``
@@ -76,12 +76,12 @@ def load_task_split(path: Path) -> tuple[dict[int, list[str]], dict[int, list[st
     ai: dict[int, list[str]] = defaultdict(list)
     with path.open(encoding="utf-8") as fh:
         for record in json.load(fh):
-            level = record["contribution_level"]
+            level = record["contribution_level"]  # "Human" for human-written, anything else is LLM-written
             if level == "Human":
                 human[record["question_id"]].append(record["answer"])
-            elif level == "Task":
+            elif level == "Task":  # independent generation from the prompt, not rewriting a human answer
                 ai[record["question_id"]].append(record["answer"])
-    return human, ai
+    return human, ai  # human/AI have different counts because persuade consists of 15 human vs 75 AI essays (see org. paper)
 
 
 def balance_by_prompt(
@@ -96,9 +96,8 @@ def balance_by_prompt(
     human_texts: list[str] = []
     ai_texts: list[str] = []
     for q in sorted(set(human) & set(ai)):
-        n = min(len(human[q]), len(ai[q]))
-        human_texts += rng.sample(human[q], n) if len(human[q]) > n else list(human[q])
-        ai_texts += rng.sample(ai[q], n) if len(ai[q]) > n else list(ai[q])
+        human_texts += rng.sample(human[q], 1)
+        ai_texts += rng.sample(ai[q], 1)
     return human_texts, ai_texts
 
 
@@ -121,7 +120,7 @@ def print_stats(
 # ── Entry point ──────────────────────────────────────────────────────────────
 def main() -> None:
     path = ensure_dataset()
-    human, ai = load_task_split(path)
+    human, ai = load_human_ai_split(path)
     human_texts, ai_texts = balance_by_prompt(human, ai)
     print_stats(human, ai, human_texts, ai_texts)
 
