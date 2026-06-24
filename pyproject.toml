@@ -48,6 +48,14 @@ dependencies = [
     "xxhash>=3.7.0",
 ]
 
+[project.optional-dependencies]
+# Extra dependencies for the runnable scripts under ``examples/`` (not needed by
+# the library itself). Install the extra with ``pip install emb-diversity[examples]``
+# (or ``pip install ".[examples]"`` / ``uv sync --extra examples`` from a checkout).
+examples = [
+    "gdown>=5.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/nlpsoc/Diversity-Measurement"
 Documentation = "https://nlpsoc.github.io/Diversity-Measurement/"
