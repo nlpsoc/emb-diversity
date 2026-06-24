@@ -6,8 +6,8 @@ Contexts", https://arxiv.org/abs/2508.08096). It downloads the dataset (step 1),
 loads the human essays and the LLM ``Task`` essays — written from the prompt
 alone, the way a human answers it — matches them on ``question_id`` and
 downsamples to equal size, prints the dataset stats, reports the semantic and
-style diversity of each class as a table, and saves a PCA scatter of the
-embeddings on both axes.
+style diversity of each class as a table, and saves a single-column PCA figure
+of the embeddings on both axes (density contours by default, or a scatter).
 
 The download needs the ``examples`` extra (``gdown``); install it with
 ``pip install emb-diversity[examples]`` or, from a checkout,
@@ -30,6 +30,8 @@ import matplotlib
 matplotlib.use("Agg")  # save to a file without needing a display
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Patch
+from scipy.stats import gaussian_kde
 from sklearn.decomposition import PCA
 
 from emb_diversity import embed_texts, measure_diversity
@@ -42,6 +44,9 @@ TARBALL = Path("gede_essay_detection.tar.gz")
 
 # Seed for the prompt-matched downsampling, so runs are reproducible.
 SEED = 0
+
+# PCA plot style: "contour" (KDE density lines, default) or "scatter" (points).
+PLOT_KIND = "contour"
 
 
 # ── Dataset download ─────────────────────────────────────────────────────────
@@ -166,39 +171,75 @@ def print_results_table(results: dict[str, dict[str, dict]], n_per_class: int) -
 
 
 # ── Plot ─────────────────────────────────────────────────────────────────────
-# Marker colours for the two classes in the scatter.
+# Line / marker colours for the two classes.
 COLORS = {"Human": "#3B6FB0", "LLM": "#E0723C"}
 
 
-def plot_pca(human_texts: list[str], ai_texts: list[str], out: Path) -> None:
-    """Save a PCA scatter of the embeddings, one panel per axis.
+def _axis_limits(points: dict[str, np.ndarray], pad: float = 0.06):
+    """Shared (xlim, ylim) covering both classes' projected points, with padding."""
+    xy = np.vstack(list(points.values()))
+    (x0, x1), (y0, y1) = (xy[:, 0].min(), xy[:, 0].max()), (xy[:, 1].min(), xy[:, 1].max())
+    dx, dy = (x1 - x0) * pad, (y1 - y0) * pad
+    return (x0 - dx, x1 + dx), (y0 - dy, y1 + dy)
 
-    PCA preserves scale, so the relative spread of the two classes is faithful:
-    on the style axis the LLM essays form a tight cluster while the human essays
-    stay spread out.
+
+def _kde_grid(xy: np.ndarray, xlim, ylim, n: int = 140):
+    """Evaluate a Gaussian KDE of ``xy`` on an ``n`` x ``n`` grid over the limits."""
+    xx, yy = np.meshgrid(np.linspace(*xlim, n), np.linspace(*ylim, n))
+    density = gaussian_kde(xy.T)(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+    return xx, yy, density
+
+
+def plot_pca(
+    human_texts: list[str], ai_texts: list[str], out: Path, kind: str = PLOT_KIND
+) -> None:
+    """Save a 2-D PCA view of the embeddings, one panel per axis, as a vector PDF.
+
+    Both ``kind`` options use the *same* PCA projection (fit per axis on the
+    pooled human + LLM embeddings); they differ only in how the projected points
+    are drawn:
+
+    - ``"contour"`` (default): Gaussian-KDE density contour lines per class —
+      legible at a single-column figure size.
+    - ``"scatter"``: the projected points themselves.
+
+    The figure is sized for one ACL column. PCA preserves scale, so the relative
+    spread is faithful: on the style axis the LLM essays concentrate into a tight
+    region while the human essays stay spread out.
     """
-    fig, axes = plt.subplots(1, len(AXES), figsize=(13, 6))
+    if kind not in ("contour", "scatter"):
+        raise ValueError(f"kind must be 'contour' or 'scatter', got {kind!r}")
+
+    plt.rcParams.update({"font.size": 7, "axes.titlesize": 8,
+                         "legend.fontsize": 6, "font.family": "serif"})
+    fig, axes = plt.subplots(1, len(AXES), figsize=(3.15, 1.7))
     for ax, axis in zip(axes, AXES):
         embeddings = {
             "Human": embed_texts(human_texts, diversity_axis=axis),
             "LLM": embed_texts(ai_texts, diversity_axis=axis),
         }
         pca = PCA(n_components=2).fit(np.vstack(list(embeddings.values())))
-        for label, emb in embeddings.items():
-            xy = pca.transform(emb)
-            ax.scatter(xy[:, 0], xy[:, 1], s=8, alpha=0.45,
-                       c=COLORS[label], edgecolors="none", label=label)
-        ax.set_title(f"{axis} — PCA of embeddings")
+        points = {label: pca.transform(emb) for label, emb in embeddings.items()}
+
+        if kind == "scatter":
+            for label, xy in points.items():
+                ax.scatter(xy[:, 0], xy[:, 1], s=1.5, alpha=0.3, c=COLORS[label],
+                           edgecolors="none", rasterized=True)
+        else:
+            xlim, ylim = _axis_limits(points)
+            for label, xy in points.items():
+                xx, yy, density = _kde_grid(xy, xlim, ylim)
+                ax.contour(xx, yy, density, levels=5, colors=[COLORS[label]], linewidths=0.7)
+
+        ax.set_title(axis)
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.legend(markerscale=2, framealpha=0.9)
 
-    fig.suptitle(
-        f"GEDE — Human vs LLM, topic-matched ({len(human_texts)} texts/class)",
-        fontsize=14,
-    )
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
-    fig.savefig(out, dpi=140, bbox_inches="tight")
+    handles = [Patch(color=COLORS[label], label=label) for label in ("Human", "LLM")]
+    axes[0].legend(handles=handles, loc="upper left", frameon=False,
+                   handlelength=1.0, handletextpad=0.4, borderpad=0.2)
+    fig.tight_layout(pad=0.2, w_pad=0.5)
+    fig.savefig(out, dpi=300, bbox_inches="tight")
     print(f"\nwrote {out}")
 
 
@@ -212,7 +253,7 @@ def main() -> None:
     results = measure_human_ai(human_texts, ai_texts)
     print_results_table(results, len(human_texts))
 
-    plot_pca(human_texts, ai_texts, Path("gede_diversity_pca.png"))
+    plot_pca(human_texts, ai_texts, Path("gede_diversity_pca.pdf"), PLOT_KIND)
 
 
 if __name__ == "__main__":
