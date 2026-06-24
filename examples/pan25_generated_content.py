@@ -11,15 +11,27 @@ where ``label`` is ``0`` for human-written and ``1`` for AI-written text, and
 
 The script:
 
-1. loads ``val.jsonl`` and splits it into human-written and AI-generated texts,
-2. prints how many texts fall in each class, how they break down by genre, and
-   which models produced the AI texts,
-3. balances the two classes within each genre by downsampling the larger to
-   the smaller (equal, unique-text counts per genre — see ``balance_per_genre``),
-4. measures the diversity of each balanced class with ``measure_diversity``
-   along both registered axes — ``semantic`` (meaning) and ``style`` (writing
-   style) — both pooled over all genres and separately per genre, and prints
-   one table per measure with the human and AI scores side by side.
+1. loads ``val.jsonl`` and splits it into human, all-AI, and GPT-only texts
+   (GPT = any model whose id contains "gpt"), grouped by genre,
+2. prints the class counts, the per-genre breakdown, and which models produced
+   the AI texts,
+3. runs several comparisons; in each, the classes are downsampled within every
+   genre to a common size (``balance_classes``) so the diversity scores are
+   comparable — only equal-sized sets can be compared,
+4. measures each balanced class with ``measure_diversity`` along both registered
+   axes — ``semantic`` (meaning) and ``style`` (writing style) — pooled over all
+   genres and separately per genre, printing one table per measure with the
+   classes side by side.
+
+The comparisons run are:
+
+- human vs all AI,
+- human vs GPT-only,
+- human vs GPT-only vs a mix of all AI models.
+
+"Mix" is a sample of the full AI pool (all models, GPT included); change the
+``("Mix", ai_by_genre)`` class in ``main`` to a non-GPT pool if you would rather
+contrast GPT against the other models only.
 
 Run it with::
 
@@ -39,7 +51,7 @@ from pathlib import Path
 
 from emb_diversity import measure_diversity
 
-# Seed for the (re)sampling in ``balance_per_genre`` so runs are reproducible.
+# Seed for the resampling in ``balance_classes`` so runs are reproducible.
 SEED = 0
 
 # Diversity axes to measure, each with its own embedding model (see
@@ -47,23 +59,32 @@ SEED = 0
 # captures writing style.
 AXES = ("semantic", "style")
 
+# A class is a (label, genre -> texts) pair; a comparison is a list of classes.
+Class = tuple[str, dict[str, list[str]]]
+
+
+def _is_gpt(model: str) -> bool:
+    """True if a model id names a GPT-family model (any version)."""
+    return "gpt" in model.lower()
+
 
 def load_split(
     path: Path,
-) -> tuple[dict[str, list[str]], dict[str, list[str]], Counter]:
+) -> tuple[dict[str, list[str]], dict[str, list[str]], dict[str, list[str]], Counter]:
     """Load val.jsonl and split it into human and AI texts, grouped by genre.
 
     Args:
         path: Path to the PAN 2025 subtask-1 ``val.jsonl`` file.
 
     Returns:
-        ``(human_by_genre, ai_by_genre, ai_models)`` — two dicts mapping each
-        genre to the list of its document texts (one dict per class), and a
-        ``Counter`` of how many AI texts each model (the ``"model"`` field)
-        produced.
+        ``(human_by_genre, ai_by_genre, gpt_by_genre, ai_models)`` — three dicts
+        mapping each genre to the list of its document texts (human, all AI, and
+        the GPT-family subset of the AI texts respectively), and a ``Counter`` of
+        how many AI texts each model (the ``"model"`` field) produced.
     """
     human_by_genre: dict[str, list[str]] = {}
     ai_by_genre: dict[str, list[str]] = {}
+    gpt_by_genre: dict[str, list[str]] = {}
     ai_models: Counter = Counter()
 
     with path.open(encoding="utf-8") as fh:
@@ -77,51 +98,45 @@ def load_split(
             if record["label"] == 0:  # 0 = human-written
                 human_by_genre.setdefault(genre, []).append(text)
             else:  # 1 = AI-written
+                model = record.get("model", "unknown")
                 ai_by_genre.setdefault(genre, []).append(text)
-                ai_models[record.get("model", "unknown")] += 1
+                ai_models[model] += 1
+                if _is_gpt(model):
+                    gpt_by_genre.setdefault(genre, []).append(text)
 
-    return human_by_genre, ai_by_genre, ai_models
+    return human_by_genre, ai_by_genre, gpt_by_genre, ai_models
 
 
-def balance_per_genre(
-    human_by_genre: dict[str, list[str]],
-    ai_by_genre: dict[str, list[str]],
-    seed: int = SEED,
-) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-    """Equalise the human and AI counts within each genre.
+def balance_classes(classes: list[Class], seed: int = SEED) -> list[Class]:
+    """Downsample every class to a common per-genre size, so they're comparable.
 
-    For every genre the target size is the *minimum* of the human and AI counts.
-    The smaller class is kept as-is; the larger class is downsampled **without
-    replacement** (a random subset) to that target. Every text in the result is
-    a distinct original text — nothing is duplicated or invented — so the two
-    classes have equal, unique-text counts per genre.
-
-    (Downsampling discards data. If keeping every text matters more than avoiding
-    duplicates, upsample the smaller class to ``n = max(len(h), len(a))`` with
-    ``rng.choices`` instead — but note exact duplicates deflate diversity scores.)
+    For each genre that *all* classes contain, the target size is the smallest
+    class's count there; every class is downsampled to it **without replacement**
+    (a random subset — no text is duplicated or invented). Genres missing from
+    any class are dropped, since they cannot be compared across all classes. The
+    result: within each kept genre every class has the same, unique-text count,
+    so each class also has the same total size.
 
     Args:
-        human_by_genre: Genre -> human texts, as returned by ``load_split``.
-        ai_by_genre: Genre -> AI texts, as returned by ``load_split``.
+        classes: List of ``(label, genre -> texts)`` pairs to equalise.
         seed: Seed for the resampling, for reproducibility.
 
     Returns:
-        ``(human_by_genre, ai_by_genre)`` — the same shape as the input, but with
-        the two classes equalised within each genre. A genre present in only one
-        class is left untouched (it cannot be balanced).
+        The classes in the same order, each downsampled to the shared sizes.
     """
     rng = random.Random(seed)
-    balanced_human: dict[str, list[str]] = {}
-    balanced_ai: dict[str, list[str]] = {}
+    maps = [by_genre for _, by_genre in classes]
+    shared_genres = sorted(set.intersection(*[set(m) for m in maps])) if maps else []
 
-    for genre in sorted(set(human_by_genre) | set(ai_by_genre)):
-        h = human_by_genre.get(genre, [])
-        a = ai_by_genre.get(genre, [])
-        n = min(len(h), len(a)) if h and a else max(len(h), len(a))
-        balanced_human[genre] = _subsample(h, n, rng)
-        balanced_ai[genre] = _subsample(a, n, rng)
+    balanced: list[dict[str, list[str]]] = [{} for _ in classes]
+    for genre in shared_genres:
+        n = min(len(m[genre]) for m in maps)
+        if n == 0:
+            continue
+        for i, m in enumerate(maps):
+            balanced[i][genre] = _subsample(m[genre], n, rng)
 
-    return balanced_human, balanced_ai
+    return [(label, balanced[i]) for i, (label, _) in enumerate(classes)]
 
 
 def _subsample(items: list[str], n: int, rng: random.Random) -> list[str]:
@@ -137,27 +152,30 @@ def flatten(by_genre: dict[str, list[str]]) -> list[str]:
     return [text for texts in by_genre.values() for text in texts]
 
 
-def print_stats(
-    human_by_genre: dict[str, list[str]],
-    ai_by_genre: dict[str, list[str]],
-    title: str,
-) -> None:
-    """Print the human/AI counts and the per-genre breakdown."""
-    n_human = sum(len(v) for v in human_by_genre.values())
-    n_ai = sum(len(v) for v in ai_by_genre.values())
-    print(f"{title} ({n_human + n_ai} texts)")
-    print(f"  human-written : {n_human}")
-    print(f"  AI-generated  : {n_ai}")
+def all_genres(classes: list[Class]) -> list[str]:
+    """Sorted union of the genres present across the given classes."""
+    genres: set[str] = set()
+    for _, by_genre in classes:
+        genres |= set(by_genre)
+    return sorted(genres)
 
-    all_genres = sorted(set(human_by_genre) | set(ai_by_genre))
-    print("  per genre (human / AI):")
-    header = f"    {'genre':<12}{'human':>8}{'AI':>8}{'total':>8}"
+
+def print_stats(classes: list[Class], title: str) -> None:
+    """Print each class's total count and the per-genre breakdown."""
+    labels = [label for label, _ in classes]
+    totals = [sum(len(v) for v in by_genre.values()) for _, by_genre in classes]
+    print(f"{title} ({sum(totals)} texts)")
+    for label, total in zip(labels, totals):
+        print(f"  {label:<8}: {total}")
+
+    print(f"  per genre ({' / '.join(labels)}):")
+    header = f"    {'genre':<12}" + "".join(f"{label:>9}" for label in labels) + f"{'total':>9}"
     print(header)
     print("    " + "-" * (len(header) - 4))
-    for genre in all_genres:
-        h = len(human_by_genre.get(genre, []))
-        a = len(ai_by_genre.get(genre, []))
-        print(f"    {genre:<12}{h:>8}{a:>8}{h + a:>8}")
+    for genre in all_genres(classes):
+        counts = [len(by_genre.get(genre, [])) for _, by_genre in classes]
+        cells = "".join(f"{c:>9}" for c in counts)
+        print(f"    {genre:<12}{cells}{sum(counts):>9}")
 
 
 def print_models(ai_models: Counter) -> None:
@@ -172,70 +190,94 @@ def print_models(ai_models: Counter) -> None:
         print(f"  {model:<28}{count:>8}{share:>9.1%}")
 
 
-def measure_scopes(
-    bal_human: dict[str, list[str]],
-    bal_ai: dict[str, list[str]],
-    genres: list[str],
-    axis: str,
-) -> list[tuple[str, dict, dict]]:
-    """Measure human and AI diversity along ``axis`` for each scope.
+def measure_scopes(classes: list[Class], axis: str) -> list[tuple[str, list[dict]]]:
+    """Measure each class's diversity along ``axis`` for every scope.
 
     The scopes are the pooled "all genres" set followed by one scope per genre.
 
     Returns:
-        A list of ``(scope, human_results, ai_results)`` tuples; a class with no
-        texts in a scope gets an empty result dict. Repeated embedding of the
-        same text across scopes hits the on-disk cache, so each text is encoded
-        once.
+        A list of ``(scope, results_per_class)`` tuples, where ``results_per_class``
+        holds one ``measure_diversity`` result dict per class (empty if that class
+        has no texts in the scope). Repeated embedding of the same text across
+        scopes hits the on-disk cache, so each text is encoded once.
     """
-    scopes = [("all genres", flatten(bal_human), flatten(bal_ai))]
-    scopes += [(g, bal_human.get(g, []), bal_ai.get(g, [])) for g in genres]
+    scopes: list[tuple[str, list[list[str]]]] = [
+        ("all genres", [flatten(by_genre) for _, by_genre in classes])
+    ]
+    for genre in all_genres(classes):
+        scopes.append((genre, [by_genre.get(genre, []) for _, by_genre in classes]))
 
-    rows: list[tuple[str, dict, dict]] = []
-    for scope, human_texts, ai_texts in scopes:
-        human = measure_diversity(human_texts, diversity_axis=axis) if human_texts else {}
-        ai = measure_diversity(ai_texts, diversity_axis=axis) if ai_texts else {}
-        rows.append((scope, human, ai))
+    rows: list[tuple[str, list[dict]]] = []
+    for scope, texts_per_class in scopes:
+        results = [
+            measure_diversity(texts, diversity_axis=axis) if texts else {}
+            for texts in texts_per_class
+        ]
+        rows.append((scope, results))
     return rows
 
 
 def _fmt(value: float | None) -> str:
-    """Format a score right for a table cell, or "-" when missing/undefined."""
+    """Format a score for a table cell, or "-" when missing/undefined."""
     if value is None or math.isnan(value):
         return "-"
     return f"{value:.4f}"
 
 
-def _fmt_delta(human: float | None, ai: float | None) -> str:
-    """Format the AI-minus-human gap, or "-" if either side is unavailable."""
-    if human is None or ai is None or math.isnan(human) or math.isnan(ai):
+def _fmt_delta(a: float | None, b: float | None) -> str:
+    """Format the b-minus-a gap, or "-" if either side is unavailable."""
+    if a is None or b is None or math.isnan(a) or math.isnan(b):
         return "-"
-    return f"{ai - human:+.4f}"
+    return f"{b - a:+.4f}"
 
 
-def print_diversity_table(axis: str, rows: list[tuple[str, dict, dict]]) -> None:
-    """Print one table per measure, with Human and AI columns side by side.
+def print_diversity_table(
+    axis: str, labels: list[str], rows: list[tuple[str, list[dict]]]
+) -> None:
+    """Print one table per measure, with one column per class side by side.
 
-    Each table compares one measure across scopes (all genres, then each genre),
-    so the human and AI scores for the same measure sit next to each other.
+    Each table compares one measure across scopes (all genres, then each genre).
+    For a two-class comparison a final delta column (second minus first) is added.
     """
     # Collect measure names in the order the measures returned them.
     measures: list[str] = []
-    for _, human, ai in rows:
-        for results in (human, ai):
-            for measure in results:
+    for _, results in rows:
+        for result in results:
+            for measure in result:
                 if measure not in measures:
                     measures.append(measure)
+
+    two_class = len(labels) == 2
+    delta_label = f"{labels[1]} - {labels[0]}" if two_class else ""
 
     print(f"\n======== {axis} diversity ========")
     for measure in measures:
         print(f"\n  {measure}")
-        print(f"    {'scope':<12}{'Human':>10}{'AI':>10}{'AI - Human':>12}")
-        print("    " + "-" * 44)
-        for scope, human, ai in rows:
-            h = human.get(measure, {}).get("value")
-            a = ai.get(measure, {}).get("value")
-            print(f"    {scope:<12}{_fmt(h):>10}{_fmt(a):>10}{_fmt_delta(h, a):>12}")
+        head = f"    {'scope':<12}" + "".join(f"{label:>12}" for label in labels)
+        if two_class:
+            head += f"{delta_label:>14}"
+        print(head)
+        print("    " + "-" * (len(head) - 4))
+        for scope, results in rows:
+            values = [result.get(measure, {}).get("value") for result in results]
+            cells = "".join(f"{_fmt(v):>12}" for v in values)
+            if two_class:
+                cells += f"{_fmt_delta(values[0], values[1]):>14}"
+            print(f"    {scope:<12}{cells}")
+
+
+def run_comparison(classes: list[Class]) -> None:
+    """Balance the given classes and print their diversity comparison."""
+    labels = [label for label, _ in classes]
+    print(f"\n################  {'  vs  '.join(labels)}  ################")
+
+    balanced = balance_classes(classes)
+    print_stats(balanced, "Balanced to a common per-genre size")
+
+    print("\nMeasuring diversity (embeds every text once; cached across scopes)...")
+    for axis in AXES:
+        rows = measure_scopes(balanced, axis)
+        print_diversity_table(axis, labels, rows)
 
 
 def main() -> None:
@@ -247,20 +289,22 @@ def main() -> None:
             "  uv run python examples/pan25_generated_content.py path/to/val.jsonl"
         )
 
-    human_by_genre, ai_by_genre, ai_models = load_split(path)
-    print_stats(human_by_genre, ai_by_genre, "Loaded")
+    human_by_genre, ai_by_genre, gpt_by_genre, ai_models = load_split(path)
+    print_stats([("human", human_by_genre), ("AI", ai_by_genre)], "Loaded")
     print_models(ai_models)
 
-    bal_human, bal_ai = balance_per_genre(human_by_genre, ai_by_genre)
-    print()
-    print_stats(bal_human, bal_ai, "Balanced per genre (min of the two)")
+    # 1) Human vs all AI.
+    run_comparison([("Human", human_by_genre), ("AI", ai_by_genre)])
 
-    genres = sorted(set(bal_human) | set(bal_ai))
-
-    print("\nMeasuring diversity (embeds every text once; cached across scopes)...")
-    for axis in AXES:
-        rows = measure_scopes(bal_human, bal_ai, genres, axis)
-        print_diversity_table(axis, rows)
+    if any(gpt_by_genre.values()):
+        # 2) Human vs the GPT-only subset.
+        run_comparison([("Human", human_by_genre), ("GPT", gpt_by_genre)])
+        # 3) Human vs GPT vs a mix of all AI models (all sampled to one size).
+        run_comparison(
+            [("Human", human_by_genre), ("GPT", gpt_by_genre), ("Mix", ai_by_genre)]
+        )
+    else:
+        print("\nNo GPT-family models found in the data; skipping the GPT comparisons.")
 
 
 if __name__ == "__main__":
