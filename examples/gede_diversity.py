@@ -1,12 +1,13 @@
 """Measure human-vs-LLM essay diversity on the GEDE dataset.
 
-Third step of a small example comparing the diversity of human- vs LLM-written
+Fourth step of a small example comparing the diversity of human- vs LLM-written
 essays on the GEDE dataset (from "Assessing LLM Text Detection in Educational
 Contexts", https://arxiv.org/abs/2508.08096). It downloads the dataset (step 1),
 loads the human essays and the LLM ``Task`` essays — written from the prompt
 alone, the way a human answers it — matches them on ``question_id`` and
-downsamples to equal size, prints the dataset stats, then measures the semantic
-and style diversity of each class. Later steps add the results table and a plot.
+downsamples to equal size, prints the dataset stats, measures the semantic and
+style diversity of each class, and prints the results as a table. The last step
+adds a plot.
 
 The download needs the ``examples`` extra (``gdown``); install it with
 ``pip install emb-diversity[examples]`` or, from a checkout,
@@ -143,6 +144,20 @@ def measure_human_ai(
     }
 
 
+# ── Results table ────────────────────────────────────────────────────────────
+def print_results_table(results: dict[str, dict[str, dict]], n_per_class: int) -> None:
+    """Print one table: every measure and axis, Human vs LLM with the gap."""
+    print(f"\nDiversity (Human vs LLM, {n_per_class} texts/class)\n")
+    header = f"{'axis':<10}{'measure':<15}{'Human':>11}{'LLM':>11}{'LLM - Human':>14}"
+    print(header)
+    print("-" * len(header))
+    for axis in AXES:
+        for measure in MEASURES:
+            human = results[axis]["Human"][measure]["value"]
+            llm = results[axis]["LLM"][measure]["value"]
+            print(f"{axis:<10}{measure:<15}{human:>11.4f}{llm:>11.4f}{llm - human:>+14.4f}")
+
+
 # ── Entry point ──────────────────────────────────────────────────────────────
 def main() -> None:
     path = ensure_dataset()
@@ -151,11 +166,7 @@ def main() -> None:
     print_stats(human, ai, human_texts, ai_texts)
 
     results = measure_human_ai(human_texts, ai_texts)
-    for axis in AXES:
-        for measure in MEASURES:
-            human_value = results[axis]["Human"][measure]["value"]
-            ai_value = results[axis]["LLM"][measure]["value"]
-            print(f"{axis:<9}{measure:<15}Human={human_value:.4f}  LLM={ai_value:.4f}")
+    print_results_table(results, len(human_texts))
 
 
 if __name__ == "__main__":
