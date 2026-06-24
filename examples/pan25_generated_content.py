@@ -13,8 +13,8 @@ The script:
 
 1. loads ``val.jsonl`` and splits it into human-written and AI-generated texts,
 2. prints how many texts fall in each class and how they break down by genre,
-3. balances the two classes within each genre so they have equal counts (see
-   ``balance_per_genre``),
+3. balances the two classes within each genre by downsampling the larger to
+   the smaller (equal, unique-text counts per genre — see ``balance_per_genre``),
 4. measures the diversity of each balanced class with ``measure_diversity``
    along both registered axes — ``semantic`` (meaning) and ``style`` (writing
    style) — and prints the scores side by side.
@@ -78,14 +78,15 @@ def balance_per_genre(
 ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
     """Equalise the human and AI counts within each genre.
 
-    For every genre the target size is the *maximum* of the human and AI counts.
-    The larger class is kept as-is; the smaller class is upsampled with
-    replacement (so some of its texts repeat) until it reaches that target. The
-    result is a class-balanced sample per genre.
+    For every genre the target size is the *minimum* of the human and AI counts.
+    The smaller class is kept as-is; the larger class is downsampled **without
+    replacement** (a random subset) to that target. Every text in the result is
+    a distinct original text — nothing is duplicated or invented — so the two
+    classes have equal, unique-text counts per genre.
 
-    Note: upsampling repeats texts, and exact duplicates lower most diversity
-    measures. To avoid duplicates instead, downsample to the *minimum* per genre
-    (``n = min(len(h), len(a))`` with ``random.sample``).
+    (Downsampling discards data. If keeping every text matters more than avoiding
+    duplicates, upsample the smaller class to ``n = max(len(h), len(a))`` with
+    ``rng.choices`` instead — but note exact duplicates deflate diversity scores.)
 
     Args:
         human_by_genre: Genre -> human texts, as returned by ``load_split``.
@@ -104,21 +105,19 @@ def balance_per_genre(
     for genre in sorted(set(human_by_genre) | set(ai_by_genre)):
         h = human_by_genre.get(genre, [])
         a = ai_by_genre.get(genre, [])
-        n = max(len(h), len(a))
-        balanced_human[genre] = _resample(h, n, rng)
-        balanced_ai[genre] = _resample(a, n, rng)
+        n = min(len(h), len(a)) if h and a else max(len(h), len(a))
+        balanced_human[genre] = _subsample(h, n, rng)
+        balanced_ai[genre] = _subsample(a, n, rng)
 
     return balanced_human, balanced_ai
 
 
-def _resample(items: list[str], n: int, rng: random.Random) -> list[str]:
-    """Return ``n`` items: the items unchanged if already ``n``, a no-replacement
-    subsample if shrinking, or an upsample with replacement if growing."""
-    if not items or len(items) == n:
+def _subsample(items: list[str], n: int, rng: random.Random) -> list[str]:
+    """Return ``n`` items: all of them if already ``n`` or fewer, otherwise a
+    random subset drawn **without replacement** (so no text is repeated)."""
+    if len(items) <= n:
         return list(items)
-    if len(items) > n:
-        return rng.sample(items, n)
-    return rng.choices(items, k=n)
+    return rng.sample(items, n)
 
 
 def flatten(by_genre: dict[str, list[str]]) -> list[str]:
@@ -171,7 +170,7 @@ def main() -> None:
 
     bal_human, bal_ai = balance_per_genre(human_by_genre, ai_by_genre)
     print()
-    print_stats(bal_human, bal_ai, "Balanced per genre (max of the two)")
+    print_stats(bal_human, bal_ai, "Balanced per genre (min of the two)")
 
     human_texts = flatten(bal_human)
     ai_texts = flatten(bal_ai)
