@@ -12,7 +12,8 @@ where ``label`` is ``0`` for human-written and ``1`` for AI-written text, and
 The script:
 
 1. loads ``val.jsonl`` and splits it into human-written and AI-generated texts,
-2. prints how many texts fall in each class and how they break down by genre,
+2. prints how many texts fall in each class, how they break down by genre, and
+   which models produced the AI texts,
 3. balances the two classes within each genre by downsampling the larger to
    the smaller (equal, unique-text counts per genre — see ``balance_per_genre``),
 4. measures the diversity of each balanced class with ``measure_diversity``
@@ -31,6 +32,7 @@ from __future__ import annotations
 import json
 import random
 import sys
+from collections import Counter
 from pathlib import Path
 
 from emb_diversity import measure_diversity
@@ -44,18 +46,23 @@ SEED = 0
 AXES = ("semantic", "style")
 
 
-def load_split(path: Path) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+def load_split(
+    path: Path,
+) -> tuple[dict[str, list[str]], dict[str, list[str]], Counter]:
     """Load val.jsonl and split it into human and AI texts, grouped by genre.
 
     Args:
         path: Path to the PAN 2025 subtask-1 ``val.jsonl`` file.
 
     Returns:
-        ``(human_by_genre, ai_by_genre)`` — two dicts mapping each genre to the
-        list of its document texts, one dict per class.
+        ``(human_by_genre, ai_by_genre, ai_models)`` — two dicts mapping each
+        genre to the list of its document texts (one dict per class), and a
+        ``Counter`` of how many AI texts each model (the ``"model"`` field)
+        produced.
     """
     human_by_genre: dict[str, list[str]] = {}
     ai_by_genre: dict[str, list[str]] = {}
+    ai_models: Counter = Counter()
 
     with path.open(encoding="utf-8") as fh:
         for line in fh:
@@ -65,10 +72,13 @@ def load_split(path: Path) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
             record = json.loads(line)
             text = record["text"]
             genre = record.get("genre", "unknown")
-            bucket = human_by_genre if record["label"] == 0 else ai_by_genre
-            bucket.setdefault(genre, []).append(text)
+            if record["label"] == 0:  # 0 = human-written
+                human_by_genre.setdefault(genre, []).append(text)
+            else:  # 1 = AI-written
+                ai_by_genre.setdefault(genre, []).append(text)
+                ai_models[record.get("model", "unknown")] += 1
 
-    return human_by_genre, ai_by_genre
+    return human_by_genre, ai_by_genre, ai_models
 
 
 def balance_per_genre(
@@ -148,6 +158,18 @@ def print_stats(
         print(f"    {genre:<12}{h:>8}{a:>8}{h + a:>8}")
 
 
+def print_models(ai_models: Counter) -> None:
+    """Print which models produced the AI texts and how many each produced."""
+    total = sum(ai_models.values())
+    print(f"\nAI models ({total} texts, {len(ai_models)} distinct):")
+    header = f"  {'model':<28}{'count':>8}{'share':>9}"
+    print(header)
+    print("  " + "-" * (len(header) - 2))
+    for model, count in ai_models.most_common():
+        share = count / total if total else 0.0
+        print(f"  {model:<28}{count:>8}{share:>9.1%}")
+
+
 def print_diversity(label: str, results: dict) -> None:
     """Print one measure_diversity result block."""
     print(f"\n{label} diversity:")
@@ -165,8 +187,9 @@ def main() -> None:
             "  uv run python examples/pan25_generated_content.py path/to/val.jsonl"
         )
 
-    human_by_genre, ai_by_genre = load_split(path)
+    human_by_genre, ai_by_genre, ai_models = load_split(path)
     print_stats(human_by_genre, ai_by_genre, "Loaded")
+    print_models(ai_models)
 
     bal_human, bal_ai = balance_per_genre(human_by_genre, ai_by_genre)
     print()
