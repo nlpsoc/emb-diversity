@@ -18,10 +18,11 @@ The script:
 3. runs several comparisons; in each, the classes are downsampled within every
    genre to a common size (``balance_classes``) so the diversity scores are
    comparable — only equal-sized sets can be compared,
-4. measures each balanced class with ``measure_diversity`` along both registered
-   axes — ``semantic`` (meaning) and ``style`` (writing style) — pooled over all
-   genres and separately per genre, printing one table per measure with the
-   classes side by side.
+4. measures each balanced class with ``measure_diversity`` along two axes —
+   ``semantic`` (meaning, ``all-mpnet-base-v2``) and ``style`` (writing style,
+   the ``StyleDistance/styledistance`` model) — pooled over all genres and
+   separately per genre, printing one table per measure with the classes side by
+   side.
 
 The comparisons run are:
 
@@ -54,10 +55,14 @@ from emb_diversity import measure_diversity
 # Seed for the resampling in ``balance_classes`` so runs are reproducible.
 SEED = 0
 
-# Diversity axes to measure, each with its own embedding model (see
-# ``emb_diversity.axes_registry``): "semantic" captures meaning, "style"
-# captures writing style.
-AXES = ("semantic", "style")
+# Diversity axes to measure, as (axis, embedding_model) pairs. The model
+# overrides the axis's default (see ``emb_diversity.axes_registry``); ``None``
+# keeps the default. "semantic" uses the axis default (all-mpnet-base-v2);
+# "style" uses the StyleDistance model rather than the axis default.
+AXES = (
+    ("semantic", None),
+    ("style", "StyleDistance/styledistance"),
+)
 
 # A class is a (label, genre -> texts) pair; a comparison is a list of classes.
 Class = tuple[str, dict[str, list[str]]]
@@ -190,10 +195,13 @@ def print_models(ai_models: Counter) -> None:
         print(f"  {model:<28}{count:>8}{share:>9.1%}")
 
 
-def measure_scopes(classes: list[Class], axis: str) -> list[tuple[str, list[dict]]]:
+def measure_scopes(
+    classes: list[Class], axis: str, embedding_model: str | None = None
+) -> list[tuple[str, list[dict]]]:
     """Measure each class's diversity along ``axis`` for every scope.
 
     The scopes are the pooled "all genres" set followed by one scope per genre.
+    ``embedding_model`` overrides the axis's default model when set.
 
     Returns:
         A list of ``(scope, results_per_class)`` tuples, where ``results_per_class``
@@ -210,7 +218,9 @@ def measure_scopes(classes: list[Class], axis: str) -> list[tuple[str, list[dict
     rows: list[tuple[str, list[dict]]] = []
     for scope, texts_per_class in scopes:
         results = [
-            measure_diversity(texts, diversity_axis=axis) if texts else {}
+            measure_diversity(texts, diversity_axis=axis, embedding_model=embedding_model)
+            if texts
+            else {}
             for texts in texts_per_class
         ]
         rows.append((scope, results))
@@ -232,7 +242,10 @@ def _fmt_delta(a: float | None, b: float | None) -> str:
 
 
 def print_diversity_table(
-    axis: str, labels: list[str], rows: list[tuple[str, list[dict]]]
+    axis: str,
+    labels: list[str],
+    rows: list[tuple[str, list[dict]]],
+    embedding_model: str | None = None,
 ) -> None:
     """Print one table per measure, with one column per class side by side.
 
@@ -250,7 +263,8 @@ def print_diversity_table(
     two_class = len(labels) == 2
     delta_label = f"{labels[1]} - {labels[0]}" if two_class else ""
 
-    print(f"\n======== {axis} diversity ========")
+    suffix = f" ({embedding_model})" if embedding_model else ""
+    print(f"\n======== {axis} diversity{suffix} ========")
     for measure in measures:
         print(f"\n  {measure}")
         head = f"    {'scope':<12}" + "".join(f"{label:>12}" for label in labels)
@@ -275,9 +289,9 @@ def run_comparison(classes: list[Class]) -> None:
     print_stats(balanced, "Balanced to a common per-genre size")
 
     print("\nMeasuring diversity (embeds every text once; cached across scopes)...")
-    for axis in AXES:
-        rows = measure_scopes(balanced, axis)
-        print_diversity_table(axis, labels, rows)
+    for axis, embedding_model in AXES:
+        rows = measure_scopes(balanced, axis, embedding_model)
+        print_diversity_table(axis, labels, rows, embedding_model)
 
 
 def main() -> None:
