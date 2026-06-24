@@ -18,7 +18,8 @@ The script:
    the smaller (equal, unique-text counts per genre — see ``balance_per_genre``),
 4. measures the diversity of each balanced class with ``measure_diversity``
    along both registered axes — ``semantic`` (meaning) and ``style`` (writing
-   style) — both pooled over all genres and separately per genre.
+   style) — both pooled over all genres and separately per genre, and prints
+   one table per measure with the human and AI scores side by side.
 
 Run it with::
 
@@ -30,6 +31,7 @@ If no path is given it looks for ``val.jsonl`` in the current directory.
 from __future__ import annotations
 
 import json
+import math
 import random
 import sys
 from collections import Counter
@@ -170,33 +172,70 @@ def print_models(ai_models: Counter) -> None:
         print(f"  {model:<28}{count:>8}{share:>9.1%}")
 
 
-def print_diversity(label: str, results: dict) -> None:
-    """Print one measure_diversity result block."""
-    print(f"\n{label} diversity:")
-    for measure, result in results.items():
-        value = result["value"]
-        print(f"  {measure:<16}{value:.4f}")
+def measure_scopes(
+    bal_human: dict[str, list[str]],
+    bal_ai: dict[str, list[str]],
+    genres: list[str],
+    axis: str,
+) -> list[tuple[str, dict, dict]]:
+    """Measure human and AI diversity along ``axis`` for each scope.
 
+    The scopes are the pooled "all genres" set followed by one scope per genre.
 
-def report_diversity(
-    scope: str, human_texts: list[str], ai_texts: list[str], axis: str
-) -> None:
-    """Measure and print human and AI diversity for one scope along one axis.
-
-    ``scope`` labels what the texts cover (e.g. "all genres" or a genre name). A
-    class with no texts in this scope is skipped. Repeated embedding of the same
-    text across scopes hits the on-disk cache, so each text is encoded once.
+    Returns:
+        A list of ``(scope, human_results, ai_results)`` tuples; a class with no
+        texts in a scope gets an empty result dict. Repeated embedding of the
+        same text across scopes hits the on-disk cache, so each text is encoded
+        once.
     """
-    if human_texts:
-        print_diversity(
-            f"Human-written [{axis} | {scope}]",
-            measure_diversity(human_texts, diversity_axis=axis),
-        )
-    if ai_texts:
-        print_diversity(
-            f"AI-generated [{axis} | {scope}]",
-            measure_diversity(ai_texts, diversity_axis=axis),
-        )
+    scopes = [("all genres", flatten(bal_human), flatten(bal_ai))]
+    scopes += [(g, bal_human.get(g, []), bal_ai.get(g, [])) for g in genres]
+
+    rows: list[tuple[str, dict, dict]] = []
+    for scope, human_texts, ai_texts in scopes:
+        human = measure_diversity(human_texts, diversity_axis=axis) if human_texts else {}
+        ai = measure_diversity(ai_texts, diversity_axis=axis) if ai_texts else {}
+        rows.append((scope, human, ai))
+    return rows
+
+
+def _fmt(value: float | None) -> str:
+    """Format a score right for a table cell, or "-" when missing/undefined."""
+    if value is None or math.isnan(value):
+        return "-"
+    return f"{value:.4f}"
+
+
+def _fmt_delta(human: float | None, ai: float | None) -> str:
+    """Format the AI-minus-human gap, or "-" if either side is unavailable."""
+    if human is None or ai is None or math.isnan(human) or math.isnan(ai):
+        return "-"
+    return f"{ai - human:+.4f}"
+
+
+def print_diversity_table(axis: str, rows: list[tuple[str, dict, dict]]) -> None:
+    """Print one table per measure, with Human and AI columns side by side.
+
+    Each table compares one measure across scopes (all genres, then each genre),
+    so the human and AI scores for the same measure sit next to each other.
+    """
+    # Collect measure names in the order the measures returned them.
+    measures: list[str] = []
+    for _, human, ai in rows:
+        for results in (human, ai):
+            for measure in results:
+                if measure not in measures:
+                    measures.append(measure)
+
+    print(f"\n======== {axis} diversity ========")
+    for measure in measures:
+        print(f"\n  {measure}")
+        print(f"    {'scope':<12}{'Human':>10}{'AI':>10}{'AI - Human':>12}")
+        print("    " + "-" * 44)
+        for scope, human, ai in rows:
+            h = human.get(measure, {}).get("value")
+            a = ai.get(measure, {}).get("value")
+            print(f"    {scope:<12}{_fmt(h):>10}{_fmt(a):>10}{_fmt_delta(h, a):>12}")
 
 
 def main() -> None:
@@ -218,12 +257,10 @@ def main() -> None:
 
     genres = sorted(set(bal_human) | set(bal_ai))
 
+    print("\nMeasuring diversity (embeds every text once; cached across scopes)...")
     for axis in AXES:
-        print(f"\n========  {axis} diversity  ========")
-        print("(scores are pooled over all genres, then per genre)")
-        report_diversity("all genres", flatten(bal_human), flatten(bal_ai), axis)
-        for genre in genres:
-            report_diversity(genre, bal_human.get(genre, []), bal_ai.get(genre, []), axis)
+        rows = measure_scopes(bal_human, bal_ai, genres, axis)
+        print_diversity_table(axis, rows)
 
 
 if __name__ == "__main__":
