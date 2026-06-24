@@ -18,7 +18,7 @@ The script:
    the smaller (equal, unique-text counts per genre — see ``balance_per_genre``),
 4. measures the diversity of each balanced class with ``measure_diversity``
    along both registered axes — ``semantic`` (meaning) and ``style`` (writing
-   style) — and prints the scores side by side.
+   style) — both pooled over all genres and separately per genre.
 
 Run it with::
 
@@ -178,6 +178,27 @@ def print_diversity(label: str, results: dict) -> None:
         print(f"  {measure:<16}{value:.4f}")
 
 
+def report_diversity(
+    scope: str, human_texts: list[str], ai_texts: list[str], axis: str
+) -> None:
+    """Measure and print human and AI diversity for one scope along one axis.
+
+    ``scope`` labels what the texts cover (e.g. "all genres" or a genre name). A
+    class with no texts in this scope is skipped. Repeated embedding of the same
+    text across scopes hits the on-disk cache, so each text is encoded once.
+    """
+    if human_texts:
+        print_diversity(
+            f"Human-written [{axis} | {scope}]",
+            measure_diversity(human_texts, diversity_axis=axis),
+        )
+    if ai_texts:
+        print_diversity(
+            f"AI-generated [{axis} | {scope}]",
+            measure_diversity(ai_texts, diversity_axis=axis),
+        )
+
+
 def main() -> None:
     path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("val.jsonl")
     if not path.exists():
@@ -195,16 +216,14 @@ def main() -> None:
     print()
     print_stats(bal_human, bal_ai, "Balanced per genre (min of the two)")
 
-    human_texts = flatten(bal_human)
-    ai_texts = flatten(bal_ai)
+    genres = sorted(set(bal_human) | set(bal_ai))
 
     for axis in AXES:
-        print(f"\nMeasuring {axis} diversity (this embeds every text once)...")
-        human_results = measure_diversity(human_texts, diversity_axis=axis)
-        ai_results = measure_diversity(ai_texts, diversity_axis=axis)
-
-        print_diversity(f"Human-written [{axis}]", human_results)
-        print_diversity(f"AI-generated [{axis}]", ai_results)
+        print(f"\n========  {axis} diversity  ========")
+        print("(scores are pooled over all genres, then per genre)")
+        report_diversity("all genres", flatten(bal_human), flatten(bal_ai), axis)
+        for genre in genres:
+            report_diversity(genre, bal_human.get(genre, []), bal_ai.get(genre, []), axis)
 
 
 if __name__ == "__main__":
