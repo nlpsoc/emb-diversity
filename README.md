@@ -17,11 +17,13 @@ Install the latest release from PyPI:
 pip install emb-diversity
 ```
 
-or within a uv project:
+For a slimmer CPU only install you might want to first run:
 
 ```bash
-uv add emb-diversity
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
+
+The installation requirements are specified in `pyproject.toml` and are automatically resolved when installing the package. 
 
 The first time you measure diversity, the default embedding model
 (`all-mpnet-base-v2`, ~420 MB) is downloaded from the Hugging Face Hub and
