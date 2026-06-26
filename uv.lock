@@ -738,11 +738,12 @@ wheels = [
 
 [[package]]
 name = "emb-diversity"
-version = "0.0.9"
+version = "0.0.10"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "networkx" },
+    { name = "numba" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "rich" },
@@ -793,6 +794,7 @@ requires-dist = [
     { name = "gdown", marker = "extra == 'examples'", specifier = ">=5.0" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "networkx", specifier = ">=2.8.8" },
+    { name = "numba", specifier = ">=0.59" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.0" },
     { name = "rich", specifier = ">=13.0" },
