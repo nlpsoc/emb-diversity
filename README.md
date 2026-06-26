@@ -131,7 +131,16 @@ print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 
 If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see https://nlpsoc.github.io/Diversity-Measurement/user-guide/vectors.html.
 
-Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Happy diversity measuring!
+```python
+import numpy as np
+vectors = np.random.randn(100, 384)
+
+# Default measure
+print(measure_diversity(vectors))
+# {'graph_entropy': {'value': 459.38..., 'parameters': {'metric': 'cosine', 'embedding_model': None}}, 'vendi_score': ..., 'mean_pw_dist': ...}
+```
+
+Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Currently, calculations are done only in RAM. This limits the dataset sizes that can be evaluated (without problem up to 10k). Happy diversity measuring!
 <!-- docs-quickstart-end -->
 
 ## Table of Contents
