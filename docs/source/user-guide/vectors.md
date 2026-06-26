@@ -13,20 +13,24 @@ from emb_diversity import measure_diversity
 vectors = np.random.randn(100, 384)
 
 # Default measure
-measure_diversity(vectors)
+print(measure_diversity(vectors))
+# {'graph_entropy': ..., 'vendi_score': ..., 'mean_pw_dist': ...}
 
 # A named measure set (variety, balance, or disparity)
-measure_diversity(vectors, measure="variety")
+print(measure_diversity(vectors, measure="variety"))
+# {'chamfer_dist': ..., 'sum_bottleneck': ..., 'mst_dispersion': ...}
+
 
 # Specific measures
-measure_diversity(vectors, measure=["mean_pw_dist", "diameter"])
+print(measure_diversity(vectors, measure=["mean_pw_dist", "diameter"]))
+# {'mean_pw_dist': ..., 'diameter': ...}
 ```
 
 Each measure returns `{"value": <float>, "parameters": {...}}`. For vector input,
 no embedding happens, so `parameters["embedding_model"]` is `None`:
 
 ```python
-measure_diversity(vectors, measure="mean_pw_dist")
+print(measure_diversity(vectors, measure="mean_pw_dist"))
 # {'mean_pw_dist': {'value': 1.39, 'parameters': {'metric': 'cosine', 'embedding_model': None}}}
 ```
 
