@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
 name = "emb-diversity"
-version = "0.0.9"
+version = "0.0.10"
 description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
