@@ -105,6 +105,7 @@ class TestIntegration:
         """embed_audio returns one finite vector per audio file."""
         pytest.importorskip("speechbrain")
         pytest.importorskip("torchaudio")
+        pytest.importorskip("soundfile")
         result = embed_audio(wav_paths)
         assert result.shape[0] == len(wav_paths)
         assert result.shape[1] > 0
