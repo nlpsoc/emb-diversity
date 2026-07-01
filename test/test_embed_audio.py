@@ -123,6 +123,7 @@ class TestIntegration:
         """The generic diversity measures run unmodified on speaker embeddings."""
         pytest.importorskip("speechbrain")
         pytest.importorskip("torchaudio")
+        pytest.importorskip("soundfile")
         from emb_diversity import measure_diversity
 
         results = measure_diversity(wav_paths, diversity_axis="speaker")
