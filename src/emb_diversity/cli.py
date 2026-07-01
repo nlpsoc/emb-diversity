@@ -34,7 +34,7 @@ def default(
         ),
     ),
     axis: str = typer.Option(
-        "semantic", "--axis", "-a", help="Diversity axis (e.g. semantic, style)."
+        "semantic", "--axis", "-a", help="Diversity axis (e.g. semantic, style, speaker)."
     ),
     model: Optional[str] = typer.Option(
         None, "--model", help="Explicit embedding model; overrides --axis."
@@ -79,7 +79,7 @@ def measure_cmd(
         ),
     ),
     axis: str = typer.Option(
-        "semantic", "--axis", "-a", help="Diversity axis (e.g. semantic, style)."
+        "semantic", "--axis", "-a", help="Diversity axis (e.g. semantic, style, speaker)."
     ),
     model: Optional[str] = typer.Option(
         None, "--model", help="Explicit embedding model; overrides --axis."

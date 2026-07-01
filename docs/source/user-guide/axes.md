@@ -3,6 +3,11 @@
 A **diversity axis** defines *what kind* of diversity you want to measure by mapping to a specific embedding model.
 Different embedding models capture different aspects of text, so the same set of texts can have high semantic diversity but low stylistic diversity (or vice versa).
 
+Most built-in axes embed **text** (a list of strings). A few embed a different
+modality instead — the `speaker` axis below embeds **audio** (a list of paths
+to audio files). The axis you pass decides how raw input is interpreted; the
+measure functions themselves are unchanged either way.
+
 ## Built-in Axes
 
 ### semantic (default)
@@ -29,6 +34,20 @@ Measures writing style diversity. Texts written in different styles (formal vs. 
 
 ```python
 log_determinant(texts, diversity_axis="style")
+```
+
+### speaker
+
+Measures speaker diversity from audio. Pass a list of **paths to audio files**
+(not text) — each is embedded with a speaker-discriminative model where the
+same speaker's utterances embed close together and different speakers embed
+far apart. Requires the `audio` extra (`pip install emb-diversity[audio]`).
+
+- **Default model:** `speechbrain/spkrec-ecapa-voxceleb`
+
+```python
+audio_paths = ["alice_1.wav", "alice_2.wav", "bob_1.wav", "carol_1.wav"]
+log_determinant(audio_paths, diversity_axis="speaker")
 ```
 
 ## Using a Custom Model

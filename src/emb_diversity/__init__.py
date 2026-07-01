@@ -16,8 +16,9 @@ _ATTR_TO_SUBMODULE = {
     "measure_diversity": "convenience",
     # Individual measures
     **{name: f"measures.{name}" for name in MEASURE_NAMES},
-    # Embedding helper
+    # Embedding helpers
     "embed_texts": "embed",
+    "embed_audio": "embed",
     # Axes registry
     "axes": "axes_registry",
     # Pairwise distance caching
@@ -55,7 +56,7 @@ if TYPE_CHECKING:
         distance_cache_info,
     )
     from .convenience import measure_diversity
-    from .embed import embed_texts
+    from .embed import embed_texts, embed_audio
     from .measures.bins_entropy import bins_entropy
     from .measures.bottleneck import bottleneck
     from .measures.chamfer_dist import chamfer_dist
