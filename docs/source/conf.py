@@ -20,6 +20,8 @@ autodoc_mock_imports = [
     'pandas',
     'transformers',
     'torch',
+    'torchaudio',
+    'speechbrain',
     'typer',
     'networkx',
     'umap',

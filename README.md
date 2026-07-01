@@ -1,7 +1,7 @@
 # emb-diversity
 
 <!-- docs-intro-start -->
-A Python package for measuring data diversity on small- to medium-sized text datasets (RAM-restricted, usually up to size 10k). All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic and other types of diversity with our package.
+A Python package for measuring data diversity on small- to medium-sized datasets (RAM-restricted, usually up to size 10k). All measures are calculating diversity based on embeddings, i.e., vector representations of your data. Depending on what embedding models you want to use, you are able to calculate semantic, stylistic, speaker and other types of diversity with our package — text by default, with select axes (e.g. `speaker`) covering other modalities like audio.
 
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
@@ -404,9 +404,16 @@ axes.register(
         name="multilingual",
         default_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         description="Cross-lingual semantic diversity",
+        modality="text",  # default — omit unless the axis embeds something other than text
     ),
 )
 ```
+
+`modality="audio"` routes raw input (a list of file paths) through the audio
+encoder (`embeddings/embed_audio.py`) instead of the text encoder. See the
+`speaker` axis for an example; adding a new non-text modality means adding a
+matching `embeddings/embed_<modality>.py` encoder and a dispatch branch in
+`embed.py`'s `resolve_embeddings`.
 
 Update `docs/source/user-guide/axes.md` with the new axis.
 

@@ -20,12 +20,17 @@ class DiversityAxis:
         default_model: HuggingFace model id used by default for this axis.
         alternative_models: Other models that work well for this axis.
         description: Human-readable explanation shown in docs and CLI.
+        modality: Kind of raw input this axis embeds — ``"text"`` (strings)
+            or ``"audio"`` (paths to audio files). Determines which encoder
+            ``resolve_embeddings`` dispatches raw input to; it has no effect
+            on input that is already a vector.
     """
 
     name: str
     default_model: str
     alternative_models: list[str] = field(default_factory=list)
     description: str = ""
+    modality: str = "text"  # omit when registering a new axis — "text" is the default
 
 
 # Module-level registry instance
@@ -50,5 +55,19 @@ axes.register(
         default_model="AnnaWegmann/Style-Embedding",
         alternative_models=["StyleDistance/styledistance", "rrivera1849/LUAR-MUD", "AIDA-UPM/star"],
         description="Writing style diversity",
+    ),
+)
+
+axes.register(
+    "speaker",
+    DiversityAxis(
+        name="speaker",
+        default_model="speechbrain/spkrec-ecapa-voxceleb",
+        description=(
+            "Speaker diversity using speaker-discriminative voice embeddings "
+            "(same speaker's utterances embed close together, different "
+            "speakers embed far apart)"
+        ),
+        modality="audio",
     ),
 )

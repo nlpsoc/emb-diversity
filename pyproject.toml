@@ -55,6 +55,15 @@ dependencies = [
 # (or ``pip install ".[examples]"`` / ``uv sync --extra examples`` from a checkout).
 examples = [
     "gdown>=5.0",
+    "kagglehub>=0.3",
+]
+# Extra dependencies for audio-modality axes (e.g. "speaker"). Not needed for
+# text-only use. Install with ``pip install emb-diversity[audio]`` (or
+# ``pip install ".[audio]"`` / ``uv sync --extra audio`` from a checkout).
+audio = [
+    "speechbrain>=1.0.0",
+    "torchaudio>=2.0",
+    "soundfile>=0.12",
 ]
 
 [project.urls]
