@@ -114,6 +114,7 @@ class TestIntegration:
         """Audio file paths through resolve_embeddings dispatch to the audio encoder."""
         pytest.importorskip("speechbrain")
         pytest.importorskip("torchaudio")
+        pytest.importorskip("soundfile")
         vectors, model_name = resolve_embeddings(wav_paths, diversity_axis="speaker")
         assert model_name == SPEAKER_MODEL
         assert vectors.shape[0] == len(wav_paths)
