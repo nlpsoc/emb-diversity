@@ -75,12 +75,27 @@ def _encode_one_batch(paths: List[str], classifier) -> List[List[float]]:
 
     signals = [_load_waveform(p).squeeze(0) for p in paths]  # each (n_frames,)
     lengths = torch.tensor([s.shape[0] for s in signals])
-    padded = torch.zeros(len(signals), int(lengths.max()))
+    max_len = int(lengths.max().item())
+    if max_len == 0:
+        raise ValueError("Audio file(s) appear to be empty (0 frames).")
+
+    padded = torch.zeros(len(signals), max_len, dtype=signals[0].dtype)
     for i, s in enumerate(signals):
         padded[i, : s.shape[0]] = s
-    wav_lens = lengths.float() / lengths.max()  # relative lengths, masks padding
+    wav_lens = lengths.float() / max_len  # relative lengths, masks padding
 
-    vectors = classifier.encode_batch(padded, wav_lens)  # (batch, 1, emb_dim)
+    device = getattr(classifier, "device", None)
+    if device is None:
+        try:
+            device = next(classifier.parameters()).device
+        except Exception:
+            device = padded.device
+
+    padded = padded.to(device)
+    wav_lens = wav_lens.to(device)
+
+    with torch.inference_mode():
+        vectors = classifier.encode_batch(padded, wav_lens)  # (batch, 1, emb_dim)
     return vectors.squeeze(1).detach().cpu().numpy().tolist()
 
 
