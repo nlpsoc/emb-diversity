@@ -1,5 +1,6 @@
 from emb_diversity import dist_dispersion, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, radius
+    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, radius, \
+    chamfer_dist, knn
 import pytest
 import numpy as np
 
@@ -415,6 +416,54 @@ class TestDistanceDispersion:
         assert np.isclose(sum_dist, expected_sum)
 
 
+class TestKNN:
+
+    @staticmethod
+    def _line_data():
+        # 1-D points; nearest-neighbour structure is easy to compute by hand.
+        return [[0], [1], [3], [7]]
+
+    def test_k1_matches_chamfer_dist(self):
+        """k=1 (the nearest neighbour) reduces to chamfer_dist."""
+        data = self._line_data()
+        assert np.isclose(
+            knn(data, k=1, metric="euclidean")["value"],
+            chamfer_dist(data, metric="euclidean")["value"],
+        )
+
+    def test_second_nearest_neighbour(self):
+        """k=2 averages each point's second-nearest-neighbour distance."""
+        data = self._line_data()
+        # sorted neighbour distances per point: 0->[1,3,7], 1->[1,2,6],
+        # 3->[2,3,4], 7->[4,6,7]; 2nd-nearest = 3, 2, 3, 6.
+        expected = np.mean([3, 2, 3, 6])
+        assert np.isclose(knn(data, k=2, metric="euclidean")["value"], expected)
+
+    def test_third_nearest_neighbour(self):
+        """k=3 (here, the farthest neighbour since n=4) averages accordingly."""
+        data = self._line_data()
+        expected = np.mean([7, 6, 4, 7])
+        assert np.isclose(knn(data, k=3, metric="euclidean")["value"], expected)
+
+    def test_default_k_is_two(self):
+        """Omitting k defaults to the second-nearest neighbour."""
+        data = self._line_data()
+        assert np.isclose(knn(data, metric="euclidean")["value"], knn(data, k=2, metric="euclidean")["value"])
+
+    def test_k_zero_raises(self):
+        """k must be a positive integer."""
+        with pytest.raises(ValueError):
+            knn(self._line_data(), k=0)
+
+    def test_too_few_points_for_k_raises(self):
+        """There must be at least k + 1 datapoints."""
+        with pytest.raises(ValueError):
+            knn([[0], [1], [3]], k=3)  # only 3 points, needs >= 4 for k=3
+
+    def test_parameters_record_k(self):
+        """The returned parameters echo back the k that was used."""
+        result = knn(self._line_data(), k=2, metric="euclidean")
+        assert result["parameters"]["k"] == 2
 
 
 class TestConvexHullVolume2D:

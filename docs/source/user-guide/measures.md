@@ -1,6 +1,6 @@
 # Available Measures
 
-emb-diversity provides 21 diversity measures across four categories.
+emb-diversity provides 22 diversity measures across four categories.
 All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
 The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
 
@@ -37,6 +37,7 @@ scores:
 | {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances |
 | {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances |
 | {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all datapoints |
+| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all datapoints |
 | {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Distance-based span relative to the centroid (Cox et al., 2021) |
 | {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Distance-based span relative to the medoid (Cox et al., 2021) |
 

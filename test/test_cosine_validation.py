@@ -14,6 +14,7 @@ PDIST_MEASURE_NAMES = [
     "energy",
     "graph_entropy",
     "hamdiv",
+    "knn",
     "mean_pw_dist",
     "mst_dispersion",
     "span_medoid",

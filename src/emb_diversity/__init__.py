@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from .measures.energy import energy
     from .measures.graph_entropy import graph_entropy
     from .measures.hamdiv import hamdiv
+    from .measures.knn import knn
     from .measures.log_determinant import log_determinant
     from .measures.mean_pw_dist import mean_pw_dist
     from .measures.mst_dispersion import mst_dispersion
