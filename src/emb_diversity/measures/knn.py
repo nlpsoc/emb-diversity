@@ -64,14 +64,14 @@ def knn(
         ValueError: If input is invalid, empty, ``k`` is not positive, or there
             are fewer than ``k + 1`` datapoints.
     """
-    if k < 1:
-        raise ValueError(f"k must be >= 1, got {k}")
+    if isinstance(k, bool) or not isinstance(k, int) or k < 1:
+        raise ValueError(f"k must be an integer >= 1, got {k!r}")
 
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="knn", chunking_kwargs=chunking_kwargs)
     X = np.asarray(data, dtype=float)
     n = X.shape[0]
     if n < k + 1:
-        raise ValueError(f"Cannot compute {k}-th nearest-neighbour distance for fewer than {k + 1} datapoints")
+        raise ValueError(f"KNN requires at least {k + 1} datapoints for k={k}, got {n}")
 
     # compute all pairwise distances
     dist_vec = compute_pairwise_distances(data, metric, **metric_kwargs)
