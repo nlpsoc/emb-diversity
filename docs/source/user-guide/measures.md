@@ -31,7 +31,7 @@ scores:
 | Function | Description |
 |---|---|
 | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | Average pairwise distance between all datapoints -- **default** |
-| {func}`dist_dispersion <emb_diversity.measures.dist_dispersion.dist_dispersion>` | Sum of all pairwise distances |
+| {func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>` | Sum of all pairwise distances |
 | {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two instances |
 | {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two instances |
 | {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances |

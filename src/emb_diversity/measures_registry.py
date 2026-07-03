@@ -15,7 +15,7 @@ from typing import Callable
 MEASURE_NAMES: tuple[str, ...] = (
     # Distance-based
     "mean_pw_dist",
-    "dist_dispersion",
+    "sum_pairwise_dist",
     "hamdiv",
     "diameter",
     "bottleneck",

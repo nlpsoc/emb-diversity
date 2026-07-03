@@ -1,4 +1,4 @@
-from emb_diversity import dist_dispersion, mean_pw_dist, cluster_inertia, \
+from emb_diversity import sum_pairwise_dist, mean_pw_dist, cluster_inertia, \
     convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, radius, \
     chamfer_dist, knn
 import pytest
@@ -381,12 +381,12 @@ class TestEnergy:
         assert np.isclose(energy(data)["value"], -2.6095)
 
 
-class TestDistanceDispersion:
+class TestSumPairwiseDist:
 
     def test_two_points_basic(self):
         """Test basic functionality with two points."""
         data = [[0, 0], [1, 1]]
-        sum_dist = dist_dispersion(data, metric="euclidean")["value"]
+        sum_dist = sum_pairwise_dist(data, metric="euclidean")["value"]
         expected = np.sqrt(2)  # sqrt((1-0)^2 + (1-0)^2)
         assert np.isclose(sum_dist, expected)
 
@@ -397,7 +397,7 @@ class TestDistanceDispersion:
         expected_distances = [1.0, 1.0, np.sqrt(2)]
         expected_sum = np.sum(expected_distances)
 
-        sum_dist = dist_dispersion(data, metric="euclidean")["value"]
+        sum_dist = sum_pairwise_dist(data, metric="euclidean")["value"]
         assert np.isclose(sum_dist, expected_sum)
 
     def test_relationship_with_mean(self):
@@ -406,7 +406,7 @@ class TestDistanceDispersion:
         data = np.random.rand(4, 2)  # 4 points = 6 pairwise distances
 
         mean_dist = mean_pw_dist(data)["value"]
-        sum_dist = dist_dispersion(data)["value"]
+        sum_dist = sum_pairwise_dist(data)["value"]
 
         # sum = mean * number_of_pairs
         n = len(data)

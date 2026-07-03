@@ -64,7 +64,6 @@ if TYPE_CHECKING:
     from .measures.convex_hull_volume_2d import convex_hull_volume_2d
     from .measures.dcscore import dcscore
     from .measures.diameter import diameter
-    from .measures.dist_dispersion import dist_dispersion
     from .measures.energy import energy
     from .measures.graph_entropy import graph_entropy
     from .measures.hamdiv import hamdiv
@@ -78,4 +77,5 @@ if TYPE_CHECKING:
     from .measures.span_medoid import span_medoid
     from .measures.sum_bottleneck import sum_bottleneck
     from .measures.sum_diameter import sum_diameter
+    from .measures.sum_pairwise_dist import sum_pairwise_dist
     from .measures.vendi_score import vendi_score
