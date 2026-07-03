@@ -10,15 +10,16 @@ PDIST_MEASURE_NAMES = [
     "bottleneck",
     "chamfer_dist",
     "diameter",
-    "dist_dispersion",
     "energy",
     "graph_entropy",
     "hamdiv",
+    "knn",
     "mean_pw_dist",
     "mst_dispersion",
     "span_medoid",
     "sum_bottleneck",
     "sum_diameter",
+    "sum_pairwise_dist",
 ]
 
 # span_centroid computes cosine via scipy.cdist instead of pdist and runs

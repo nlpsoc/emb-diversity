@@ -11,11 +11,11 @@ from __future__ import annotations
 import importlib
 from typing import Callable
 
-# All 21 measures.
+# All 22 measures.
 MEASURE_NAMES: tuple[str, ...] = (
     # Distance-based
     "mean_pw_dist",
-    "dist_dispersion",
+    "sum_pairwise_dist",
     "hamdiv",
     "diameter",
     "bottleneck",
@@ -25,6 +25,7 @@ MEASURE_NAMES: tuple[str, ...] = (
     "cluster_inertia",
     "span_centroid",
     "chamfer_dist",
+    "knn",
     # Volume-based
     "convex_hull_volume_2d",
     "radius",
