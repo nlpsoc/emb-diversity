@@ -79,3 +79,7 @@ if TYPE_CHECKING:
     from .measures.sum_diameter import sum_diameter
     from .measures.sum_pairwise_dist import sum_pairwise_dist
     from .measures.vendi_score import vendi_score
+
+# Plotting functionality
+from .plot.visualize import plot_2d, plot_3d
+__all__ = ["plot_2d", "plot_3d"]
