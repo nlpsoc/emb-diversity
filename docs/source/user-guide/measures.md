@@ -1,6 +1,6 @@
 # Available Measures
 
-emb-diversity provides 22 diversity measures across four categories.
+emb-diversity provides 22 diversity measures.
 All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
 The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
 
