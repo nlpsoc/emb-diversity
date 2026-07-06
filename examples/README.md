@@ -1,0 +1,1 @@
+This folder contains the scripts for the use cases in our demo paper. To run them install the package with the examples extra, i.e. `pip install emb-diversity[examples]`. Then run the scripts in this folder, e.g. `python examples/gede_diversity.py`. The scripts will download the necessary datasets and embeddings automatically.
