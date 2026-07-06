@@ -7,7 +7,7 @@ from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
 
-### Distribution-Based Diversity Measure
+### Geometry-Based Diversity Measure
 
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
