@@ -13,32 +13,28 @@ from typing import Callable
 
 # All 22 measures.
 MEASURE_NAMES: tuple[str, ...] = (
-    # Distance-based
     "mean_pw_dist",
     "sum_pairwise_dist",
-    "hamdiv",
-    "diameter",
-    "bottleneck",
-    "sum_bottleneck",
-    "sum_diameter",
-    "energy",
-    "cluster_inertia",
-    "span_centroid",
     "chamfer_dist",
     "knn",
-    # Volume-based
+    "energy",
+    "diameter",
+    "bottleneck",
+    "sum_diameter",
+    "sum_bottleneck",
     "convex_hull_volume_3d",
     "geo_mean_std",
+    "span_centroid",
     "span_medoid",
-    # Distribution-based
+    "cluster_inertia",
+    "log_determinant",
     "vendi_score",
     "renyi_entropy",
     "dcscore",
-    "log_determinant",
     "bins_entropy",
-    # Graph-based
-    "graph_entropy",
     "mst_dispersion",
+    "graph_entropy",
+    "hamdiv",
 )
 
 
