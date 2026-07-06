@@ -298,6 +298,7 @@ L2-normalized vectors; also `"rbf"`, `"lap"`, `"poly"`); `tau`; `eps` (default
 `1e-6`); `use_cholesky` (default `True`).
 
 **References.**
+- Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286.
 - Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024).
 - Ba, Yang, Mohammad Sadeq Abolhasani, and Rong Pan. "Predict Training Data Quality via Its Geometry in Metric Space." arXiv preprint arXiv:2510.15970 (2025).
 
