@@ -29,7 +29,7 @@ class TestMeasureResolution:
         assert _resolve_measure_names("energy") == ["energy"]
 
     def test_list_passthrough(self):
-        assert _resolve_measure_names(["diameter", "radius"]) == ["diameter", "radius"]
+        assert _resolve_measure_names(["diameter", "geo_mean_std"]) == ["diameter", "geo_mean_std"]
 
     def test_unknown_name_passes_through_unresolved(self):
         # Resolution does not validate; measure_diversity() raises later.
