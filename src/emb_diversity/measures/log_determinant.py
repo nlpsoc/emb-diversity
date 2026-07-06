@@ -29,7 +29,11 @@ def log_determinant(
         chunking_kwargs: dict | None = None,
 ) -> MeasureResult:
     """**Interpretation of values:** larger value = more diverse (can be negative; less negative = more diverse).
-    **Range:** unbounded, (-inf, +inf); can be negative.
+    **Range:** unbounded in general, (-inf, +inf), depending on kernel choice.
+    For the default cosine kernel (``kernel_type="cs"``, ``tau=1.0``,
+    ``normalize=True``), trace(K) = n bounds the value above by
+    ``n * log(1 + eps)`` (approximately 0), so scores are negative in practice,
+    with magnitude driven by zero or near-zero eigenvalues (e.g. when n > d).
 
     Compute Log-Determinant Diversity (LDD): the log-determinant of a kernel
     matrix built from the input vectors, ``LDD = log det(K + eps * I)``. For a
@@ -42,6 +46,7 @@ def log_determinant(
     3) Return ``log det(A)`` (via Cholesky, falling back to ``slogdet``).
 
     References:
+        Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286.
         Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024).
         Ba, Yang, Mohammad Sadeq Abolhasani, and Rong Pan. "Predict Training Data Quality via Its Geometry in Metric Space." arXiv preprint arXiv:2510.15970 (2025).
         
