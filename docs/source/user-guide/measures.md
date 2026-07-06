@@ -44,7 +44,7 @@ scores:
 | {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy |
 | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
 | {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | Entropy of the degree distribution of a nearest-neighbour graph -- **default** |
-| {func}`convex_hull_volume_2d <emb_diversity.measures.convex_hull_volume_2d.convex_hull_volume_2d>` | Area of the convex hull after UMAP-projecting embeddings to 2D |
+| {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D |
 | {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Length of the shortest Hamiltonian circuit through all points |
 | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree |
 | {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations |

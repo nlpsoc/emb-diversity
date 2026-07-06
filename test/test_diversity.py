@@ -1,5 +1,5 @@
 from emb_diversity import sum_pairwise_dist, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_2d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, geo_mean_std, \
+    convex_hull_volume_3d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, geo_mean_std, \
     chamfer_dist, knn
 import pytest
 import numpy as np
@@ -466,58 +466,63 @@ class TestKNN:
         assert result["parameters"]["k"] == 2
 
 
-class TestConvexHullVolume2D:
+class TestConvexHullVolume3D:
 
     def test_few_points_raises_error(self):
-        """Test behavior when there are fewer than 3 points (cannot form 2D hull)."""
-        with pytest.raises(ValueError, match=r"Cannot compute 2D convex hull for fewer than 3 points \(got 2\)"):
-            convex_hull_volume_2d([[0, 0], [1, 1]])["value"]
+        """Test behavior when there are fewer than 4 points (cannot form 3D hull)."""
+        with pytest.raises(ValueError, match=r"Cannot compute 3D convex hull for fewer than 4 points \(got 3\)"):
+            convex_hull_volume_3d([[0, 0, 0], [1, 1, 0], [1, 0, 1]])["value"]
 
-    def test_collinear_points_zero_volume(self):
-        """Test that collinear points have zero area."""
-        # Input is already 2D, so reduction is a no-op and points stay collinear.
-        line = [[0, 0], [1, 0], [2, 0]]
-        assert convex_hull_volume_2d(line)["value"] == 0.0
+    def test_coplanar_points_zero_volume(self):
+        """Test that coplanar points have zero volume."""
+        # Input is already 3D, so reduction is a no-op and points stay coplanar.
+        square = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]
+        assert convex_hull_volume_3d(square)["value"] == 0.0
 
-    def test_known_2d_shapes(self):
-        """For inputs already in 2D, reduction is a no-op and areas are exact."""
-        # Triangle with known area
-        triangle = [[0, 0], [1, 0], [0, 1]]
-        area = convex_hull_volume_2d(triangle)["value"]
-        expected_area = 0.5  # Area of right triangle with legs 1,1
-        assert np.isclose(area, expected_area)
+    def test_known_3d_shapes(self):
+        """For inputs already in 3D, reduction is a no-op and volumes are exact."""
+        # Tetrahedron with known volume
+        tetrahedron = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        volume = convex_hull_volume_3d(tetrahedron)["value"]
+        expected_volume = 1 / 6  # Volume of a unit right tetrahedron
+        assert np.isclose(volume, expected_volume)
 
-        # Square with known area
-        square = [[0, 0], [1, 0], [1, 1], [0, 1]]
-        area = convex_hull_volume_2d(square)["value"]
-        expected_area = 1.0  # Unit square
-        assert np.isclose(area, expected_area)
+        # Cube with known volume
+        cube = [[x, y, z] for x in (0, 1) for y in (0, 1) for z in (0, 1)]
+        volume = convex_hull_volume_3d(cube)["value"]
+        expected_volume = 1.0  # Unit cube
+        assert np.isclose(volume, expected_volume)
 
     def test_numpy_array_input(self):
         """Accept a numpy array without raising the ambiguous-truth-value ValueError."""
-        triangle = np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
-        area = convex_hull_volume_2d(triangle)["value"]
-        assert np.isclose(area, 0.5)
+        tetrahedron = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        volume = convex_hull_volume_3d(tetrahedron)["value"]
+        assert np.isclose(volume, 1 / 6)
 
     def test_high_dim_input_uses_umap_projection(self):
-        """For >2D input, UMAP projection is invoked and yields a positive area."""
+        """For >3D input, UMAP projection is invoked and yields a positive volume."""
         rng = np.random.default_rng(42)
         data = rng.normal(size=(50, 10))
-        area = convex_hull_volume_2d(data, random_state=42)["value"]
-        assert isinstance(area, float)
-        assert area > 0
-        assert np.isfinite(area)
+        volume = convex_hull_volume_3d(data, random_state=42)["value"]
+        assert isinstance(volume, float)
+        assert volume > 0
+        assert np.isfinite(volume)
 
-    def test_umap_failure_falls_back_to_first_two_columns(self, monkeypatch):
-        """If umap-learn cannot be imported, fall back to the first 2 columns with a warning."""
+    def test_umap_failure_falls_back_to_first_three_columns(self, monkeypatch):
+        """If umap-learn cannot be imported, fall back to the first 3 columns with a warning."""
         import sys
-        # Force `import umap` to raise ImportError inside _reduce_to_2d.
+        # Force `import umap` to raise ImportError inside _reduce_to_3d.
         monkeypatch.setitem(sys.modules, "umap", None)
-        # First 2 columns form a known triangle; the third column is ignored.
-        data = [[0.0, 0.0, 99.0], [1.0, 0.0, 99.0], [0.0, 1.0, 99.0]]
-        with pytest.warns(UserWarning, match="UMAP reduction to 2D failed"):
-            area = convex_hull_volume_2d(data)["value"]
-        assert np.isclose(area, 0.5)
+        # First 3 columns form a known tetrahedron; the fourth column is ignored.
+        data = [
+            [0.0, 0.0, 0.0, 99.0],
+            [1.0, 0.0, 0.0, 99.0],
+            [0.0, 1.0, 0.0, 99.0],
+            [0.0, 0.0, 1.0, 99.0],
+        ]
+        with pytest.warns(UserWarning, match="UMAP reduction to 3D failed"):
+            volume = convex_hull_volume_3d(data)["value"]
+        assert np.isclose(volume, 1 / 6)
 
 
 
