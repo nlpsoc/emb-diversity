@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from typing import TYPE_CHECKING
 
-from .measures_registry import MEASURE_NAMES
+from .measures_registry import MEASURE_NAMES, get_measure
 
 # Public names resolve lazily on first attribute access (PEP 562), keeping
 # `import emb_diversity` fast: the heavy dependencies (torch, scikit-learn,
@@ -31,13 +31,19 @@ __all__ = list(_ATTR_TO_SUBMODULE)
 
 
 def __getattr__(name: str):
-    try:
-        submodule = _ATTR_TO_SUBMODULE[name]
-    except KeyError:
-        raise AttributeError(
-            f"module {__name__!r} has no attribute {name!r}"
-        ) from None
-    attr = getattr(importlib.import_module(f".{submodule}", __name__), name)
+    if name in MEASURE_NAMES:
+        # Routed through get_measure() so a direct call like
+        # `emb_diversity.mean_pw_dist(...)` gets the same "version"-stamped
+        # result as one made through `measure_diversity()`.
+        attr = get_measure(name)
+    else:
+        try:
+            submodule = _ATTR_TO_SUBMODULE[name]
+        except KeyError:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from None
+        attr = getattr(importlib.import_module(f".{submodule}", __name__), name)
     globals()[name] = attr  # cache so later accesses skip __getattr__
     return attr
 

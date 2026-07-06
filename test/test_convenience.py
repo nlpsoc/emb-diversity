@@ -20,7 +20,7 @@ class TestConvenienceFunction:
         """Each measure runs via measure_diversity on array input without
         returning NaN, and matches the direct call on the same vectors.
 
-        Each result is a ``{"value": float, "parameters": {...}}`` dict.
+        Each result is a ``{"value": float, "parameters": {...}, "version": str}`` dict.
         """
         X = self._vectors()
         direct = get_measure(name)(X)

@@ -6,10 +6,11 @@ The three measures marked **default** below (`graph_entropy`, `vendi_score`, `me
 
 ## Interpreting the scores
 
-Each diversity measure returns a `{"value": float, "parameters": {...}}` dict;
-the `value` is the diversity score and `parameters` records the configuration
-used to produce it. We list a few things to keep in mind when reading those
-scores:
+Each diversity measure returns a `{"value": float, "parameters": {...}, "version":
+str}` dict; the `value` is the diversity score, `parameters` records the
+configuration used to produce it, and `version` is the installed
+`emb-diversity` package version that computed it. We list a few things to keep
+in mind when reading those scores:
 
 - **Higher = more diverse.** For every measure, a larger value means a
   more diverse set and a smaller value a less diverse one. This holds even for
