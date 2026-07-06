@@ -8,8 +8,11 @@ import numpy as np
 
 DistanceMetric = Union[str, Callable[[np.ndarray, np.ndarray], float]]
 
-# Return shape of every measure: the scalar score plus the parameters that
-# produced it. ``{"value": float, "parameters": dict[str, Any]}``.
+# Return shape of every measure function: the scalar score plus the
+# parameters that produced it. ``{"value": float, "parameters": dict[str,
+# Any]}``. Callers going through ``get_measure()`` or ``measure_diversity()``
+# additionally get a top-level ``"version"`` key stamped in — see
+# ``measures_registry.get_measure``.
 MeasureResult = Dict[str, Any]
 
 # Anything coercible to a 2D numeric array of shape (n, d): numpy arrays,

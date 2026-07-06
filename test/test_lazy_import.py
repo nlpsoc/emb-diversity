@@ -49,10 +49,12 @@ class TestLazyImport:
         subprocess.run([sys.executable, "-c", code], check=True)
 
     def test_measure_attribute_resolves_to_callable(self):
-        """Accessing a measure on the package returns the measure function."""
+        """Accessing a measure on the package returns a version-stamping
+        wrapper around the measure function (see measures_registry.get_measure)."""
         from emb_diversity.measures.mean_pw_dist import mean_pw_dist
 
-        assert emb_diversity.mean_pw_dist is mean_pw_dist
+        assert callable(emb_diversity.mean_pw_dist)
+        assert emb_diversity.mean_pw_dist.__wrapped__ is mean_pw_dist
 
     def test_unknown_attribute_raises_attribute_error(self):
         """An unknown name raises AttributeError, like a regular module."""

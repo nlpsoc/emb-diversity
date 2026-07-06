@@ -26,11 +26,13 @@ print(measure_diversity(vectors, measure=["mean_pw_dist", "diameter"]))
 # {'mean_pw_dist': ..., 'diameter': ...}
 ```
 
-Each measure returns `{"value": <float>, "parameters": {...}}`. For vector input,
-no embedding happens, so `parameters["embedding_model"]` is `None`:
+Each measure returns `{"value": <float>, "parameters": {...}, "version": <str>}`,
+where `version` is the installed `emb-diversity` package version that computed
+the result. For vector input, no embedding happens, so
+`parameters["embedding_model"]` is `None`:
 
 ```python
 print(measure_diversity(vectors, measure="mean_pw_dist"))
-# {'mean_pw_dist': {'value': 1.39, 'parameters': {'metric': 'cosine', 'embedding_model': None}}}
+# {'mean_pw_dist': {'value': 1.39, 'parameters': {'metric': 'cosine', 'embedding_model': None}, 'version': '0.0.10'}}
 ```
 
