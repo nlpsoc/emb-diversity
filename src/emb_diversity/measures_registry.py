@@ -28,7 +28,7 @@ MEASURE_NAMES: tuple[str, ...] = (
     "knn",
     # Volume-based
     "convex_hull_volume_3d",
-    "radius",
+    "geo_mean_std",
     "span_medoid",
     # Distribution-based
     "vendi_score",

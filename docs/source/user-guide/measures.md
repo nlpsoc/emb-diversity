@@ -47,7 +47,7 @@ scores:
 | {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D |
 | {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Length of the shortest Hamiltonian circuit through all points |
 | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree |
-| {func}`radius <emb_diversity.measures.radius.radius>` | Geometric mean of per-dimension standard deviations |
+| {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations |
 | {func}`energy <emb_diversity.measures.energy.energy>` | Energy distance between the dataset and a reference distribution |
 | {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Inertia -- sum of squared distances to cluster centres |
 | {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | DC Score based on self-similarity with softmax normalisation |

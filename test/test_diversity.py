@@ -1,5 +1,5 @@
 from emb_diversity import sum_pairwise_dist, mean_pw_dist, cluster_inertia, \
-    convex_hull_volume_3d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, radius, \
+    convex_hull_volume_3d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, geo_mean_std, \
     chamfer_dist, knn
 import pytest
 import numpy as np
