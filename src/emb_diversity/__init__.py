@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from .measures.bottleneck import bottleneck
     from .measures.chamfer_dist import chamfer_dist
     from .measures.cluster_inertia import cluster_inertia
-    from .measures.convex_hull_volume_2d import convex_hull_volume_2d
+    from .measures.convex_hull_volume_3d import convex_hull_volume_3d
     from .measures.dcscore import dcscore
     from .measures.diameter import diameter
     from .measures.energy import energy

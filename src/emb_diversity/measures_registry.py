@@ -27,7 +27,7 @@ MEASURE_NAMES: tuple[str, ...] = (
     "chamfer_dist",
     "knn",
     # Volume-based
-    "convex_hull_volume_2d",
+    "convex_hull_volume_3d",
     "radius",
     "span_medoid",
     # Distribution-based
