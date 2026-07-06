@@ -30,26 +30,26 @@ scores:
 
 | Function | Brief Description |
 |---|---|
-| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **default** Average pairwise distance between all datapoints |
+| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **default** Average pairwise distance between all data points |
 | {func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>` | Sum of all pairwise distances |
-| {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two instances |
-| {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two instances |
+| {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two data points |
+| {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two data points |
 | {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances |
 | {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances |
-| {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all datapoints |
-| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all datapoints |
-| {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Distance-based span relative to the centroid |
-| {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Distance-based span relative to the medoid (Cox et al., 2021) |
+| {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all data points |
+| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all data points |
+| {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Span relative to the centroid |
+| {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Span relative to the medoid |
 | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | **default** Vendi Score -- effective number of distinct items |
 | {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy |
 | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
 | {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | **default** Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph |
 | {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D |
-| {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Approximate length of the shortest Hamiltonian circuit through all points |
+| {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Approximate length of the shortest Hamiltonian circuit through all data points |
 | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree |
 | {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations |
-| {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all datapoints (equally-charged-particle model) |
-| {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Inertia -- sum of squared distances to cluster centres |
+| {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) |
+| {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Sum of squared distances to cluster centres |
 | {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | DC Score based on self-similarity with softmax normalisation |
 | {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) |
 
@@ -398,7 +398,7 @@ tight clusters, indicating higher diversity.
 within-cluster sum of squared distances to each point's assigned cluster centre.
 
 **Parameters.** `n_clusters` (default `200`; automatically reduced to `n - 1` if
-fewer datapoints than clusters are given).
+fewer data points than clusters are given).
 
 **References.**
 - Yang, Yuming, Yang Nan, Junjie Ye, et al. "Measuring Data Diversity for Instruction Tuning: A Systematic Analysis and A Reliable Metric." arXiv:2502.17184. Preprint, arXiv, February 28, 2025. https://doi.org/10.48550/arXiv.2502.17184.
@@ -459,7 +459,7 @@ requirement.
 
 | Family | Description | Measures |
 |---|---|---|
-| Distance-based | Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | `mean_pw_dist`, `sum_pairwise_dist`, `chamfer_dist`, `knn`, `energy` |
-| Geometry-based | Treats embeddings as a point cloud in dimension-`d` space and quantifies diversity through geometric properties — extent, volume, or spread around a representative point. | `diameter`, `bottleneck`, `sum_diameter`, `sum_bottleneck`, `convex_hull_volume_3d`, `geo_mean_std`, `span_centroid`, `span_medoid`, `cluster_inertia`, `log_determinant` |
-| Distribution-based | Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | `vendi_score`, `renyi_entropy`, `dcscore`, `bins_entropy` |
-| Graph-theory-based | Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | `mst_dispersion`, `graph_entropy`, `hamdiv` |
+| Distance-based | Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`, {func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>`, {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`, {func}`knn <emb_diversity.measures.knn.knn>`, {func}`energy <emb_diversity.measures.energy.energy>` |
+| Geometry-based | Treats embeddings as a point cloud in dimension-`d` space and quantifies diversity through geometric properties — extent, volume, or spread around a representative point. | {func}`diameter <emb_diversity.measures.diameter.diameter>`, {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`, {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`, {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`, {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>`, {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>`, {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`, {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`, {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`, {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` |
+| Distribution-based | Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`, {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`, {func}`dcscore <emb_diversity.measures.dcscore.dcscore>`, {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` |
+| Graph-theory-based | Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`, {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`, {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |
