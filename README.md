@@ -8,6 +8,24 @@ This library is developed as part of the [DataDivers](https://datadivers-erc.git
 
 📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
 
+## Table of Contents
+
+- **[Install](#install)**
+- **[Usage](#usage)**
+  - [Python API](#python-api)
+  - [CLI](#cli)
+- [Development](#development)
+  - [Development setup](#development-setup)
+  - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
+  - [Working with uv](#working-with-uv)
+  - [Adding New Measures](#adding-new-measures)
+  - [Docstring Style Guide](#docstring-style-guide)
+  - [Adding New Diversity Axes](#adding-new-diversity-axes)
+  - [Building and publishing a release](#building-and-publishing-a-release)
+- [Open TODOs](#open-todos)
+- [Funding](#funding)
+- [Citation](#citation)
+
 ## Install
 
 <!-- docs-install-start -->
@@ -31,6 +49,8 @@ cached locally, so later runs are fast and work offline.
 <!-- docs-install-end -->
 
 ## Usage
+
+### Python API
 
 <!-- docs-quickstart-start -->
 
@@ -145,21 +165,24 @@ print(measure_diversity(vectors))
 Note that most measures return unbounded values that cannot be compared for datasets with differing sizes. Currently, calculations are done only in RAM. This limits the dataset sizes that can be evaluated (without problem up to 10k). Happy diversity measuring!
 <!-- docs-quickstart-end -->
 
-## Table of Contents
+### CLI
 
-- [Install](#install)
-- [Usage](#usage)
-- [Development](#development)
-  - [Development setup](#development-setup)
-  - [Suggested Workflow for Collaboration](#suggested-workflow-for-collaboration)
-  - [Working with uv](#working-with-uv)
-  - [Adding New Measures](#adding-new-measures)
-  - [Docstring Style Guide](#docstring-style-guide)
-  - [Adding New Diversity Axes](#adding-new-diversity-axes)
-  - [Building and publishing a release](#building-and-publishing-a-release)
-- [Open TODOs](#open-todos)
-- [Funding](#funding)
-- [Citation](#citation)
+`emb-diversity` also installs a command-line interface for measuring diversity
+directly from text, CSV, or TSV files, without writing any Python:
+
+```bash
+# Default measures on a text file (one text per line)
+emb-diversity measure texts.txt
+
+# A named measure set, a different diversity axis, JSON output for piping
+emb-diversity measure texts.txt -m variety --axis style --format json
+
+# CSV input with a custom column name
+emb-diversity measure reviews.csv --column review_text
+```
+
+See the full [CLI reference](https://nlpsoc.github.io/Diversity-Measurement/user-guide/cli.html)
+for all commands and options (`measure`, `list-measures`, `list-axes`).
 
 ## Development
 
