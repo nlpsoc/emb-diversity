@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import csv
+import functools
+import inspect
 import json
 import sys
 from pathlib import Path
@@ -56,10 +59,19 @@ def default(
         "mean", "--pooling",
         help="How to combine chunk vectors when --chunking is set: mean or max.",
     ),
+    params: Optional[list[str]] = typer.Option(
+        None,
+        "--param",
+        "-p",
+        help=(
+            "Override a measure parameter as key=value, repeatable: "
+            "-p k=5 -p metric=euclidean. Requires exactly one -m measure name."
+        ),
+    ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
     _run_measure(input_file, measures, axis, model, column, output_format,
-                 chunking, chunks, pooling)
+                 chunking, chunks, pooling, params)
 
 
 @app.command("measure")
@@ -101,14 +113,23 @@ def measure_cmd(
         "mean", "--pooling",
         help="How to combine chunk vectors when --chunking is set: mean or max.",
     ),
+    params: Optional[list[str]] = typer.Option(
+        None,
+        "--param",
+        "-p",
+        help=(
+            "Override a measure parameter as key=value, repeatable: "
+            "-p k=5 -p metric=euclidean. Requires exactly one -m measure name."
+        ),
+    ),
 ) -> None:
     """Measure diversity from a text file or CSV/TSV."""
     _run_measure(input_file, measures, axis, model, column, output_format,
-                 chunking, chunks, pooling)
+                 chunking, chunks, pooling, params)
 
 
 def _run_measure(input_file, measures, axis, model, column, output_format,
-                 chunking=False, chunks=10, pooling="mean"):
+                 chunking=False, chunks=10, pooling="mean", params=None):
     """Shared logic for the measure command."""
     from .convenience import measure_diversity
 
@@ -129,6 +150,19 @@ def _run_measure(input_file, measures, axis, model, column, output_format,
         measure_arg = measures[0]
     else:
         measure_arg = measures
+
+    # ── Bind --param overrides ───────────────────────────────────
+    # Parameter overrides target a single measure function, so they are only
+    # allowed with exactly one measure name (not a set, "all", or the default).
+    if params:
+        if measures is None or len(measures) != 1 or measures[0] in ("all", *MEASURE_SETS):
+            typer.echo(
+                "Error: --param requires exactly one measure name, "
+                "e.g. -m knn -p k=5.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        measure_arg = _configure_measure(measures[0], params)
 
     # Bundle the long-text flags into the dict the Python API expects; only set
     # it when chunking is enabled so the default path stays truncation.
@@ -184,6 +218,104 @@ def list_axes_cmd() -> None:
 
 
 # ── Helpers ──────────────────────────────────────────────────────
+
+# Arguments every measure shares; they are set through dedicated CLI options
+# (--axis, --model, --chunking, …), so --param must not override them.
+_RESERVED_PARAMS = frozenset(
+    {"data", "diversity_axis", "embedding_model", "chunking_kwargs"}
+)
+
+
+def _parse_param_value(raw: str):
+    """Convert a --param value string to a Python value.
+
+    ``true``/``false`` (any case) become booleans and ``none`` becomes None;
+    anything else is tried as a Python literal (int, float, …) and kept as a
+    plain string when that fails — so ``metric=euclidean`` needs no quoting.
+    """
+    lowered = raw.lower()
+    if lowered == "true":
+        return True
+    if lowered == "false":
+        return False
+    if lowered == "none":
+        return None
+    try:
+        return ast.literal_eval(raw)
+    except (ValueError, SyntaxError):
+        return raw
+
+
+def _parse_params(params: list[str]) -> dict:
+    """Parse repeated ``key=value`` strings into a kwargs dict."""
+    parsed = {}
+    for item in params:
+        key, sep, raw = item.partition("=")
+        if not sep or not key:
+            typer.echo(
+                f"Error: invalid --param {item!r}; expected key=value.", err=True
+            )
+            raise typer.Exit(code=1)
+        parsed[key] = _parse_param_value(raw)
+    return parsed
+
+
+def _configure_measure(name: str, raw_params: list[str]):
+    """Resolve measure *name* and bind the --param overrides to it.
+
+    Returns a callable that runs the measure with the overrides applied; it
+    keeps the measure's ``__name__`` so results stay keyed by the measure
+    name. Unknown measure names and parameters exit with an error before any
+    embedding work happens.
+    """
+    from .measures_registry import MEASURE_NAMES, get_measure
+
+    if name not in MEASURE_NAMES:
+        typer.echo(
+            f"Error: unknown measure {name!r}. "
+            "Run 'emb-diversity list-measures' to see available measures.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    fn = get_measure(name)
+    params = _parse_params(raw_params)
+    _validate_params(name, fn, params)
+
+    configured = functools.partial(fn, **params)
+    configured.__name__ = name
+    return configured
+
+
+def _validate_params(name: str, fn, params: dict) -> None:
+    """Exit with an error for --param keys the measure does not accept."""
+    sig = inspect.signature(fn)
+    # A measure with **kwargs (e.g. extra distance-metric options) accepts
+    # keys beyond its named parameters, so skip the unknown-key check there.
+    has_var_kw = any(
+        p.kind is inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+    )
+    accepted = [
+        p.name
+        for p in sig.parameters.values()
+        if p.name not in _RESERVED_PARAMS and p.kind is not inspect.Parameter.VAR_KEYWORD
+    ]
+    for key in params:
+        if key in _RESERVED_PARAMS:
+            typer.echo(
+                f"Error: {key!r} is not settable via --param — use the "
+                "dedicated options instead (--axis, --model, --chunking, ...).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        if key not in sig.parameters and not has_var_kw:
+            available = ", ".join(accepted) if accepted else "none"
+            typer.echo(
+                f"Error: measure {name!r} has no parameter {key!r}. "
+                f"Available: {available}.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
 
 def _read_texts(path: Path, column: str) -> list[str]:
