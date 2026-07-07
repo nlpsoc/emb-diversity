@@ -8,37 +8,40 @@ not pull in the measures' heavy dependencies.
 
 from __future__ import annotations
 
+import functools
 import importlib
+from importlib.metadata import version as _dist_version
 from typing import Callable
+
+# The installed emb-diversity package version. Stamped onto every measure
+# result (see get_measure below) so a result can be traced back to the code
+# that produced it — a version "fingerprint" for reproducibility.
+PACKAGE_VERSION: str = _dist_version("emb-diversity")
 
 # All 22 measures.
 MEASURE_NAMES: tuple[str, ...] = (
-    # Distance-based
     "mean_pw_dist",
     "sum_pairwise_dist",
-    "hamdiv",
-    "diameter",
-    "bottleneck",
-    "sum_bottleneck",
-    "sum_diameter",
-    "energy",
-    "cluster_inertia",
-    "span_centroid",
     "chamfer_dist",
     "knn",
-    # Volume-based
-    "convex_hull_volume_2d",
-    "radius",
+    "energy",
+    "diameter",
+    "bottleneck",
+    "sum_diameter",
+    "sum_bottleneck",
+    "convex_hull_volume_3d",
+    "geo_mean_std",
+    "span_centroid",
     "span_medoid",
-    # Distribution-based
+    "cluster_inertia",
+    "log_determinant",
     "vendi_score",
     "renyi_entropy",
     "dcscore",
-    "log_determinant",
     "bins_entropy",
-    # Graph-based
-    "graph_entropy",
     "mst_dispersion",
+    "graph_entropy",
+    "hamdiv",
 )
 
 
@@ -46,7 +49,11 @@ def get_measure(name: str) -> Callable:
     """Return the measure function registered under *name*.
 
     The measure's module is imported on first use and cached by Python's
-    import system, so repeated lookups are cheap.
+    import system, so repeated lookups are cheap. The returned callable wraps
+    the raw measure function so its result also carries a top-level
+    ``"version"`` key (:data:`PACKAGE_VERSION`) — this is the single place
+    that stamping happens, so it covers both direct calls (``emb_diversity.
+    <name>(...)``) and calls made through ``measure_diversity()``.
 
     Args:
         name: A measure name from :data:`MEASURE_NAMES`.
@@ -58,7 +65,15 @@ def get_measure(name: str) -> Callable:
         registered = ", ".join(sorted(MEASURE_NAMES))
         raise KeyError(f"Unknown measure {name!r}. Registered: {registered}")
     module = importlib.import_module(f".measures.{name}", __package__)
-    return getattr(module, name)
+    fn = getattr(module, name)
+
+    @functools.wraps(fn)
+    def versioned(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        result["version"] = PACKAGE_VERSION
+        return result
+
+    return versioned
 
 
 # NOTE: If you change DEFAULT_MEASURE or MEASURE_SETS below, you must also update

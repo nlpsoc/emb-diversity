@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Distance-Based Diversity Measure
+### Geometry-Based Diversity Measure
 
 
 def cluster_inertia(

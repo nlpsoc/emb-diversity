@@ -7,10 +7,10 @@ import numpy as np
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Volume-Based Diversity Measure
+### Geometry-Based Diversity Measure
 
 
-def radius(
+def geo_mean_std(
         data: Sequence[Sequence[float]],
         *,
         diversity_axis: str = "semantic",
@@ -52,12 +52,12 @@ def radius(
         the input vectors, so it is not comparable across differently scaled
         embeddings.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="radius", chunking_kwargs=chunking_kwargs)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="geo_mean_std", chunking_kwargs=chunking_kwargs)
     X = np.asarray(data, dtype=float)
     n, d = X.shape
 
     if n < 2:
-        raise ValueError("Cannot compute radius diversity for fewer than 2 datapoints")
+        raise ValueError("Cannot compute geo_mean_std diversity for fewer than 2 datapoints")
 
     # Standard deviation along each embedding dimension
     stds = np.std(X, axis=0, ddof=1)  # unbiased estimator

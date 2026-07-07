@@ -7,7 +7,7 @@ pass/fail case. Behaviours specific to a single measure live in test_diversity.p
 import numpy as np
 import pytest
 
-from emb_diversity.measures_registry import MEASURE_NAMES, get_measure
+from emb_diversity.measures_registry import MEASURE_NAMES, PACKAGE_VERSION, get_measure
 
 
 class TestAllMeasures:
@@ -19,19 +19,21 @@ class TestAllMeasures:
 
     @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
     def test_result_contract(self, name):
-        """Every measure returns ``{"value": float, "parameters": {...}}``.
+        """Every measure returns ``{"value": float, "parameters": {...}, "version": str}``.
 
-        The value is a finite Python float, and ``parameters`` records an
-        ``embedding_model`` entry which is ``None`` for vector (non-text) input.
+        The value is a finite Python float, ``parameters`` records an
+        ``embedding_model`` entry which is ``None`` for vector (non-text) input,
+        and ``version`` is the installed package version.
         """
         result = get_measure(name)(self._vectors())
 
-        assert set(result.keys()) == {"value", "parameters"}
+        assert set(result.keys()) == {"value", "parameters", "version"}
         assert isinstance(result["value"], float)
         assert np.isfinite(result["value"])
         assert isinstance(result["parameters"], dict)
         # Vector input is not embedded, so no model id is recorded.
         assert result["parameters"]["embedding_model"] is None
+        assert result["version"] == PACKAGE_VERSION
 
     @pytest.mark.parametrize("name", sorted(MEASURE_NAMES))
     def test_empty_data_raises_value_error(self, name):

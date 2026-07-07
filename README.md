@@ -50,8 +50,10 @@ texts_a = [
 
 # Uses the default measures and semantic embeddings
 print(measure_diversity(texts_a))
-# Each result holds the score under 'value' and the configuration used under
-# 'parameters' (shown as ... below):
+# Each result holds the score under 'value', the configuration used under
+# 'parameters', and the installed emb-diversity package version under
+# 'version' — a fingerprint tracing the result back to the code that
+# produced it (shown as ... below):
 # -> {'graph_entropy': {'value': 6.86..., ...},
 #     'vendi_score':   {'value': 4.12..., ...},
 #     'mean_pw_dist':  {'value': 0.69..., ...}}

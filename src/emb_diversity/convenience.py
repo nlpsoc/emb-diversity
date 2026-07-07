@@ -53,8 +53,12 @@ def measure_diversity(
 
     Returns:
         Dict mapping each measure name to its result, a dict of the form
-        ``{"value": float, "parameters": {...}}`` where ``parameters`` records
-        the configuration used (including the resolved ``embedding_model``).
+        ``{"value": float, "parameters": {...}, "version": str}`` where
+        ``parameters`` records the configuration used (including the resolved
+        ``embedding_model``) and ``version`` is the installed ``emb-diversity``
+        package version that computed the result — a fingerprint for tracing a
+        value back to the code that produced it. A custom measure callable is
+        run as given and is not stamped with ``version``.
         If a measure fails, its ``value`` is ``nan``, the entry gains an
         ``"error"`` key with the failure message, and a ``UserWarning`` is
         emitted — so other measures still run, but failures stay visible.
@@ -62,9 +66,9 @@ def measure_diversity(
     Example:
         >>> from emb_diversity import measure_diversity
         >>> measure_diversity(["The cat sat.", "Dogs play fetch."])
-        {'graph_entropy': {'value': ..., 'parameters': {'metric': 'cosine', 'embedding_model': ...}}}
+        {'graph_entropy': {'value': ..., 'parameters': {'metric': 'cosine', 'embedding_model': ...}, 'version': ...}}
         >>> measure_diversity(texts, measure="variety")
-        {'chamfer_dist': {'value': ..., 'parameters': {...}}, 'sum_bottleneck': {...}, 'mst_dispersion': {...}}
+        {'chamfer_dist': {'value': ..., 'parameters': {...}, 'version': ...}, 'sum_bottleneck': {...}, 'mst_dispersion': {...}}
     """
     # ── Resolve measures ─────────────────────────────────────────
     # Each item is a built-in name or a user-supplied measure callable.

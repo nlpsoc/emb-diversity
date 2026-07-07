@@ -211,7 +211,7 @@ def plot_pca(
         raise ValueError(f"kind must be 'contour' or 'scatter', got {kind!r}")
 
     plt.rcParams.update({"font.size": 7, "axes.titlesize": 8,
-                         "legend.fontsize": 6, "font.family": "serif"})
+                         "axes.titleweight": "bold", "font.family": "serif"})
     fig, axes = plt.subplots(1, len(AXES), figsize=(3.15, 1.7))
     for ax, axis in zip(axes, AXES):
         embeddings = {
@@ -236,8 +236,13 @@ def plot_pca(
         ax.set_yticks([])
 
     handles = [Patch(color=COLORS[label], label=label) for label in ("Human", "LLM")]
-    axes[0].legend(handles=handles, loc="upper left", frameon=False,
-                   handlelength=1.0, handletextpad=0.4, borderpad=0.2)
+    # Legend goes in the style panel: the LLM essays concentrate there, leaving
+    # the upper-left corner free of contours (unlike the semantic panel).
+    axes[AXES.index("style")].legend(
+        handles=handles, loc="upper left", frameon=False,
+        prop={"size": 8, "weight": "bold"},
+        handlelength=1.0, handletextpad=0.4, borderpad=0.2,
+    )
     fig.tight_layout(pad=0.2, w_pad=0.5)
     fig.savefig(out, dpi=300, bbox_inches="tight")
     print(f"\nwrote {out}")

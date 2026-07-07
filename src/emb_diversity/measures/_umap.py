@@ -1,7 +1,7 @@
-"""Shared UMAP projection helper for measures that reduce to 2D.
+"""Shared UMAP projection helper for measures that reduce to a lower dimension.
 
-``bins_entropy`` and ``convex_hull_volume_2d`` can both project their input to two
-dimensions with UMAP.
+``bins_entropy`` and ``convex_hull_volume_3d`` both project their input to a
+lower dimension with UMAP.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def fit_transform_umap(reducer, X: np.ndarray) -> np.ndarray:
         X: Input array of shape ``(n, d)``.
 
     Returns:
-        The 2D projection returned by ``reducer.fit_transform``.
+        The projection returned by ``reducer.fit_transform``.
     """
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")

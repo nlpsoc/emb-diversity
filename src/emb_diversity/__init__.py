@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from typing import TYPE_CHECKING
 
-from .measures_registry import MEASURE_NAMES
+from .measures_registry import MEASURE_NAMES, get_measure
 
 # Public names resolve lazily on first attribute access (PEP 562), keeping
 # `import emb_diversity` fast: the heavy dependencies (torch, scikit-learn,
@@ -25,19 +25,28 @@ _ATTR_TO_SUBMODULE = {
     "compute_pairwise_distances": "measures.utils",
     "clear_distance_cache": "measures.utils",
     "distance_cache_info": "measures.utils",
+    # Plotting
+    "plot_2d": "plot.visualize",      
+    "plot_3d": "plot.visualize",      
 }
 
 __all__ = list(_ATTR_TO_SUBMODULE)
 
 
 def __getattr__(name: str):
-    try:
-        submodule = _ATTR_TO_SUBMODULE[name]
-    except KeyError:
-        raise AttributeError(
-            f"module {__name__!r} has no attribute {name!r}"
-        ) from None
-    attr = getattr(importlib.import_module(f".{submodule}", __name__), name)
+    if name in MEASURE_NAMES:
+        # Routed through get_measure() so a direct call like
+        # `emb_diversity.mean_pw_dist(...)` gets the same "version"-stamped
+        # result as one made through `measure_diversity()`.
+        attr = get_measure(name)
+    else:
+        try:
+            submodule = _ATTR_TO_SUBMODULE[name]
+        except KeyError:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from None
+        attr = getattr(importlib.import_module(f".{submodule}", __name__), name)
     globals()[name] = attr  # cache so later accesses skip __getattr__
     return attr
 
@@ -61,17 +70,17 @@ if TYPE_CHECKING:
     from .measures.bottleneck import bottleneck
     from .measures.chamfer_dist import chamfer_dist
     from .measures.cluster_inertia import cluster_inertia
-    from .measures.convex_hull_volume_2d import convex_hull_volume_2d
+    from .measures.convex_hull_volume_3d import convex_hull_volume_3d
     from .measures.dcscore import dcscore
     from .measures.diameter import diameter
     from .measures.energy import energy
+    from .measures.geo_mean_std import geo_mean_std
     from .measures.graph_entropy import graph_entropy
     from .measures.hamdiv import hamdiv
     from .measures.knn import knn
     from .measures.log_determinant import log_determinant
     from .measures.mean_pw_dist import mean_pw_dist
     from .measures.mst_dispersion import mst_dispersion
-    from .measures.radius import radius
     from .measures.renyi_entropy import renyi_entropy
     from .measures.span_centroid import span_centroid
     from .measures.span_medoid import span_medoid
@@ -79,7 +88,4 @@ if TYPE_CHECKING:
     from .measures.sum_diameter import sum_diameter
     from .measures.sum_pairwise_dist import sum_pairwise_dist
     from .measures.vendi_score import vendi_score
-
-# Plotting functionality
-from .plot.visualize import plot_2d, plot_3d
-__all__ = ["plot_2d", "plot_3d"]
+    from .plot.visualize import plot_2d, plot_3d

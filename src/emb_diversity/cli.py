@@ -228,9 +228,9 @@ def _read_texts(path: Path, column: str) -> list[str]:
 def _print_results(results: dict[str, dict], fmt: str) -> None:
     """Format and print results.
 
-    Each value in *results* is a ``{"value": float, "parameters": {...}}`` dict.
-    The table and csv formats show the scalar score; json emits the full nested
-    structure (including parameters).
+    Each value in *results* is a ``{"value": float, "parameters": {...},
+    "version": str}`` dict. The table and csv formats show the scalar score;
+    json emits the full nested structure (including parameters and version).
     """
     if fmt == "json":
         # default=str so a callable metric (or other non-serializable param)

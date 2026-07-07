@@ -10,7 +10,7 @@ from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult, TensorLike
 from .utils import compute_pairwise_distances
 
-### Graph-Based Diversity Measure
+### Graph-Theory-Based Diversity Measure
 
 
 def mst_dispersion(data: TensorLike,

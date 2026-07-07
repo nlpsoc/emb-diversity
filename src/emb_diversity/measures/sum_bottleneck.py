@@ -9,7 +9,7 @@ from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
 from .utils import compute_pairwise_distances
 
-### Distance-Based Diversity Measure
+### Geometry-Based Diversity Measure
 
 
 def sum_bottleneck(
