@@ -1,13 +1,11 @@
 """Utilities for visualization functions."""
 
 import numpy as np
-import seaborn as sns
-from matplotlib.colors import to_hex
 import colorsys
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import umap.umap_ as umap
-from typing import Iterable, List, Tuple
+from typing import Iterable, List
 
 
 def _reduce_dim(
