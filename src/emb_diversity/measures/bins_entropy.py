@@ -1,14 +1,14 @@
 from __future__ import annotations
+
 import warnings
+
+import numpy as np
+from sklearn.decomposition import PCA
 
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
 ### Distribution-Based Diversity Measure
-
-import numpy as np
-from sklearn.decomposition import PCA
-
 
 
 def bins_entropy(

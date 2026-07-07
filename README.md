@@ -260,7 +260,11 @@ When you add a new measure to `src/emb_diversity/measures/`:
    (`chunking`/`chunks`/`pooling`) to the embedding step — thread it through
    unchanged. Then return
    `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
-   Add a complete docstring following the style guide below.
+   Add a complete docstring following the style guide below. Right after the
+   file's imports, add a `### <Family>-Based Diversity Measure` comment naming
+   which of the four families in
+   [the taxonomy](docs/source/user-guide/measures.md#taxonomy) the measure
+   belongs to (e.g. `### Distance-Based Diversity Measure`).
 2. Add its name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
    The public API (`emb_diversity.<name>`), the CLI, and `measure_diversity`
    all pick it up from there.
