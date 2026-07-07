@@ -13,8 +13,7 @@ Usage::
     python timing_measures_v2.py run     # benchmark (resumable)
     python timing_measures_v2.py plot    # render the figure from the JSON
 
-Edit the constants below to change sizes, runs, or budget. The figure is
-sized for the ACL one-column format (3.03 in wide).
+Edit the constants below to change sizes, runs, or budget.
 """
 
 import argparse
@@ -125,7 +124,6 @@ def plot_results(results_path: Path, plot_path: Path) -> None:
 
     results = json.loads(results_path.read_text())
 
-    # 3.03 in = ACL \columnwidth, so fonts render at their true point size
     plt.rcParams["font.size"] = 9
     fig, ax = plt.subplots(figsize=(3.03, 3.4))
     colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
