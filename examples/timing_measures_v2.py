@@ -1,107 +1,176 @@
+"""Benchmark the runtime of every registered measure across dataset sizes.
+
+Runs every measure in ``MEASURE_NAMES`` on synthetic ``(n, 384)`` Gaussian
+vectors. Results are checkpointed to a JSON file after every (measure, size)
+pair, so a crashed run loses almost nothing and rerunning the same command
+resumes where it stopped. Each (measure, size) pair runs in a child process
+with a wall-clock budget: runs finished within the budget are kept, a pair
+whose first run doesn't finish is marked "timeout" and the measure is skipped
+at larger sizes, and a crashing child (e.g. out of memory) is marked "error".
+
+Usage::
+
+    python timing_measures_v2.py run     # benchmark (resumable)
+    python timing_measures_v2.py plot    # render the figure from the JSON
+
+Edit the constants below to change sizes, runs, or budget. The figure is
+sized for the ACL one-column format (3.03 in wide).
+"""
+
+import argparse
+import json
+import multiprocessing as mp
 import time
-from collections import defaultdict
+from pathlib import Path
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-from emb_diversity import (
-    mean_pw_dist, dist_dispersion, diameter, bottleneck, sum_bottleneck,
-    sum_diameter, chamfer_dist, span_centroid, span_medoid, vendi_score,
-    renyi_entropy, bins_entropy, graph_entropy, convex_hull_volume_2d,
-    hamdiv, mst_dispersion, radius, energy, cluster_inertia, dcscore,
-    log_determinant,
-)
-# Direct module handle for the pairwise-distance cache controls.
-from emb_diversity.measures import utils as pw
-
-# Disable the in-memory LRU so repeated large distance matrices never
-# accumulate in RAM during the benchmark.
-pw._MEMORY_MAX = 0
+SIZES = [10, 100, 1_000, 10_000, 100_000]
+N_RUNS = 5
+DIM = 384
+SEED = 42
+BUDGET_S = 3600  # wall-clock budget per (measure, size) pair
+RESULTS_FILE = Path("timing_results.json")
+PLOT_FILE = Path("runtime_scaling.pdf")
 
 
-# Define measures
-measures = {
-    "mean_pw_dist": mean_pw_dist,
-    "dist_dispersion": dist_dispersion,
-    "diameter": diameter,
-    "bottleneck": bottleneck,
-    "sum_bottleneck": sum_bottleneck,
-    "sum_diameter": sum_diameter,
-    "chamfer_dist": chamfer_dist,
-    "span_centroid": span_centroid,
-    "span_medoid": span_medoid,
-    "vendi_score": vendi_score,
-    "renyi_entropy": renyi_entropy,
-    "bins_entropy": bins_entropy,
-    "graph_entropy": graph_entropy,
-    "convex_hull_volume_2d": convex_hull_volume_2d,
-    #  "hamdiv": hamdiv,
-    "mst_dispersion": mst_dispersion,
-    "radius": radius,
-    "energy": energy,
-    "cluster_inertia": cluster_inertia,
-    "dcscore": dcscore,
-    "log_determinant": log_determinant,
-}
+def save_json(path: Path, payload) -> None:
+    """Write via a temp file + atomic rename so a crash never corrupts it."""
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, indent=2))
+    tmp.replace(path)
 
 
-def time_call(fn, *args, **kwargs):
-    """Return the time a measure took to run, from a cold cache.
+def _worker(measure_name: str, size: int, out_path: str) -> None:
+    """Child process: time N_RUNS cold-cache runs of one measure.
 
-    Clearing the distance cache before each call ensures we always time the
-    real computation instead of a cache hit (the same dataset is reused across
-    runs, which would otherwise be served from cache after the first run).
+    Timings are flushed to *out_path* after every run, so the parent keeps
+    the finished runs even if it kills this process at the budget.
     """
-    pw.clear_distance_cache()  # drop memory + disk so this is a true cold run
-    start = time.perf_counter()
-    fn(*args, **kwargs)
-    end = time.perf_counter()
-    return end - start
+    import numpy as np
+
+    from emb_diversity.measures_registry import get_measure
+    from emb_diversity.measures import utils as pw
+
+    pw._MEMORY_MAX = 0  # don't let large distance matrices pile up in RAM
+    fn = get_measure(measure_name)
+    data = np.random.RandomState(SEED).randn(size, DIM)
+
+    times = []
+    for _ in range(N_RUNS):
+        pw.clear_distance_cache()  # memory + disk, so every run is cold
+        start = time.perf_counter()
+        fn(data)
+        times.append(time.perf_counter() - start)
+        Path(out_path).write_text(json.dumps(times))
 
 
-# Synthetic datasets of varying sizes. 100_000 is intentionally omitted:
-# pdist on 100k points builds a ~40 GB condensed array and would OOM.
-SIZES = [10, 100, 1000, 10000, 100_000]
-N_RUNS = 10
+def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
+    """Run one (measure, size) pair in a child process under BUDGET_S."""
+    # spawn (not fork) = clean interpreter per pair on every platform
+    proc = mp.get_context("spawn").Process(
+        target=_worker, args=(measure_name, size, str(tmp_path))
+    )
+    proc.start()
+    proc.join(timeout=BUDGET_S)
+    timed_out = proc.is_alive()
+    if timed_out:
+        proc.terminate()
+        proc.join()
+    try:  # the child may have been killed mid-write
+        times = json.loads(tmp_path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        times = []
+    tmp_path.unlink(missing_ok=True)
 
-vector_datasets = [np.random.randn(n, 384) for n in SIZES]
-
-# Initialize results dict
-results = {name: defaultdict(list) for name in measures}
-
-for i in range(N_RUNS):
-    for dataset in vector_datasets:
-        for name, fn in measures.items():
-            elapsed = time_call(fn, dataset)
-            results[name][f"run_{i}"].append(elapsed)
-            print(f"{name} | size={len(dataset)} | {elapsed:.6f}s")
-    print("Completed run", i)
+    if times:  # at least one run finished — that's a usable timing
+        return {"status": "ok", "times": times}
+    return {"status": "timeout" if timed_out else "error", "times": []}
 
 
-# PLOTTING
-sizes = np.array(SIZES)  # aligned with the datasets actually run
+def run_benchmark(results_path: Path) -> None:
+    from emb_diversity.measures_registry import MEASURE_NAMES
 
-plt.figure(figsize=(5, 5))
+    if results_path.exists():
+        results = json.loads(results_path.read_text())
+        print(f"Resuming from {results_path}")
+    else:
+        results = {}
 
-# Large color palette
-colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
+    tmp_path = results_path.with_suffix(".cell")
+    total = len(MEASURE_NAMES) * len(SIZES)
+    cell_no = 0
+    for measure_name in MEASURE_NAMES:
+        cells = results.setdefault(measure_name, {})
+        for size in sorted(SIZES):
+            cell_no += 1
+            if str(size) in cells:
+                continue  # done in a previous run
+            if any(c["status"] == "timeout"
+                   for s, c in cells.items() if int(s) < size):
+                # timed out on fewer points — more would only be slower
+                cells[str(size)] = {"status": "skipped", "times": []}
+            else:
+                cells[str(size)] = run_measure(measure_name, size, tmp_path)
+            cell = cells[str(size)]
+            runs = (f", mean {sum(cell['times']) / len(cell['times']):.4f}s "
+                    f"over {len(cell['times'])} runs" if cell["times"] else "")
+            print(f"[{cell_no}/{total}] {measure_name} | size={size} | "
+                  f"{cell['status']}{runs}", flush=True)
+            save_json(results_path, results)  # checkpoint after every pair
+    print(f"Done. Results in {results_path}")
 
-for idx, (measure_name, runs) in enumerate(results.items()):
-    run_matrix = np.array([runs[f"run_{i}"] for i in range(N_RUNS)])
-    mean_vals = run_matrix.mean(axis=0)
-    std_vals = run_matrix.std(axis=0)
 
-    color = colors[idx]
+def plot_results(results_path: Path, plot_path: Path) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-    plt.plot(sizes, mean_vals, marker="o", label=measure_name, color=color)
-    plt.fill_between(sizes, mean_vals - std_vals, mean_vals + std_vals,
-                     alpha=0.2, color=color)
+    results = json.loads(results_path.read_text())
 
-plt.xscale("log")
-plt.xlabel("Dataset size (log scale)")
-plt.ylabel("Runtime (seconds)")
-plt.title("Runtime scaling of embedding diversity measures")
-plt.legend(ncol=2, fontsize=9)
-plt.grid(True, ls="--", alpha=0.4)
-plt.tight_layout()
-plt.savefig("runtime_scaling.pdf", bbox_inches="tight")
+    # 3.03 in = ACL \columnwidth, so fonts render at their true point size
+    plt.rcParams["font.size"] = 9
+    fig, ax = plt.subplots(figsize=(3.03, 3.4))
+    colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
+    markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
+
+    for idx, (measure_name, cells) in enumerate(results.items()):
+        done = sorted((int(s), c["times"]) for s, c in cells.items()
+                      if c["times"])
+        if not done:
+            continue
+        sizes = [s for s, _ in done]
+        means = np.array([np.mean(t) for _, t in done])
+        stds = np.array([np.std(t) for _, t in done])
+        ax.plot(sizes, means, color=colors[idx], label=measure_name,
+                marker=markers[idx % len(markers)], markersize=3, linewidth=1)
+        ax.fill_between(sizes, means - stds, means + stds,
+                        color=colors[idx], alpha=0.2, linewidth=0)
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Dataset size")
+    ax.set_ylabel("Runtime (seconds)")
+    ax.legend(ncol=2, fontsize=5.5, framealpha=0.9,
+              columnspacing=0.8, handlelength=1.4, labelspacing=0.25)
+    ax.grid(True, ls="--", alpha=0.4)
+    fig.tight_layout()
+    fig.savefig(plot_path, bbox_inches="tight")
+    print(f"Plot saved to {plot_path}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+    p_run = sub.add_parser("run", help="run the benchmark (resumable)")
+    p_run.add_argument("--results", type=Path, default=RESULTS_FILE)
+    p_plot = sub.add_parser("plot", help="plot results from the JSON file")
+    p_plot.add_argument("--results", type=Path, default=RESULTS_FILE)
+    p_plot.add_argument("--out", type=Path, default=PLOT_FILE)
+
+    args = parser.parse_args()
+    if args.command == "run":
+        run_benchmark(args.results)
+    else:
+        plot_results(args.results, args.out)
+
+
+if __name__ == "__main__":
+    main()
