@@ -2,18 +2,16 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from ..embed import resolve_embeddings
+import numpy as np
+from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
 
+from ..embed import resolve_embeddings
 from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
 ### Distribution-Based Diversity Measure
 
-import numpy as np
-from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
-
 _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
-
 
 
 def renyi_entropy(

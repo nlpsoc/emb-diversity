@@ -2,18 +2,16 @@ from __future__ import annotations
 
 from typing import Sequence
 
+import numpy as np
+from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
+
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
-
 ### Geometry-Based Diversity Measure
 
-import numpy as np
-from sklearn.metrics.pairwise import rbf_kernel, laplacian_kernel, polynomial_kernel
-
 _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
-
 
 
 def log_determinant(
@@ -48,7 +46,6 @@ def log_determinant(
     References:
         Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286.
         Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024).
-        Ba, Yang, Mohammad Sadeq Abolhasani, and Rong Pan. "Predict Training Data Quality via Its Geometry in Metric Space." arXiv preprint arXiv:2510.15970 (2025).
         
     Args:
         data:
