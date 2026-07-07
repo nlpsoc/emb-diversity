@@ -56,6 +56,8 @@ cached locally, so later runs are fast and work offline.
 
 Measuring the diversity of a dataset with our package is easy: 
 
+**Basic usage**
+
 ```python
 from emb_diversity import measure_diversity
 
@@ -79,6 +81,8 @@ print(measure_diversity(texts_a))
 #     'mean_pw_dist':  {'value': 0.69..., ...}}
 ```
 
+**Comparing two datasets**
+
 Note that measuring the diversity of a dataset is usually only meaningful when comparing it to another datasets. The reason is that diversity values in isolation are not easily interpretable and are not bounded, sensitive to dataset size and sensitive to the used embedding space. Let's add another corpus. 
 
 ```python
@@ -98,6 +102,8 @@ print(measure_diversity(texts_b))
 # -> {'graph_entropy': {'value': 6.91..., ...}, 'vendi_score': {'value': 4.93..., ...}, 'mean_pw_dist': {'value': 0.98..., ...}}
 ```
 
+**Choosing a diversity axis**
+
 When a measure considers a dataset to be more diverse, it will assign it a higher diversity value. Here, the three default measures consistently show that `texts_b` is more diverse than `texts_a`. This can change, when we change what diversity "axis" is considered, for example, "style" instead of "semantic". 
 
 ```python
@@ -108,6 +114,8 @@ print(measure_diversity(texts_b, diversity_axis="style"))
 # -> {'graph_entropy': {'value': 6.32..., ...}, 'vendi_score': {'value': 2.24..., ...}, 'mean_pw_dist': {'value': 0.32..., ...}}
 ```
 
+**Choosing an embedding model**
+
 You can also specify a different embedding model with a HuggingFace identifier, for example, a model trained for Dutch. Be careful to use models can represent the information you are interested in, otherwise you might get some inconsistent results! A Dutch model might behave unpredictably on English text.
 
 ```python
@@ -117,6 +125,8 @@ print(measure_diversity(texts_a, embedding_model="GroNLP/bert-base-dutch-cased")
 print(measure_diversity(texts_b, embedding_model="GroNLP/bert-base-dutch-cased"))
 # -> {'graph_entropy': {'value': 6.80..., ...}, 'vendi_score': {'value': 1.52..., ...}, 'mean_pw_dist': {'value': 0.11..., ...}}
 ```
+
+**Matching the embedding model's language**
 
 The results above are inconsistent. We can do the same again, but with sentences translated to Dutch, to get better semantic diversity scores for Dutch specifically. 
 
@@ -141,8 +151,10 @@ print(measure_diversity(texts_b_nl, embedding_model="GroNLP/bert-base-dutch-case
 # -> {'graph_entropy': {'value': 6.91..., ...}, 'vendi_score': {'value': 2.61..., ...}, 'mean_pw_dist': {'value': 0.34..., ...}}
 ```
 
+**Running specific measures**
 
 You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
+
 ```python
 # Run specific measures
 print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
@@ -150,6 +162,8 @@ print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
 print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 # -> {'diameter': {'value': 1.0..., ...}, 'log_determinant': {'value': -0.06..., ...}}
 ```
+
+**Using raw vectors**
 
 If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see https://nlpsoc.github.io/Diversity-Measurement/user-guide/vectors.html.
 
