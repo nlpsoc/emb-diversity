@@ -88,8 +88,16 @@ def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
     return {"status": "timeout" if timed_out else "error", "times": []}
 
 
-def run_benchmark(results_path: Path) -> None:
+def run_benchmark(results_path: Path, measure: str | None = None) -> None:
     from emb_diversity.measures_registry import MEASURE_NAMES
+
+    if measure is None:
+        names = MEASURE_NAMES
+    elif measure in MEASURE_NAMES:
+        names = (measure,)
+    else:
+        raise SystemExit(f"Unknown measure {measure!r}. "
+                         f"Registered: {', '.join(sorted(MEASURE_NAMES))}")
 
     if results_path.exists():
         results = json.loads(results_path.read_text())
@@ -98,9 +106,9 @@ def run_benchmark(results_path: Path) -> None:
         results = {}
 
     tmp_path = results_path.with_suffix(".cell")
-    total = len(MEASURE_NAMES) * len(SIZES)
+    total = len(names) * len(SIZES)
     cell_no = 0
-    for measure_name in MEASURE_NAMES:
+    for measure_name in names:
         cells = results.setdefault(measure_name, {})
         for size in sorted(SIZES):
             cell_no += 1
@@ -162,13 +170,15 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     p_run = sub.add_parser("run", help="run the benchmark (resumable)")
     p_run.add_argument("--results", type=Path, default=RESULTS_FILE)
+    p_run.add_argument("--measure", default=None,
+                       help="run only this measure (default: all)")
     p_plot = sub.add_parser("plot", help="plot results from the JSON file")
     p_plot.add_argument("--results", type=Path, default=RESULTS_FILE)
     p_plot.add_argument("--out", type=Path, default=PLOT_FILE)
 
     args = parser.parse_args()
     if args.command == "run":
-        run_benchmark(args.results)
+        run_benchmark(args.results, args.measure)
     else:
         plot_results(args.results, args.out)
 
