@@ -81,3 +81,7 @@ for axis in axes.list_all():
     if axis.alternative_models:
         print(f"  alternatives: {axis.alternative_models}")
 ```
+
+If you would like to contribute a new built-in axis to the package, see
+[Adding New Diversity Axes](../development.md#adding-new-diversity-axes) in
+the Development guide.
