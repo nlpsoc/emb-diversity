@@ -41,7 +41,7 @@ class TestDualMatchesFull:
 class TestDualIsFaster:
     def test_faster_than_full_kernel(self):
         """The dual route beats the full kernel for n >> d."""
-        X = _vectors(3000, 16)
+        X = _vectors(3000, 30)
 
         start = time.perf_counter()
         renyi_entropy(X)
@@ -53,4 +53,4 @@ class TestDualIsFaster:
         log_determinant(X, use_dual=False)
         full_time = time.perf_counter() - start
 
-        assert dual_time < full_time
+        assert 2*dual_time < full_time
