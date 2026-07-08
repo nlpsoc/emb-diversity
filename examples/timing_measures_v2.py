@@ -43,16 +43,16 @@ PLOT_FILE = Path("runtime_scaling.pdf")
 # pdist dominates their runtime, so their curves coincide anyway). Measures
 # missing from this mapping land under an "other" heading.
 MEASURE_GROUPS = {
-    "pairwise distances": [
+    "distance matrix": [
         "mean_pw_dist", "sum_pw_dist", "sum_pairwise_dist", "chamfer_dist",
         "energy", "diameter", "bottleneck", "sum_diameter", "sum_bottleneck",
         "span_medoid",
     ],
-    "distance graphs": ["mst_dispersion", "graph_entropy", "knn", "hamdiv"],
+    "distance graph": ["mst_dispersion", "graph_entropy", "knn", "hamdiv"],
     "kernel matrix": ["vendi_score", "renyi_entropy", "dcscore",
                       "log_determinant"],
     "UMAP projection": ["bins_entropy", "convex_hull_volume_3d"],
-    "summary statistics": ["cluster_inertia", "span_centroid", "geo_mean_std"],
+    "vector statistics": ["cluster_inertia", "span_centroid", "geo_mean_std"],
 }
 
 
@@ -201,11 +201,11 @@ def plot_results(results_path: Path, plot_path: Path,
     markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
     # one colormap per group; members get dark-to-light shades of it
     group_cmaps = {
-        "pairwise distances": None,  # single black line, curves coincide
-        "distance graphs": plt.cm.Blues,
+        "distance matrix": None,  # single black line, curves coincide
+        "distance graph": plt.cm.Blues,
         "kernel matrix": plt.cm.Greens,
         "UMAP projection": plt.cm.Oranges,
-        "summary statistics": plt.cm.Purples,
+        "vector statistics": plt.cm.Purples,
         "other": plt.cm.Greys,
     }
 
