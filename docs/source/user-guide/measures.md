@@ -467,5 +467,5 @@ Each measure module in `src/emb_diversity/measures/` marks its family with a
 `### <Family>-Based Diversity Measure` comment placed right after the file's
 imports (e.g. `### Distance-Based Diversity Measure`). When contributing a new
 built-in measure, add this comment for the family it belongs to — see
-[Adding New Measures](https://github.com/nlpsoc/Diversity-Measurement#adding-new-measures)
+[Adding New Measures](https://github.com/nlpsoc/emb-diversity#adding-new-measures)
 in the README for the full steps.
