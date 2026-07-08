@@ -40,6 +40,14 @@ user-guide/configuration
 emb_diversity
 ```
 
+## Development
+
+```{toctree}
+:maxdepth: 2
+
+development
+```
+
 ## Indices
 
 - {ref}`genindex`
