@@ -147,7 +147,7 @@ print(measure_diversity(texts_b_nl, embedding_model="GroNLP/bert-base-dutch-case
 
 **Running specific measures**
 
-You can also use specific measures, see an overview here: https://nlpsoc.github.io/emb-diversity/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
+You can also use specific measures, see an [overview of all measures](https://nlpsoc.github.io/emb-diversity/user-guide/measures.html). Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
 
 ```python
 # Run specific measures
@@ -159,7 +159,7 @@ print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 
 **Using raw vectors**
 
-If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see https://nlpsoc.github.io/emb-diversity/user-guide/vectors.html.
+If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see [Using Vectors Directly](https://nlpsoc.github.io/emb-diversity/user-guide/vectors.html).
 
 ```python
 import numpy as np
