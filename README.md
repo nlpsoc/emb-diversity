@@ -6,7 +6,7 @@ A Python package for measuring data diversity on small- to medium-sized datasets
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
 
-**Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>  
+**Documentation:** <https://nlpsoc.github.io/emb-diversity/>  
 **PyPi**: <https://pypi.org/project/emb-diversity/>
 
 ## Install
@@ -123,7 +123,7 @@ print(measure_diversity(texts_b_nl, embedding_model="GroNLP/bert-base-dutch-case
 ```
 
 
-You can also use specific measures, see an overview here: https://nlpsoc.github.io/Diversity-Measurement/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
+You can also use specific measures, see an overview here: https://nlpsoc.github.io/emb-diversity/user-guide/measures.html. Use with caution. Some measures might be worse for your use case than others. We recommend to test whether your chosen measure and embedding space capture your diversity axis of interest.
 ```python
 # Run specific measures
 print(measure_diversity(texts_a, measure=["diameter", "log_determinant"]))
@@ -132,7 +132,7 @@ print(measure_diversity(texts_b, measure=["diameter", "log_determinant"]))
 # -> {'diameter': {'value': 1.0..., ...}, 'log_determinant': {'value': -0.06..., ...}}
 ```
 
-If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see https://nlpsoc.github.io/Diversity-Measurement/user-guide/vectors.html.
+If you are not working with text data or you already calculated the embeddings yourself, you can use ``vectors`` (numpy arrays or lists of lists of numbers) directly as well, see https://nlpsoc.github.io/emb-diversity/user-guide/vectors.html.
 
 ```python
 import numpy as np
@@ -170,8 +170,8 @@ To work on `emb-diversity` itself, install from a clone with
 [`uv`](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```bash
-git clone https://github.com/nlpsoc/Diversity-Measurement.git
-cd Diversity-Measurement
+git clone https://github.com/nlpsoc/emb-diversity.git
+cd emb-diversity
 uv sync --group dev          # runtime + dev tools (pytest, docs, ...)
 source .venv/bin/activate
 ```
@@ -485,7 +485,7 @@ the software:
 @misc{emb_diversity,
   author = {Su, Cantao and Velayuthan, Menan and Ploeger, Esther and Nguyen, Dong and Wegmann, Anna},
   title  = {emb-diversity},
-  url    = {https://github.com/nlpsoc/Diversity-Measurement},
+  url    = {https://github.com/nlpsoc/emb-diversity},
 }
 ```
 <!-- docs-citation-end -->
