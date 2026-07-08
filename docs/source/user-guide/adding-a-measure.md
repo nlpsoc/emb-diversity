@@ -1,4 +1,4 @@
-# Adding a Measure
+# Writing a Custom Measure
 
 Besides the [built-in measures](measures.md), you can run **your own** measure by
 passing a function to `measure_diversity()`; no need to modify the package. 

@@ -451,10 +451,10 @@ taxonomy proposed in:
 > measures.* Under review.
 
 This grouping isn't required knowledge for using `emb-diversity` — it's included
-as background. When [adding a new measure](adding-a-measure.md) to the package,
-it's worth considering which family it fits (and whether that family already has
-similar coverage), but this is a helpful design consideration rather than a
-requirement.
+as background. When [contributing a new built-in measure](../development.md#adding-new-measures)
+to the package, it's worth considering which family it fits (and whether that
+family already has similar coverage), but this is a helpful design consideration
+rather than a requirement.
 
 | Family | Measures |
 |---|---|
