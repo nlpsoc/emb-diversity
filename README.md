@@ -6,7 +6,8 @@ A Python package for measuring data diversity on small- to medium-sized datasets
 This library is developed as part of the [DataDivers](https://datadivers-erc.github.io/) project.
 <!-- docs-intro-end -->
 
-📖 **Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>
+**Documentation:** <https://nlpsoc.github.io/Diversity-Measurement/>  
+**PyPi**: <https://pypi.org/project/emb-diversity/>
 
 ## Install
 
