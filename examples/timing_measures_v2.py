@@ -184,12 +184,20 @@ def plot_results(results_path: Path, plot_path: Path,
     colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
     markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
 
-    smallest_mean = None
-    for idx, (measure_name, cells) in enumerate(results.items()):
+    # Legend order = line order at the right edge: measures that reached the
+    # largest size come first, slowest on top; measures that stopped earlier
+    # (timeout/error) follow, ordered by runtime at the largest size they
+    # completed.
+    series = []
+    for measure_name, cells in results.items():
         done = sorted((int(s), c["times"]) for s, c in cells.items()
                       if c["times"])
-        if not done:
-            continue
+        if done:
+            series.append((measure_name, done))
+    series.sort(key=lambda item: (-item[1][-1][0], -np.mean(item[1][-1][1])))
+
+    smallest_mean = None
+    for idx, (measure_name, done) in enumerate(series):
         sizes = [s for s, _ in done]
         means = np.array([np.mean(t) for _, t in done])
         smallest_mean = min(smallest_mean or means.min(), means.min())
