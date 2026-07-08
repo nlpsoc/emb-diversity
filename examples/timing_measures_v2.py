@@ -57,9 +57,14 @@ def _worker(measure_name: str, size: int, out_path: str) -> None:
     for _ in range(N_RUNS):
         pw.clear_distance_cache()  # memory + disk, so every run is cold
         start = time.perf_counter()
-        fn(data)
+        try:
+            fn(data)
+        except Exception as e:  # report what failed, then die
+            Path(out_path).write_text(
+                json.dumps({"times": times, "error": f"{type(e).__name__}: {e}"}))
+            raise
         times.append(time.perf_counter() - start)
-        Path(out_path).write_text(json.dumps(times))
+        Path(out_path).write_text(json.dumps({"times": times, "error": None}))
 
 
 def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
@@ -78,14 +83,21 @@ def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
         proc.terminate()
         proc.join()
     try:  # the child may have been killed mid-write
-        times = json.loads(tmp_path.read_text())
+        report = json.loads(tmp_path.read_text())
     except (FileNotFoundError, json.JSONDecodeError):
-        times = []
+        report = {"times": [], "error": None}
     tmp_path.unlink(missing_ok=True)
 
-    if times:  # at least one run finished — that's a usable timing
-        return {"status": "ok", "times": times}
-    return {"status": "timeout" if timed_out else "error", "times": []}
+    if report["error"] is not None:  # the measure raised in the child
+        return {"status": "error", "error": report["error"],
+                "times": report["times"]}
+    if report["times"]:  # at least one run finished — a usable timing
+        return {"status": "ok", "times": report["times"]}
+    if timed_out:
+        return {"status": "timeout", "times": []}
+    # the child died without reporting (e.g. killed by the OS on OOM)
+    return {"status": "error", "times": [],
+            "error": f"child process died with exit code {proc.exitcode}"}
 
 
 def run_benchmark(results_path: Path, measure: str | None = None) -> None:
@@ -121,10 +133,11 @@ def run_benchmark(results_path: Path, measure: str | None = None) -> None:
             else:
                 cells[str(size)] = run_measure(measure_name, size, tmp_path)
             cell = cells[str(size)]
-            runs = (f", mean {sum(cell['times']) / len(cell['times']):.4f}s "
+            note = (f", mean {sum(cell['times']) / len(cell['times']):.4f}s "
                     f"over {len(cell['times'])} runs" if cell["times"] else "")
+            note += f" ({cell['error']})" if cell.get("error") else ""
             print(f"[{cell_no}/{total}] {measure_name} | size={size} | "
-                  f"{cell['status']}{runs}", flush=True)
+                  f"{cell['status']}{note}", flush=True)
             save_json(results_path, results)  # checkpoint after every pair
     print(f"Done. Results in {results_path}")
 
