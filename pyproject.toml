@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
 name = "emb-diversity"
-version = "0.0.10"
+version = "0.0.12"
 description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -67,10 +67,10 @@ audio = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nlpsoc/Diversity-Measurement"
-Documentation = "https://nlpsoc.github.io/Diversity-Measurement/"
-Repository = "https://github.com/nlpsoc/Diversity-Measurement"
-"Bug Tracker" = "https://github.com/nlpsoc/Diversity-Measurement/issues"
+Homepage = "https://github.com/nlpsoc/emb-diversity"
+Documentation = "https://nlpsoc.github.io/emb-diversity/"
+Repository = "https://github.com/nlpsoc/emb-diversity"
+"Bug Tracker" = "https://github.com/nlpsoc/emb-diversity/issues"
 
 [project.scripts]
 emb-diversity = "emb_diversity.cli:app"

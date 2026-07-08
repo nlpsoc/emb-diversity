@@ -219,7 +219,7 @@ the software:
 @misc{emb_diversity,
   author = {Su, Cantao and Velayuthan, Menan and Ploeger, Esther and Nguyen, Dong and Wegmann, Anna},
   title  = {emb-diversity},
-  url    = {https://github.com/nlpsoc/Diversity-Measurement},
+  url    = {https://github.com/nlpsoc/emb-diversity},
 }
 ```
 <!-- docs-citation-end -->

@@ -2,7 +2,7 @@
 
 This folder holds the [Sphinx](https://www.sphinx-doc.org/) documentation for
 emb-diversity. The rendered site is published at
-<https://nlpsoc.github.io/Diversity-Measurement/>.
+<https://nlpsoc.github.io/emb-diversity/>.
 
 ## Publishing is automatic
 
