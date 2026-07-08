@@ -100,9 +100,11 @@ def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
             "error": f"child process died with exit code {proc.exitcode}"}
 
 
-def run_benchmark(results_path: Path, measure: str | None = None) -> None:
+def run_benchmark(results_path: Path, measure: str | None = None,
+                  sizes: list | None = None) -> None:
     from emb_diversity.measures_registry import MEASURE_NAMES
 
+    sizes = SIZES if sizes is None else sizes
     if measure is None:
         names = MEASURE_NAMES
     elif measure in MEASURE_NAMES:
@@ -118,11 +120,11 @@ def run_benchmark(results_path: Path, measure: str | None = None) -> None:
         results = {}
 
     tmp_path = results_path.with_suffix(".cell")
-    total = len(names) * len(SIZES)
+    total = len(names) * len(sizes)
     cell_no = 0
     for measure_name in names:
         cells = results.setdefault(measure_name, {})
-        for size in sorted(SIZES):
+        for size in sorted(sizes):
             cell_no += 1
             if str(size) in cells:
                 continue  # done in a previous run
@@ -185,13 +187,15 @@ def main() -> None:
     p_run.add_argument("--results", type=Path, default=RESULTS_FILE)
     p_run.add_argument("--measure", default=None,
                        help="run only this measure (default: all)")
+    p_run.add_argument("--sizes", type=int, nargs="+", default=None,
+                       help=f"dataset sizes to benchmark (default: {SIZES})")
     p_plot = sub.add_parser("plot", help="plot results from the JSON file")
     p_plot.add_argument("--results", type=Path, default=RESULTS_FILE)
     p_plot.add_argument("--out", type=Path, default=PLOT_FILE)
 
     args = parser.parse_args()
     if args.command == "run":
-        run_benchmark(args.results, args.measure)
+        run_benchmark(args.results, args.measure, args.sizes)
     else:
         plot_results(args.results, args.out)
 
