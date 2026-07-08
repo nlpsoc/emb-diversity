@@ -70,9 +70,10 @@ def _worker(measure_name: str, size: int, n_runs: int, out_path: str) -> None:
 def run_measure(measure_name: str, size: int, tmp_path: Path,
                 n_runs: int = N_RUNS) -> dict:
     """Run one (measure, size) pair in a child process under BUDGET_S."""
+    if n_runs <= 0:
+        raise ValueError(f"n_runs must be >= 1 (got {n_runs})")
     # Ensure we don't accidentally read stale timings after a parent/child crash.
     tmp_path.unlink(missing_ok=True)
-
     # spawn (not fork) = clean interpreter per pair on every platform
     proc = mp.get_context("spawn").Process(
         target=_worker, args=(measure_name, size, n_runs, str(tmp_path))
