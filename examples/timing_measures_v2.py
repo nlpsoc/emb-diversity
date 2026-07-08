@@ -14,6 +14,14 @@ Usage::
     python timing_measures_v2.py plot    # render the figure from the JSON
 
 Edit the constants below to change sizes, runs, or budget.
+
+Run benchmarks **sequentially, one per working directory**: the measures
+share the on-disk distance cache in the working directory (.cache/pdist),
+and every timed run clears it. Concurrent runs started from the same folder
+delete each other's cache mid-computation — long pdist runs then crash while
+writing their cache — and concurrent writes to the same results file
+overwrite each other. To parallelize (e.g. one SLURM job per measure), give
+every job its own working directory and results file.
 """
 
 import argparse
@@ -51,6 +59,15 @@ def _worker(measure_name: str, size: int, n_runs: int, out_path: str) -> None:
 
     pw._MEMORY_MAX = 0  # don't let large distance matrices pile up in RAM
     fn = get_measure(measure_name)
+
+    # Warm-up on a tiny dataset (untimed): pays one-time in-process costs
+    # such as numba JIT compilation in the UMAP-based measures, so the
+    # timed runs below measure the computation, not the compiler.
+    try:
+        fn(np.random.RandomState(0).randn(32, DIM))
+    except Exception:
+        pass  # the timed runs will surface any real error
+
     data = np.random.RandomState(SEED).randn(size, DIM)
 
     times = []
