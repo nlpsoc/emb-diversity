@@ -121,17 +121,22 @@ def run_benchmark(results_path: Path) -> None:
     print(f"Done. Results in {results_path}")
 
 
-def plot_results(results_path: Path, plot_path: Path) -> None:
+def plot_results(results_path: Path, plot_path: Path,
+                 bands: bool = True) -> None:
+    """Plot mean runtimes; *bands* adds a +/-1 std ribbon per measure."""
     import matplotlib.pyplot as plt
     import numpy as np
 
     results = json.loads(results_path.read_text())
 
     plt.rcParams["font.size"] = 9
-    fig, ax = plt.subplots(figsize=(3.03, 3.4))
+    # constrained layout reserves the legend's space inside the 3.03 in
+    # (ACL \columnwidth) figure, shrinking the axes to fit next to it
+    fig, ax = plt.subplots(figsize=(3.03, 3.0), layout="constrained")
     colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
     markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
 
+    smallest_mean = None
     for idx, (measure_name, cells) in enumerate(results.items()):
         done = sorted((int(s), c["times"]) for s, c in cells.items()
                       if c["times"])
@@ -139,21 +144,29 @@ def plot_results(results_path: Path, plot_path: Path) -> None:
             continue
         sizes = [s for s, _ in done]
         means = np.array([np.mean(t) for _, t in done])
-        stds = np.array([np.std(t) for _, t in done])
+        smallest_mean = min(smallest_mean or means.min(), means.min())
         ax.plot(sizes, means, color=colors[idx], label=measure_name,
                 marker=markers[idx % len(markers)], markersize=3, linewidth=1)
-        ax.fill_between(sizes, means - stds, means + stds,
-                        color=colors[idx], alpha=0.2, linewidth=0)
+        if bands:
+            stds = np.array([np.std(t) for _, t in done])
+            ax.fill_between(sizes, means - stds, means + stds,
+                            color=colors[idx], alpha=0.2, linewidth=0)
 
     ax.set_xscale("log")
     ax.set_yscale("log")
+    if smallest_mean is not None:
+        # keep every mean visible, but don't let band edges (which can
+        # approach zero) stretch the axis into meaningless sub-ms depths
+        ax.set_ylim(bottom=0.6 * smallest_mean)
+    # one tick per benchmarked size (the narrow axes otherwise drop labels)
+    ax.set_xticks(sorted({int(s) for c in results.values() for s in c}))
+    ax.tick_params(labelsize=8)
     ax.set_xlabel("Dataset size")
     ax.set_ylabel("Runtime (seconds)")
-    ax.legend(ncol=2, fontsize=5.5, framealpha=0.9,
-              columnspacing=0.8, handlelength=1.4, labelspacing=0.25)
+    fig.legend(loc="outside center right", fontsize=6, frameon=False,
+               handlelength=1.2, labelspacing=0.3)
     ax.grid(True, ls="--", alpha=0.4)
-    fig.tight_layout()
-    fig.savefig(plot_path, bbox_inches="tight")
+    fig.savefig(plot_path)
     print(f"Plot saved to {plot_path}")
 
 
@@ -165,12 +178,14 @@ def main() -> None:
     p_plot = sub.add_parser("plot", help="plot results from the JSON file")
     p_plot.add_argument("--results", type=Path, default=RESULTS_FILE)
     p_plot.add_argument("--out", type=Path, default=PLOT_FILE)
+    p_plot.add_argument("--no-bands", action="store_true",
+                        help="plot mean lines only, without +/-1 std bands")
 
     args = parser.parse_args()
     if args.command == "run":
         run_benchmark(args.results)
     else:
-        plot_results(args.results, args.out)
+        plot_results(args.results, args.out, bands=not args.no_bands)
 
 
 if __name__ == "__main__":
