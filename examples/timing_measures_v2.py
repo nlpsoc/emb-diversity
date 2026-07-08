@@ -38,8 +38,8 @@ def save_json(path: Path, payload) -> None:
     tmp.replace(path)
 
 
-def _worker(measure_name: str, size: int, out_path: str) -> None:
-    """Child process: time N_RUNS cold-cache runs of one measure.
+def _worker(measure_name: str, size: int, n_runs: int, out_path: str) -> None:
+    """Child process: time *n_runs* cold-cache runs of one measure.
 
     Timings are flushed to *out_path* after every run, so the parent keeps
     the finished runs even if it kills this process at the budget.
@@ -54,7 +54,7 @@ def _worker(measure_name: str, size: int, out_path: str) -> None:
     data = np.random.RandomState(SEED).randn(size, DIM)
 
     times = []
-    for _ in range(N_RUNS):
+    for _ in range(n_runs):
         pw.clear_distance_cache()  # memory + disk, so every run is cold
         start = time.perf_counter()
         try:
@@ -67,14 +67,15 @@ def _worker(measure_name: str, size: int, out_path: str) -> None:
         Path(out_path).write_text(json.dumps({"times": times, "error": None}))
 
 
-def run_measure(measure_name: str, size: int, tmp_path: Path) -> dict:
+def run_measure(measure_name: str, size: int, tmp_path: Path,
+                n_runs: int = N_RUNS) -> dict:
     """Run one (measure, size) pair in a child process under BUDGET_S."""
     # Ensure we don't accidentally read stale timings after a parent/child crash.
     tmp_path.unlink(missing_ok=True)
 
     # spawn (not fork) = clean interpreter per pair on every platform
     proc = mp.get_context("spawn").Process(
-        target=_worker, args=(measure_name, size, str(tmp_path))
+        target=_worker, args=(measure_name, size, n_runs, str(tmp_path))
     )
     proc.start()
     proc.join(timeout=BUDGET_S)
@@ -124,10 +125,18 @@ def run_benchmark(results_path: Path, measure: str | None = None) -> None:
         cells = results.setdefault(measure_name, {})
         for size in sorted(SIZES):
             cell_no += 1
-            if str(size) in cells:
-                continue  # done in a previous run
-            if any(c["status"] == "timeout"
-                   for s, c in cells.items() if int(s) < size):
+            cell = cells.get(str(size))
+            if cell is not None:
+                # An "ok" cell can hold fewer than N_RUNS timings if the
+                # budget cut it short — run the missing ones and append.
+                missing = (N_RUNS - len(cell["times"])
+                           if cell["status"] == "ok" else 0)
+                if missing <= 0:
+                    continue  # done in a previous run
+                top_up = run_measure(measure_name, size, tmp_path, missing)
+                cell["times"] += top_up["times"]
+            elif any(c["status"] == "timeout"
+                     for s, c in cells.items() if int(s) < size):
                 # timed out on fewer points — more would only be slower
                 cells[str(size)] = {"status": "skipped", "times": []}
             else:
