@@ -53,6 +53,8 @@ after editing any docstring or page.
 - `source/user-guide/*.md` — the user guide pages (`measures`,
   `adding-a-measure`, `vectors`, `axes`, `cli`, `cache`), written in MyST
   Markdown.
+- `source/development.md` — the contributor-facing Development guide (dev
+  setup, workflow, adding measures/axes, docstring style, releasing).
 - `source/conf.py` — the Sphinx configuration.
 - `Makefile` — the `apidoc`/`html`/`clean` targets above.
 
