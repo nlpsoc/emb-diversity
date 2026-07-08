@@ -132,7 +132,14 @@ def log_determinant(
             X_use = X / norms
         else:
             X_use = X
-        K = (X_use @ X_use.T) / tau
+        # The d x d dual matrix X.T @ X has the same nonzero eigenvalues as
+        # the n x n kernel X @ X.T, so it can stand in when it is smaller;
+        # the kernel's remaining structural zero eigenvalues are added back
+        # in closed form below (zeros_logdet).
+        if X_use.shape[0] <= X_use.shape[1]:
+            K = (X_use @ X_use.T) / tau
+        else:
+            K = (X_use.T @ X_use) / tau
     elif kernel_type == "rbf":
         K = rbf_kernel(X, X, gamma=tau)
     elif kernel_type == "lap":
@@ -144,13 +151,17 @@ def log_determinant(
     K = 0.5 * (K + K.T)
 
     n = K.shape[0]
+    # log det(K_full + eps*I) sums log(eps) once per structural zero
+    # eigenvalue of a rank-deficient kernel (len(X) - n of them; zero
+    # whenever K is the full n x n matrix).
+    zeros_logdet = (len(X) - n) * np.log(eps)
     A = K + eps * np.eye(n, dtype=K.dtype)
 
     # ---- Compute logdet ----
     if use_cholesky:
         try:
             L = np.linalg.cholesky(A)
-            return {"value": float(2.0 * np.sum(np.log(np.diag(L)))), "parameters": parameters}
+            return {"value": float(2.0 * np.sum(np.log(np.diag(L))) + zeros_logdet), "parameters": parameters}
         except np.linalg.LinAlgError:
             # fallback below
             pass
@@ -162,4 +173,4 @@ def log_determinant(
             "logdet undefined: det(A) is not positive (sign <= 0). "
             "Try larger eps or re-check kernel choice."
         )
-    return {"value": float(logdet), "parameters": parameters}
+    return {"value": float(logdet + zeros_logdet), "parameters": parameters}

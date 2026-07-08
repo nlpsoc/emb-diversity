@@ -135,7 +135,14 @@ def renyi_entropy(
             X_use = X / norms
         else:
             X_use = X
-        K = (X_use @ X_use.T) / tau
+        # The d x d dual matrix X.T @ X has the same nonzero eigenvalues,
+        # trace, and Frobenius norm as the n x n kernel X @ X.T, so the
+        # computation below is unchanged by using whichever is smaller; for
+        # n >> d this avoids materializing an n x n matrix.
+        if X_use.shape[0] <= X_use.shape[1]:
+            K = (X_use @ X_use.T) / tau
+        else:
+            K = (X_use.T @ X_use) / tau
     elif kernel_type == "rbf":
         K = rbf_kernel(X, X, gamma=tau)
     elif kernel_type == "lap":
