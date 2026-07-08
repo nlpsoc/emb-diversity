@@ -32,20 +32,20 @@ user-guide/cli
 user-guide/configuration
 ```
 
-## API Reference
-
-```{toctree}
-:maxdepth: 2
-
-emb_diversity
-```
-
 ## Development
 
 ```{toctree}
 :maxdepth: 2
 
 development
+```
+
+## API Reference
+
+```{toctree}
+:maxdepth: 2
+
+emb_diversity
 ```
 
 ## Indices
