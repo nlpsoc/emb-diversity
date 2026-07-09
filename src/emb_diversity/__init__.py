@@ -86,6 +86,6 @@ if TYPE_CHECKING:
     from .measures.span_medoid import span_medoid
     from .measures.sum_bottleneck import sum_bottleneck
     from .measures.sum_diameter import sum_diameter
-    from .measures.sum_pairwise_dist import sum_pairwise_dist
+    from .measures.sum_pw_dist import sum_pw_dist
     from .measures.vendi_score import vendi_score
     from .plot.visualize import plot_2d, plot_3d
