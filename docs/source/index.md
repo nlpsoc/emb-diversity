@@ -36,6 +36,7 @@ user-guide/configuration
 
 ```{toctree}
 :maxdepth: 2
+:caption: Notes
 
 notes
 ```
