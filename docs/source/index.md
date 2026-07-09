@@ -30,7 +30,6 @@ user-guide/vectors
 user-guide/axes
 user-guide/cli
 user-guide/configuration
-notes
 ```
 
 ## Development
@@ -47,6 +46,14 @@ development
 :maxdepth: 2
 
 emb_diversity
+```
+
+## Notes
+
+```{toctree}
+:maxdepth: 2
+
+notes
 ```
 
 ## Indices
