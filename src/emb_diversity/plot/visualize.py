@@ -44,6 +44,10 @@ def plot_2d(
 
     # KDE background per group
     for group_coords, color in zip(coords_split, colors):
+        # KDE needs enough samples to estimate a density
+        if group_coords.shape[0] < 2:
+            continue
+
         light = _assign_color(color, factor=0.55)
         cmap = LinearSegmentedColormap.from_list(
             "lighter_kde", [(1, 1, 1), light], N=256
