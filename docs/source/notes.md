@@ -112,7 +112,7 @@ Given a list of texts and an embedding configuration (model, and either truncati
     output aligns positionally with the input texts regardless of which were
     cached.
 
-# Pairwise-distance cache
+## Pairwise-distance cache
 
 Many measures require the computation of a matrix of pairwise distances between a dataset's embedding vectors (`scipy.pdist`), which is often the dominant 
 computational cost when multiple measures are applied on the same data. We wrap this computation in a two-level cache, checked in order.
