@@ -30,6 +30,7 @@ user-guide/vectors
 user-guide/axes
 user-guide/cli
 user-guide/configuration
+notes
 ```
 
 ## Development
