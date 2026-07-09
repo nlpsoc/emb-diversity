@@ -1,4 +1,6 @@
-# Handling Long Texts
+# Notes
+
+## Handling Long Texts
 
 Longer texts demand models that can support longer maximum sequence lengths. When this condition is not satisfied, i.e., when the text token count is larger than the model's maximum sequence 
 length  (Lewis et al., 2020; Park et al., 2022), the model resorts to truncation, where it chops and takes the text up until its maximum sequence length. 
