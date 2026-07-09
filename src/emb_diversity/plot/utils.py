@@ -5,7 +5,8 @@ import colorsys
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import umap.umap_ as umap
-from typing import Iterable, List
+from typing import Iterable, List
+
 
 
 def _reduce_dim(
@@ -59,6 +60,10 @@ def _reduce_dim(
         reducer = PCA(n_components=n_components, random_state=random_state)
         return reducer.fit_transform(embeddings)
 
+        if tsne_perplexity >= embeddings.shape[0]:
+            raise ValueError(
+                f"tsne_perplexity must be < n_samples ({embeddings.shape[0]}), got {tsne_perplexity}"
+            )
     if method == "tsne":
         reducer = TSNE(
             n_components=n_components,
