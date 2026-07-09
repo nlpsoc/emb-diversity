@@ -32,7 +32,7 @@ in mind when reading those scores:
 | Function | Brief Description |
 |---|---|
 | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **(default)** - Average pairwise distance between all data points |
-| {func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>` | Sum of all pairwise distances |
+| {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>` | Sum of all pairwise distances |
 | {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all data points |
 | {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all data points |
 | {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) |
@@ -74,7 +74,7 @@ return their mean.
 - Miranda, Brando, Alycia Lee, Sudharsan Sundar, Allison Casasola, Rylan Schaeffer, Elyas Obbad, and Sanmi Koyejo. "Beyond scale: The diversity coefficient as a data quality metric for variability in natural language data." arXiv preprint arXiv:2306.13840 (2023).
 - Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021.
 
-### Sum Pairwise Distance — {func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>`
+### Sum Pairwise Distance — {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`
 
 **Intuition.** Sums all pairwise distances to capture the overall spread of the
 dataset. Also known as Max Dispersion or DistSum. Grows with `n`, so it is only comparable across datasets of the same size.
@@ -458,7 +458,7 @@ rather than a requirement.
 
 | Family | Measures |
 |---|---|
-| **Distance-based**<br>Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`<br>{func}`sum_pairwise_dist <emb_diversity.measures.sum_pairwise_dist.sum_pairwise_dist>`<br>{func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`<br>{func}`knn <emb_diversity.measures.knn.knn>`<br>{func}`energy <emb_diversity.measures.energy.energy>` |
+| **Distance-based**<br>Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`<br>{func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`<br>{func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`<br>{func}`knn <emb_diversity.measures.knn.knn>`<br>{func}`energy <emb_diversity.measures.energy.energy>` |
 | **Geometry-based**<br>Treats embeddings as a point cloud in dimension-`d` space and quantifies diversity through geometric properties — extent, volume, or spread around a representative point. | {func}`diameter <emb_diversity.measures.diameter.diameter>`<br>{func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`<br>{func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`<br>{func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`<br>{func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>`<br>{func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>`<br>{func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`<br>{func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`<br>{func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`<br>{func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` |
 | **Distribution-based**<br>Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`<br>{func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`<br>{func}`dcscore <emb_diversity.measures.dcscore.dcscore>`<br>{func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` |
 | **Graph-theory-based**<br>Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`<br>{func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`<br>{func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |

@@ -21,7 +21,7 @@ PACKAGE_VERSION: str = _dist_version("emb-diversity")
 # All 22 measures.
 MEASURE_NAMES: tuple[str, ...] = (
     "mean_pw_dist",
-    "sum_pairwise_dist",
+    "sum_pw_dist",
     "chamfer_dist",
     "knn",
     "energy",
