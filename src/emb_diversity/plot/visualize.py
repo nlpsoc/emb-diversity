@@ -65,11 +65,16 @@ def plot_2d(
             alpha=0.35,
             bw_adjust=0.7,
             thresh=0.05,
-    if labels is None:
-        labels = [f"Dataset {i + 1}" for i in range(len(embeddings))]
-    elif len(labels) != len(embeddings):
-        raise ValueError(f"labels must have length {len(embeddings)}, got {len(labels)}")
-
+    if labels is None:
+
+        labels = [f"Dataset {i + 1}" for i in range(len(embeddings))]
+
+    elif len(labels) != len(embeddings):
+
+        raise ValueError(f"labels must have length {len(embeddings)}, got {len(labels)}")
+
+
+
         )
 
     # Scatter groups
@@ -157,8 +162,11 @@ def plot_3d(
     )
 
     sizes = [e.shape[0] for e in embeddings]
+    if labels is not None and len(labels) != len(embeddings):
+        raise ValueError(f"labels must have length {len(embeddings)}, got {len(labels)}")
+
     coords_split = np.split(coords, np.cumsum(sizes)[:-1])
-    colors = [to_hex(c) for c in sns.color_palette("Set1", len(embeddings))]
+        label = labels[i] if labels is not None else f"Dataset {i + 1}"
 
     fig = go.Figure()
 
