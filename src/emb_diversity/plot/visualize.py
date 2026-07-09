@@ -44,14 +44,6 @@ def plot_2d(
 
     # KDE background per group
     for group_coords, color in zip(coords_split, colors):
-        # KDE needs enough samples to estimate a density
-
-        if group_coords.shape[0] < 2:
-
-            continue
-
-
-
         light = _assign_color(color, factor=0.55)
         cmap = LinearSegmentedColormap.from_list(
             "lighter_kde", [(1, 1, 1), light], N=256
@@ -65,16 +57,7 @@ def plot_2d(
             alpha=0.35,
             bw_adjust=0.7,
             thresh=0.05,
-    if labels is None:
-
-        labels = [f"Dataset {i + 1}" for i in range(len(embeddings))]
-
-    elif len(labels) != len(embeddings):
-
-        raise ValueError(f"labels must have length {len(embeddings)}, got {len(labels)}")
-
-
-
+            ax=ax,
         )
 
     # Scatter groups
@@ -162,11 +145,8 @@ def plot_3d(
     )
 
     sizes = [e.shape[0] for e in embeddings]
-    if labels is not None and len(labels) != len(embeddings):
-        raise ValueError(f"labels must have length {len(embeddings)}, got {len(labels)}")
-
     coords_split = np.split(coords, np.cumsum(sizes)[:-1])
-        label = labels[i] if labels is not None else f"Dataset {i + 1}"
+    colors = [to_hex(c) for c in sns.color_palette("Set1", len(embeddings))]
 
     fig = go.Figure()
 

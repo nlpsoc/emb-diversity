@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
 name = "emb-diversity"
-version = "0.0.10"
+version = "0.0.12"
 description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,7 +48,8 @@ dependencies = [
     "xxhash>=3.7.0",
     "numba>=0.59", # fix for numba install fail with uv
     "seaborn>=0.13.2",
-    "plotly>=6.7.0"
+    "plotly>=6.7.0",
+    "notebook>=7.5.4",
 ]
 
 [project.optional-dependencies]
@@ -69,10 +70,10 @@ audio = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nlpsoc/Diversity-Measurement"
-Documentation = "https://nlpsoc.github.io/Diversity-Measurement/"
-Repository = "https://github.com/nlpsoc/Diversity-Measurement"
-"Bug Tracker" = "https://github.com/nlpsoc/Diversity-Measurement/issues"
+Homepage = "https://github.com/nlpsoc/emb-diversity"
+Documentation = "https://nlpsoc.github.io/emb-diversity/"
+Repository = "https://github.com/nlpsoc/emb-diversity"
+"Bug Tracker" = "https://github.com/nlpsoc/emb-diversity/issues"
 
 [project.scripts]
 emb-diversity = "emb_diversity.cli:app"
@@ -105,6 +106,8 @@ dev = [
     "sphinx-autodoc-typehints>=3.0.0",
     "myst-parser>=5.0.0",
     "umap-learn>=0.5.9",
+    "seaborn>=0.13.2",
+    "plotly>=6.7.0"
 ]
 
 [tool.pytest.ini_options]

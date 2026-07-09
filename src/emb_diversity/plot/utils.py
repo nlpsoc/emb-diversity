@@ -1,12 +1,13 @@
 """Utilities for visualization functions."""
 
 import numpy as np
+import seaborn as sns
+from matplotlib.colors import to_hex
 import colorsys
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import umap.umap_ as umap
-from typing import Iterable, List
-
+from typing import Iterable, List, Tuple
 
 
 def _reduce_dim(
@@ -59,14 +60,6 @@ def _reduce_dim(
     if method == "pca":
         reducer = PCA(n_components=n_components, random_state=random_state)
         return reducer.fit_transform(embeddings)
-
-        if tsne_perplexity >= embeddings.shape[0]:
-
-            raise ValueError(
-
-                f"tsne_perplexity must be < n_samples ({embeddings.shape[0]}), got {tsne_perplexity}"
-
-            )
 
     if method == "tsne":
         reducer = TSNE(
@@ -123,9 +116,6 @@ def _validate_embeddings(embeddings: Iterable[np.ndarray]) -> List[np.ndarray]:
     for e in embeddings:
         if not isinstance(e, np.ndarray):
             raise TypeError("each embedding must be a numpy array")
-    if not validated:
-        raise ValueError("embeddings must contain at least one embedding matrix")
-
         if e.ndim != 2:
             raise ValueError("each embedding must be 2D (N, D)")
         validated.append(e)
