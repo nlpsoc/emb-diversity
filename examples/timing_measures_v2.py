@@ -54,6 +54,8 @@ MEASURE_GROUPS = {
     "UMAP projection": ["bins_entropy", "convex_hull_volume_3d"],
     "vector statistics": ["cluster_inertia", "span_centroid", "geo_mean_std"],
 }
+# The legend lists the groups in this dict order; measures inside a group
+# are sorted by runtime (slowest first).
 
 
 def save_json(path: Path, payload) -> None:
@@ -234,7 +236,6 @@ def plot_results(results_path: Path, plot_path: Path,
                       key=runtime_key)
     if leftover:
         groups.append(("other", leftover))
-    groups.sort(key=lambda g: runtime_key(g[1][0]))
 
     from matplotlib.lines import Line2D
     handles, labels, heading_rows = [], [], []
