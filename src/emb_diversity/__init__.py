@@ -25,6 +25,9 @@ _ATTR_TO_SUBMODULE = {
     "compute_pairwise_distances": "measures.utils",
     "clear_distance_cache": "measures.utils",
     "distance_cache_info": "measures.utils",
+    # Plotting
+    "plot_2d": "plot.visualize",      
+    "plot_3d": "plot.visualize",      
 }
 
 __all__ = list(_ATTR_TO_SUBMODULE)
@@ -85,3 +88,4 @@ if TYPE_CHECKING:
     from .measures.sum_diameter import sum_diameter
     from .measures.sum_pw_dist import sum_pw_dist
     from .measures.vendi_score import vendi_score
+    from .plot.visualize import plot_2d, plot_3d
