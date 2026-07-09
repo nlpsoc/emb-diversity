@@ -32,6 +32,14 @@ user-guide/cli
 user-guide/configuration
 ```
 
+## Notes
+
+```{toctree}
+:maxdepth: 2
+
+notes
+```
+
 ## Development
 
 ```{toctree}
