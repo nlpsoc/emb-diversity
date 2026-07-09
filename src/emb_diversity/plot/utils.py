@@ -60,10 +60,14 @@ def _reduce_dim(
         reducer = PCA(n_components=n_components, random_state=random_state)
         return reducer.fit_transform(embeddings)
 
-        if tsne_perplexity >= embeddings.shape[0]:
-            raise ValueError(
-                f"tsne_perplexity must be < n_samples ({embeddings.shape[0]}), got {tsne_perplexity}"
-            )
+        if tsne_perplexity >= embeddings.shape[0]:
+
+            raise ValueError(
+
+                f"tsne_perplexity must be < n_samples ({embeddings.shape[0]}), got {tsne_perplexity}"
+
+            )
+
     if method == "tsne":
         reducer = TSNE(
             n_components=n_components,
@@ -119,6 +123,9 @@ def _validate_embeddings(embeddings: Iterable[np.ndarray]) -> List[np.ndarray]:
     for e in embeddings:
         if not isinstance(e, np.ndarray):
             raise TypeError("each embedding must be a numpy array")
+    if not validated:
+        raise ValueError("embeddings must contain at least one embedding matrix")
+
         if e.ndim != 2:
             raise ValueError("each embedding must be 2D (N, D)")
         validated.append(e)
