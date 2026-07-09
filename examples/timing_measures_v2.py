@@ -202,11 +202,13 @@ def plot_results(results_path: Path, plot_path: Path,
     fig, ax = plt.subplots(figsize=(3.03, 3.2), layout="constrained")
     markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
     # one colormap per group; members get dark-to-light shades of it
+    from matplotlib.colors import LinearSegmentedColormap
     group_cmaps = {
         "distance matrix": None,  # single black line, curves coincide
         "distance graph": plt.cm.Blues,
-        "kernel matrix": plt.cm.Greens,
-        "UMAP projection": plt.cm.Oranges,
+        "kernel matrix": LinearSegmentedColormap.from_list(
+            "kernel_red", ["white", "#ff3333"]),
+        "UMAP projection": plt.cm.Greys,
         "vector statistics": plt.cm.Purples,
         "other": plt.cm.Greys,
     }
