@@ -46,9 +46,9 @@ MEASURE_GROUPS = {
     "distance matrix": [
         "mean_pw_dist", "sum_pw_dist", "sum_pairwise_dist", "chamfer_dist",
         "energy", "diameter", "bottleneck", "sum_diameter", "sum_bottleneck",
-        "span_medoid",
+        "span_medoid", "knn",
     ],
-    "distance graph": ["mst_dispersion", "graph_entropy", "knn", "hamdiv"],
+    "distance graph": ["mst_dispersion", "graph_entropy", "hamdiv"],
     "kernel matrix": ["vendi_score", "renyi_entropy", "dcscore",
                       "log_determinant"],
     "UMAP projection": ["bins_entropy", "convex_hull_volume_3d"],
