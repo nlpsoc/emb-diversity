@@ -32,6 +32,14 @@ user-guide/cli
 user-guide/configuration
 ```
 
+## Development
+
+```{toctree}
+:maxdepth: 2
+
+development
+```
+
 ## API Reference
 
 ```{toctree}

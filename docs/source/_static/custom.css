@@ -1,0 +1,9 @@
+/* sphinx_rtd_theme forces `white-space: nowrap` on every table cell
+   (`.wy-table-responsive table td/th`) so long-running text can't wrap and
+   the whole table becomes horizontally scrollable instead. Restore normal
+   wrapping so cell content wraps at the column width; explicit `<br>` tags
+   in the source still force a line break where wanted. */
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+    white-space: normal;
+}

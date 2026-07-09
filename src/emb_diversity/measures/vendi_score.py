@@ -2,16 +2,14 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from ..embed import resolve_embeddings
+import numpy as np
+from vendi_score import vendi
 
+from ..embed import resolve_embeddings
 from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
 ### Distribution-Based Diversity Measure
-
-import numpy as np
-from vendi_score import vendi
-
 
 
 def vendi_score(
@@ -39,9 +37,8 @@ def vendi_score(
 
     References:
         Friedman, Dan, and Adji Bousso Dieng. "The Vendi Score: A Diversity Evaluation Metric for Machine Learning." Transactions on Machine Learning Research (2023).
-        Limbeck, Katharina, et al. "Metric space magnitude for evaluating the diversity of latent representations." Advances in Neural Information Processing Systems 37 (2024): 123911-123953.
-        Mironov, Mikhail, and Liudmila Prokhorenkova. “Measuring Diversity: Axioms and Challenges.” arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-
+        Pasarkar, A. P., & Dieng, A. B. (2023). Cousins of the vendi score: A family of similarity-based diversity metrics for science and machine learning. arXiv preprint arXiv:2310.12952.
+        
     Args:
         data:
             Iterable/array-like of (embedding) vectors with shape (n, d), or raw

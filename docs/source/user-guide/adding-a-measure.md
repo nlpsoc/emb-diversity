@@ -1,9 +1,11 @@
-# Adding a Measure
+# Writing a Custom Measure
 
 Besides the [built-in measures](measures.md), you can run **your own** measure by
 passing a function to `measure_diversity()`; no need to modify the package. 
 If you would like to contribute a embedding-based diversity measure to the package, 
-see the [Readme.md](https://github.com/nlpsoc/Diversity-Measurement).
+see [Adding New Measures](../development.md#adding-new-measures)
+in the Development guide — it also covers tagging the measure with its family from the
+[taxonomy](measures.md).
 
 ## The contract
 
