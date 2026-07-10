@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta" # Use setuptools as the build backend
 
 [project]
 name = "emb-diversity"
-version = "0.0.13"
+version = "0.1.0"
 description = "A package for measuring diversity in text and vector data"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 keywords = ["diversity", "nlp", "embeddings", "emb-diversity", "metrics"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering",
