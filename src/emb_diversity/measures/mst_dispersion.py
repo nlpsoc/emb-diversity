@@ -10,8 +10,6 @@ from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult, TensorLike
 from .utils import compute_pairwise_distances
 
-### Graph-Theory-Based Diversity Measure
-
 
 def mst_dispersion(data: TensorLike,
                    metric: DistanceMetric = "cosine",

@@ -9,8 +9,6 @@ from ..embed import resolve_embeddings
 from ..utility.validate import ensure_cosine_defined
 from .types import DistanceMetric, MeasureResult
 
-### Geometry-Based Diversity Measure
-
 
 def span_centroid(
         data: Sequence[Sequence[float]],

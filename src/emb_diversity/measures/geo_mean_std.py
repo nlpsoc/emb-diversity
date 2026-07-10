@@ -7,8 +7,6 @@ import numpy as np
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Geometry-Based Diversity Measure
-
 
 def geo_mean_std(
         data: Sequence[Sequence[float]],
