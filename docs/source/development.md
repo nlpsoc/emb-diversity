@@ -97,18 +97,16 @@ When you add a new measure to `src/emb_diversity/measures/`:
    (`chunking`/`chunks`/`pooling`) to the embedding step — thread it through
    unchanged. Then return
    `{"value": <float>, "parameters": {<params>, "embedding_model": embedding_model}}`.
-   Add a complete docstring following the style guide below. Right after the
-   file's imports, add a `### <Family>-Based Diversity Measure` comment naming
-   which of the four families in
-   [the taxonomy](user-guide/measures.md#taxonomy) the measure
-   belongs to (e.g. `### Distance-Based Diversity Measure`).
+   Add a complete docstring following the style guide below.
 2. Add its name to `MEASURE_NAMES` in `src/emb_diversity/measures_registry.py`.
    The public API (`emb_diversity.<name>`), the CLI, and `measure_diversity`
    all pick it up from there.
 3. Add the matching import to the `TYPE_CHECKING` block in
    `src/emb_diversity/__init__.py` so IDEs and type checkers see it
    (`test/test_lazy_import.py` fails if this step is forgotten).
-4. **Update `user-guide/measures.md`** — add a row for the new measure in the appropriate table.
+4. **Update `user-guide/measures.md`** — add a row for the new measure in the
+   measures table, and add it to both [taxonomy](user-guide/measures.md#taxonomy)
+   tables (conceptual family and computational group).
 
 A distance-based measure can reuse `compute_pairwise_distances` from
 `measures/utils.py` — the cached pairwise-distance helper the built-in measures use

@@ -443,18 +443,28 @@ practical for small-to-medium datasets rather than very large ones.
 
 ## Taxonomy
 
-The measures above can also be grouped into four families, following the
-taxonomy proposed in:
+The measures can be grouped in two complementary ways. The first taxonomy is
+**conceptual**: it groups measures by *what aspect of the data they quantify*
+(distances, geometry, distributions, graph structure). The second grouping is
+**computational**: it groups measures by *what they compute to arrive at their
+value* — that grouping determines runtime and memory behaviour and is the one
+used in the paper's benchmark figures. The two views don't always coincide:
+for example, `log_determinant` is geometry-based conceptually (a volume) but
+computed from the kernel matrix, and `cluster_inertia` is geometry-based
+conceptually but computationally a cheap vector statistic.
+
+While the computational grouping is part of this demo submission, the conceptual grouping follows:
 
 > Cantao Su, Anna Wegmann, Esther Ploeger, and Dong Nguyen. 2026. *Measuring
 > data diversity with embeddings: A taxonomy and benchmark for diversity
 > measures.* Under review.
+> ([PDF](https://github.com/nlpsoc/emb-diversity/blob/main/assets/26-07-09_Measuring_Data_Diversity.pdf))
 
 This grouping isn't required knowledge for using `emb-diversity` — it's included
 as background. When [contributing a new built-in measure](../development.md#adding-new-measures)
-to the package, it's worth considering which family it fits (and whether that
-family already has similar coverage), but this is a helpful design consideration
-rather than a requirement.
+to the package, add it to both tables below.
+
+### Conceptual families
 
 | Family | Measures |
 |---|---|
@@ -463,9 +473,14 @@ rather than a requirement.
 | **Distribution-based**<br>Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`<br>{func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`<br>{func}`dcscore <emb_diversity.measures.dcscore.dcscore>`<br>{func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` |
 | **Graph-theory-based**<br>Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`<br>{func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`<br>{func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |
 
-Each measure module in `src/emb_diversity/measures/` marks its family with a
-`### <Family>-Based Diversity Measure` comment placed right after the file's
-imports (e.g. `### Distance-Based Diversity Measure`). When contributing a new
-built-in measure, add this comment for the family it belongs to — see
-[Adding New Measures](https://github.com/nlpsoc/emb-diversity#adding-new-measures)
-in the README for the full steps.
+### Computational grouping
+
+| Group | What is built | Measures |
+|---|---|---|
+| **Distance matrix** | all pairwise distances, reduced directly (means, sums, extremes, per-point minima/maxima) | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`<br>{func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`<br>{func}`energy <emb_diversity.measures.energy.energy>`<br>{func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`<br>{func}`knn <emb_diversity.measures.knn.knn>`<br>{func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`<br>{func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`<br>{func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`<br>{func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`<br>{func}`diameter <emb_diversity.measures.diameter.diameter>` |
+| **Distance graph** | a graph over the pairwise distances (spanning tree, tour, weighted graph) | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`<br>{func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`<br>{func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |
+| **Kernel matrix** | the similarity (kernel) matrix, mostly summarized via its eigenvalue spectrum | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`<br>{func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`<br>{func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>`<br>{func}`dcscore <emb_diversity.measures.dcscore.dcscore>` |
+| **UMAP projection** | a low-dimensional UMAP embedding of the vectors | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>`<br>{func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` |
+| **Vector statistics** | statistics on the raw vectors — no pairwise computation | {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`<br>{func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`<br>{func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` |
+
+The taxonomy lives only on this page.

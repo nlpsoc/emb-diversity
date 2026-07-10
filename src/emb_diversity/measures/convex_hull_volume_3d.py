@@ -9,8 +9,6 @@ from scipy.spatial import ConvexHull
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Geometry-Based Diversity Measure (3D-projected)
-
 
 def convex_hull_volume_3d(
         data: Sequence[Sequence[float]],
