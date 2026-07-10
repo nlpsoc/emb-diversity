@@ -446,14 +446,14 @@ practical for small-to-medium datasets rather than very large ones.
 The measures can be grouped in two complementary ways. The first taxonomy is
 **conceptual**: it groups measures by *what aspect of the data they quantify*
 (distances, geometry, distributions, graph structure). The second grouping is
-**computational**: it groups measures by *what they build to compute their
+**computational**: it groups measures by *what they compute to arrive at their
 value* — that grouping determines runtime and memory behaviour and is the one
 used in the paper's benchmark figures. The two views don't always coincide:
 for example, `log_determinant` is geometry-based conceptually (a volume) but
 computed from the kernel matrix, and `cluster_inertia` is geometry-based
 conceptually but computationally a cheap vector statistic.
 
-Both groupings follow:
+While the computational grouping is part of this demo submission, the conceptual grouping follows:
 
 > Cantao Su, Anna Wegmann, Esther Ploeger, and Dong Nguyen. 2026. *Measuring
 > data diversity with embeddings: A taxonomy and benchmark for diversity
@@ -483,4 +483,4 @@ to the package, add it to both tables below.
 | **UMAP projection** | a low-dimensional UMAP embedding of the vectors | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>`<br>{func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` |
 | **Vector statistics** | statistics on the raw vectors — no pairwise computation | {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`<br>{func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`<br>{func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` |
 
-The taxonomy lives only on this page — the measure modules do not repeat it.
+The taxonomy lives only on this page.
