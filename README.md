@@ -212,7 +212,7 @@ This work is supported by the ERC Starting Grant **DataDivers** (101162980).
 ## Citation
 
 <!-- docs-citation-start -->
-If you use `emb-diversity` in your work, consider citing:
+If you use `emb-diversity` in your work, consider citing our paper:
 
 ```bibtex
 @article{su2026embdiversity,
