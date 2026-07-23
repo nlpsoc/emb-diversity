@@ -221,7 +221,7 @@ the software:
       author={Cantao Su and Menan Velayuthan and Esther Ploeger and Dong Nguyen and Anna Wegmann},
       journal={arXiv preprint arXiv:2607.19848},
       year={2026},
-      url={https://arxiv.org/abs/2607.19848}
+      url={https://arxiv.org/abs/2607.19848},
 }
 ```
 <!-- docs-citation-end -->
