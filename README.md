@@ -216,10 +216,12 @@ There is no paper yet, so if you use `emb-diversity` in your work, please cite
 the software:
 
 ```bibtex
-@misc{emb_diversity,
-  author = {Su, Cantao and Velayuthan, Menan and Ploeger, Esther and Nguyen, Dong and Wegmann, Anna},
-  title  = {emb-diversity},
-  url    = {https://github.com/nlpsoc/emb-diversity},
+@article{su2026embdiversity,
+      title={emb-diversity: A Tool for Embedding-Based Measurement of Data Diversity},
+      author={Cantao Su and Menan Velayuthan and Esther Ploeger and Dong Nguyen and Anna Wegmann},
+      journal={arXiv preprint arXiv:2607.19848},
+      year={2026},
+      url={https://arxiv.org/abs/2607.19848}
 }
 ```
 <!-- docs-citation-end -->
