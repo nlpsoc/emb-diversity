@@ -6,21 +6,11 @@ The three measures marked **default** below (`graph_entropy`, `vendi_score`, `me
 
 ## Interpreting the scores
 
-Each diversity measure returns a `{"value": float, "parameters": {...}, "version":
-str}` dict; the `value` is the diversity score, `parameters` records the
-configuration used to produce it, and `version` is the installed
-`emb-diversity` package version that computed it. We list a few things to keep
-in mind when reading those scores:
+Each diversity measure returns a `{"value": float, "parameters": {...}, "version": str}` dict; the `value` is the diversity score, `parameters` records the configuration used to produce it, and `version` is the installed `emb-diversity` package version that computed it. We list some general things to keep in mind when interpreting those scores below and continue with detailed information about each measure in the following section.
 
-- **Higher = more diverse.** For every measure, a larger value means a
-  more diverse set and a smaller value a less diverse one. This holds even for
-  measures that return negative values: `log_determinant` and `energy` are
-  always negative, so a *less negative* value (closer to zero) means more diverse. Keep in mind that this reflects diversity as the measure defines it, not an objective property of the dataset itself.
+- **Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
 
-- **Scores are not normalized.** There is no fixed scale: some measures
-  are bounded (e.g. `vendi_score` lies in `[1, n]`; cosine-based distances in
-  `[0, 2]`), others are unbounded. A score's absolute magnitude is only
-  meaningful relative to other scores from the *same* measure.
+  - **Scores are not normalized.** Diversity measures have been introduced in a variety of different works. They have no standardized bounds: some measures are bounded (e.g. cosine-based distances in`[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). A score's absolute magnitude is only meaningful relative to other scores from the *same* measure.
 
 - **Scores are sensitive to dataset size.** Some measures change with the number
   of items `n`,  so you can't directly compare datasets of different sizes. To compare datasets, use the same measure and subsample them to the same `n`.
