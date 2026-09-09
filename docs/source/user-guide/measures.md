@@ -19,7 +19,7 @@ To navigate resulting difficulties, we make the following recommendations:
 - **Only compare datasets of the same size n.** 
 - **Only compare values produced using the same embedding model.**
 - **Only compare scores computed by the same measure.**
-- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, a drop of 2 in one near 3 is large. We recommend, to compare the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`").  The exception are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful.
+- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, a drop of 2 in one near 3 is large. We recommend, to compare the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`").  The exception are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)).
 
 ## Measures
 
