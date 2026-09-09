@@ -430,7 +430,7 @@ tours, i.e. higher diversity.
 shortest Hamiltonian circuit with the chosen TSP heuristic, and return the
 tour's total length.
 
-**Parameters.** `solver` (default `"christofides"`, or `"greedy"`); `metric`
+**Parameters.** `solver` (default `"greedy"`, or `"christofides"`); `metric`
 (default `"cosine"`).
 
 **Caveat.** Exact computation is NP-hard (equivalent to solving the TSP), so this
