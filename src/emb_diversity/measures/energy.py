@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-import numpy as np
-
 from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
 from .utils import compute_pairwise_distances
@@ -25,8 +23,8 @@ def energy(
 
     Compute the energy-based diversity of a set of vector representations.
 
-    1) Compute all unique pairwise distances between datapoints (floored at
-       ``epsilon`` for numerical stability).
+    1) Compute all unique pairwise distances between datapoints (with
+       ``epsilon`` added to each for numerical stability).
     2) Raise each distance to the power ``gamma`` and take its reciprocal (the
        pairwise energy).
     3) Return the negative mean of these pairwise energies.
@@ -46,7 +44,7 @@ def energy(
             Exponent applied to each pairwise distance. Defaults to 1.0 (as in
             the paper).
         epsilon:
-            Lower bound applied to each distance, so zero distances (e.g.
+            Added to each distance, so zero distances (e.g.
             duplicates) do not blow up the reciprocal. Defaults to 1e-6.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
@@ -69,11 +67,10 @@ def energy(
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="energy", chunking_kwargs=chunking_kwargs)
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     # The metric can blow up when the distance is 0 (e.g., duplicates, or vectors
-    # pointing in the same direction). Add a small constant epsilon to
-    # entries that are 0 or very small
-    dists = np.maximum(dists, epsilon)
+    # pointing in the same direction). Add a small constant epsilon to every
+    # distance, following the reference implementation.
     return {
-        "value": -float((1.0 / (dists ** gamma)).mean()),
+        "value": -float((1.0 / ((dists + epsilon) ** gamma)).mean()),
         "parameters": {
             "metric": metric,
             "gamma": gamma,

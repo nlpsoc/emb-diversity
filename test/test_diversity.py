@@ -373,12 +373,18 @@ class TestEnergy:
 
         # Pairwise cosine distances:
         # [0, 1] and [1, 0]: orthogonal, cosine similarity = 0, distance = 1.0
-        # [0, 1] and [1, 1]: 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) ~ 0.2929
-        # [1, 0] vs [1, 1]: 1 - (1 / (sqrt(1^2 + 0^2) * sqrt(1^2 + 1^2))) ~ 0.2929
-        # So, distances are [1.0, 0.2929, 0.2929]
-        # Energy = -(1/3) * (1/1 + 1/0.2929 + 1/0.2929)
+        # [0, 1] and [1, 1]: 1 - (1 / (sqrt(0^2 + 1^2) * sqrt(1^2 + 1^2))) = 1 - 1/sqrt(2)
+        # [1, 0] vs [1, 1]: 1 - (1 / (sqrt(1^2 + 0^2) * sqrt(1^2 + 1^2))) = 1 - 1/sqrt(2)
+        d01 = 1.0
+        d02 = 1.0 - 1.0 / np.sqrt(2)
+        d12 = 1.0 - 1.0 / np.sqrt(2)
 
-        assert np.isclose(energy(data)["value"], -2.6095)
+        # epsilon is added to each distance, so keep it in the expected value
+        # rather than rounding it away (~ -2.60947).
+        eps = 1e-6
+        expected = -np.mean([1 / (d01 + eps), 1 / (d02 + eps), 1 / (d12 + eps)])
+
+        assert np.isclose(energy(data)["value"], expected)
 
 
 class TestSumPairwiseDist:
