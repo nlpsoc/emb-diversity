@@ -1,6 +1,6 @@
 from emb_diversity import sum_pw_dist, mean_pw_dist, cluster_inertia, \
     convex_hull_volume_3d, energy, graph_entropy, diameter, sum_diameter, bottleneck, sum_bottleneck, hamdiv, log_determinant, dcscore, bins_entropy, renyi_entropy, geo_mean_std, \
-    chamfer_dist, knn
+    chamfer_dist, knn, span_centroid, span_medoid, mst_dispersion, vendi_score
 import pytest
 import numpy as np
 
@@ -385,6 +385,25 @@ class TestEnergy:
         expected = -np.mean([1 / (d01 + eps), 1 / (d02 + eps), 1 / (d12 + eps)])
 
         assert np.isclose(energy(data)["value"], expected)
+
+    def test_near_duplicate_pair_does_not_dominate(self):
+        """A single near-duplicate pair must not blow up the mean energy."""
+        rng = np.random.default_rng(0)
+        data = rng.standard_normal((10, 8))
+        data /= np.linalg.norm(data, axis=1, keepdims=True)
+
+        # Rotate row 1 off row 0 by theta, giving a cosine distance of
+        # 1 - cos(theta) ~ theta^2 / 2 = 1e-9 between them.
+        theta = np.sqrt(2e-9)
+        off = rng.standard_normal(8)
+        off -= (off @ data[0]) * data[0]
+        off /= np.linalg.norm(off)
+        data[1] = np.cos(theta) * data[0] + np.sin(theta) * off
+
+        # epsilon bounds that pair's reciprocal at 1/epsilon, so the mean over
+        # the 45 pairs stays around 2.2e4. With a much smaller epsilon the pair
+        # alone contributes 1/1e-9 and the mean reaches ~2.2e7.
+        assert abs(energy(data)["value"]) < 1e5
 
 
 class TestSumPairwiseDist:
@@ -1031,3 +1050,63 @@ class TestRenyiKernelEntropy:
         data = [[1.0, 0.0], [0.0, 1.0]]
         with pytest.raises(ValueError, match="alpha must be > 0"):
             renyi_entropy(data, alpha=0.0)["value"]
+
+
+class TestVendiScoreDualFormulation:
+
+    @pytest.mark.parametrize("n", [5, 50, 500])
+    @pytest.mark.parametrize("d", [2, 8, 384])
+    def test_dual_and_gram_paths_agree(self, n, d):
+        """The dual formulation must match the explicit Gram-matrix path."""
+        # emb-diversity delegates the Gram path to the official vendi-score
+        # package, so that path is covered upstream; the dual path is this
+        # package's own fast route and is what this pins down.
+        data = np.random.default_rng(n * 1000 + d).standard_normal((n, d))
+
+        dual = vendi_score(data, use_dual=True)["value"]
+        gram = vendi_score(data, use_dual=False)["value"]
+
+        assert np.isclose(dual, gram, rtol=0, atol=1e-10)
+
+
+class TestClosedFormFixtures:
+    """Closed-form values for measures whose output is otherwise unpinned.
+
+    Two fixtures are used because neither is sufficient alone. On the identity
+    matrix every cosine distance is 1, so mean_pw_dist, diameter, bottleneck,
+    chamfer_dist and knn all return 1 and a swapped min/max would pass
+    unnoticed. On the 0/60/90-degree fixture the three distances are distinct,
+    so the measures that select among them are pinned down as well.
+    """
+
+    @staticmethod
+    def _angles():
+        """Three unit vectors in R^2 at 0, 60 and 90 degrees from the x-axis.
+
+        The three cosine distances are 0.5, 1 and 1 - sqrt(3)/2.
+        """
+        return np.array([[1.0, 0.0], [0.5, np.sqrt(3) / 2], [0.0, 1.0]])
+
+    @pytest.mark.parametrize("n", [3, 4, 5, 8])
+    def test_span_centroid_on_orthonormal_rows(self, n):
+        """On n orthonormal rows the centroid span is 1 - 1/sqrt(n)."""
+        assert np.isclose(span_centroid(np.eye(n))["value"], 1 - 1 / np.sqrt(n))
+
+    @pytest.mark.parametrize("n", [3, 4, 5, 8])
+    def test_geo_mean_std_on_orthonormal_rows(self, n):
+        """On n orthonormal rows the geometric mean std is 1/sqrt(n)."""
+        assert np.isclose(geo_mean_std(np.eye(n))["value"], 1 / np.sqrt(n))
+
+    def test_span_medoid_on_angles(self):
+        """The medoid span is the mean distance from the most central point."""
+        # The medoid is the 60-degree vector, at distances 0.5 and
+        # 1 - sqrt(3)/2 from the other two: (0.5 + 1 - sqrt(3)/2) / 3.
+        expected = (0.5 + (1 - np.sqrt(3) / 2)) / 3
+        assert np.isclose(span_medoid(self._angles())["value"], expected)
+        assert np.isclose(expected, 0.2113249)
+
+    def test_mst_dispersion_on_angles(self):
+        """The MST keeps the two shortest distances and drops the longest."""
+        expected = 0.5 + (1 - np.sqrt(3) / 2)
+        assert np.isclose(mst_dispersion(self._angles())["value"], expected)
+        assert np.isclose(expected, 0.6339746)
