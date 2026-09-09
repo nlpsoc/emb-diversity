@@ -13,7 +13,7 @@ def energy(
         data: Sequence[Sequence[float]],
         metric: DistanceMetric = "cosine",
         gamma: float = 1.0,
-        epsilon: float = 1e-12,
+        epsilon: float = 1e-6,
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
@@ -47,7 +47,7 @@ def energy(
             the paper).
         epsilon:
             Lower bound applied to each distance, so zero distances (e.g.
-            duplicates) do not blow up the reciprocal. Defaults to 1e-12.
+            duplicates) do not blow up the reciprocal. Defaults to 1e-6.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
         **metric_kwargs:
