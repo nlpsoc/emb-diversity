@@ -198,10 +198,6 @@ def _kde_grid(xy: np.ndarray, xlim, ylim, n: int = 140):
 
 def _fade_cmap(color: str, max_alpha: float = FILL_MAX_ALPHA) -> mcolors.Colormap:
     """Colormap from fully transparent to ``color`` at ``max_alpha`` opacity.
-
-    Ramping the alpha channel (rather than blending from white) means low-density
-    regions paint nothing, so one class's fill never washes out the other's and
-    overlapping regions blend both colours.
     """
     r, g, b = mcolors.to_rgb(color)
     return mcolors.LinearSegmentedColormap.from_list(
