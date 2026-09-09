@@ -14,7 +14,7 @@ from .utils import compute_pairwise_distances
 def hamdiv(
         data: Sequence[Sequence[float]],
         metric: DistanceMetric = "cosine",
-        solver: Literal["greedy", "christofides"] = "christofides",
+        solver: Literal["greedy", "christofides"] = "greedy",
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
@@ -46,8 +46,8 @@ def hamdiv(
         solver:
             NetworkX TSP solver strategy. Options:
 
-            - ``"greedy"``: Greedy nearest-neighbour heuristic.
-            - ``"christofides"``: Christofides algorithm (default).
+            - ``"greedy"``: Greedy nearest-neighbour heuristic (default).
+            - ``"christofides"``: Christofides algorithm.
 
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
@@ -62,6 +62,15 @@ def hamdiv(
     Raises:
         ValueError:
             If data is empty or contains fewer than 2 datapoints, or if solver is invalid.
+
+    Note:
+        **Scope of the value:** HamDiv is the length of a tour found by an
+        approximation algorithm, not the optimal Hamiltonian circuit. With the
+        default cosine distance the triangle inequality is violated (~3% of
+        triples in our tests), so the Christofides 1.5-approximation guarantee
+        does not hold; measured against exact solutions at n <= 10, both solvers
+        deviate from the optimum by 6-8% on average and up to 19% on individual
+        instances. Values are comparable only within a fixed solver.
     """
     data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="hamdiv", chunking_kwargs=chunking_kwargs)
     if len(data) < 2:
