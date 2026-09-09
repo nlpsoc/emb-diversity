@@ -1,21 +1,25 @@
 # Available Measures
 
-emb-diversity provides 22 diversity measures.
-All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
-The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
+emb-diversity provides 22 diversity measures. All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).  The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any. Generally it holds that:
+
+**Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
 
 ## Interpreting the scores
 
-Each diversity measure returns a `{"value": float, "parameters": {...}, "version": str}` dict; the `value` is the diversity score, `parameters` records the configuration used to produce it, and `version` is the installed `emb-diversity` package version that computed it. We list some general things to keep in mind when interpreting those scores below and continue with detailed information about each measure in the following section.
+Each diversity measure returns a `{"value": float, "parameters": {...}, "version": str}` dict; the `value` is the diversity score, `parameters` records the configuration used to produce it, and `version` is the installed `emb-diversity` package version that computed it. We list some general difficulties when interpreting those scores and recommendations for navigating them. We continue with detailed information about each measure in the following section.
 
-- **Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
+- **Scores depend on the measure and the embedding model.** Each measure formalizes "diverse" in its own way, so measures can disagree on the same data. For example, `mean_pw_dist` asks how far apart items are on average; `graph_entropy` asks whether each item's distances to the others are evenly spread. If a set shrinks uniformly, the first shrinks while the second stays the same. Likewise, each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can be diverse under one and uniform under the other. Even two models for the same aspect place items at different distances.
 
-  - **Scores are not normalized.** Diversity measures have been introduced in a variety of different works. They have no standardized bounds: some measures are bounded (e.g. cosine-based distances in`[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). A score's absolute magnitude is only meaningful relative to other scores from the *same* measure.
+- **Scores are not normalized.** Diversity measures have been introduced in a variety of different works that follow no standardized scales or bounds. We faithfully implement measures from literature and as a result some measures are bounded (e.g. cosine-based distances in`[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). As a result raw differences for one measure are hard to interpret and scores are not comparable across measures. Addressing this is an open research question, we recommend practical solutions below.
 
-- **Scores are sensitive to dataset size.** Some measures change with the number
-  of items `n`,  so you can't directly compare datasets of different sizes. To compare datasets, use the same measure and subsample them to the same `n`.
+- **Scores are sensitive to dataset size.** Some measures change with the number of items `n`. For example, `vendi_score` has a higher maximum value with increasing `n`.
  
-- **Measures are sensitive to the embedding model.** Different embedding models will yield different scores, so you should always use the same embedding model when comparing datasets.
+
+To navigate resulting difficulties, we make the following recommendations: 
+- **Only compare datasets of the same size n.** 
+- **Only compare values produced using the same embedding model.**
+- **Only compare scores computed by the same measure.**
+- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, a drop of 2 in one near 3 is large. We recommend, to compare the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`").  The exception are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful.
 
 ## Measures
 
