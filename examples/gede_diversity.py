@@ -7,7 +7,8 @@ loads the human essays and the LLM ``Task`` essays — written from the prompt
 alone, the way a human answers it — matches them on ``question_id`` and
 downsamples to equal size, prints the dataset stats, reports the semantic and
 style diversity of each class as a table, and saves a single-column PCA figure
-of the embeddings on both axes (density contours by default, or a scatter).
+of the embeddings on both axes (filled density contours by default, or a
+scatter).
 
 The download needs the ``examples`` extra (``gdown``); install it with
 ``pip install emb-diversity[examples]`` or, from a checkout,
@@ -28,6 +29,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # save to a file without needing a display
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Patch
@@ -45,7 +47,7 @@ TARBALL = Path("gede_essay_detection.tar.gz")
 # Seed for the prompt-matched downsampling, so runs are reproducible.
 SEED = 0
 
-# PCA plot style: "contour" (KDE density lines, default) or "scatter" (points).
+# PCA plot style: "contour" (filled KDE density + lines, default) or "scatter" (points).
 PLOT_KIND = "contour"
 
 
@@ -171,8 +173,12 @@ def print_results_table(results: dict[str, dict[str, dict]], n_per_class: int) -
 
 
 # ── Plot ─────────────────────────────────────────────────────────────────────
-# Line / marker colours for the two classes.
-COLORS = {"Human": "#3B6FB0", "LLM": "#E0723C"}
+# Fill / line / marker colours for the two classes.
+COLORS = {"Human": "#FF3333", "LLM": "#7EA6E0"}
+
+# Opacity of the density fill at its peak; lower keeps the contour lines
+# visible on top and lets both classes show through where they overlap.
+FILL_MAX_ALPHA = 0.75
 
 
 def _axis_limits(points: dict[str, np.ndarray], pad: float = 0.06):
@@ -190,17 +196,28 @@ def _kde_grid(xy: np.ndarray, xlim, ylim, n: int = 140):
     return xx, yy, density
 
 
+def _fade_cmap(color: str, max_alpha: float = FILL_MAX_ALPHA) -> mcolors.Colormap:
+    """Colormap from fully transparent to ``color`` at ``max_alpha`` opacity.
+    """
+    r, g, b = mcolors.to_rgb(color)
+    return mcolors.LinearSegmentedColormap.from_list(
+        "fade", [(r, g, b, 0.0), (r, g, b, max_alpha)], N=256
+    )
+
+
 def plot_pca(
     human_texts: list[str], ai_texts: list[str], out: Path, kind: str = PLOT_KIND
 ) -> None:
-    """Save a 2-D PCA view of the embeddings, one panel per axis, as a vector PDF.
+    """Save a 2-D PCA view of the embeddings, one panel per axis, as a PDF.
 
     Both ``kind`` options use the *same* PCA projection (fit per axis on the
     pooled human + LLM embeddings); they differ only in how the projected points
     are drawn:
 
-    - ``"contour"`` (default): Gaussian-KDE density contour lines per class —
-      legible at a single-column figure size.
+    - ``"contour"`` (default): per class, a smooth Gaussian-KDE density fill
+      (transparent to the class colour) with contour lines on top — legible at
+      a single-column figure size. The fill is embedded as a 300-dpi image; the
+      lines, titles and legend stay vector.
     - ``"scatter"``: the projected points themselves.
 
     The figure is sized for one ACL column. PCA preserves scale, so the relative
@@ -210,8 +227,7 @@ def plot_pca(
     if kind not in ("contour", "scatter"):
         raise ValueError(f"kind must be 'contour' or 'scatter', got {kind!r}")
 
-    plt.rcParams.update({"font.size": 7, "axes.titlesize": 8,
-                         "axes.titleweight": "bold", "font.family": "serif"})
+    plt.rcParams.update({"font.size": 7, "axes.titlesize": 8, "font.family": "serif"})
     fig, axes = plt.subplots(1, len(AXES), figsize=(3.15, 1.7))
     for ax, axis in zip(axes, AXES):
         embeddings = {
@@ -227,11 +243,16 @@ def plot_pca(
                            edgecolors="none", rasterized=True)
         else:
             xlim, ylim = _axis_limits(points)
-            for label, xy in points.items():
+            for label, xy in points.items():  # Human first, LLM drawn on top
                 xx, yy, density = _kde_grid(xy, xlim, ylim)
-                ax.contour(xx, yy, density, levels=5, colors=[COLORS[label]], linewidths=0.7)
+                ax.imshow(density, cmap=_fade_cmap(COLORS[label]), vmin=0,
+                          vmax=density.max(), origin="lower", extent=(*xlim, *ylim),
+                          aspect="auto", interpolation="bilinear")
+                ax.contour(xx, yy, density, levels=5, colors=[COLORS[label]], linewidths=1.5)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
 
-        ax.set_title(axis)
+        ax.set_title(f"{axis.capitalize()} Embeddings")
         ax.set_xticks([])
         ax.set_yticks([])
 
@@ -239,8 +260,7 @@ def plot_pca(
     # Legend goes in the style panel: the LLM essays concentrate there, leaving
     # the upper-left corner free of contours (unlike the semantic panel).
     axes[AXES.index("style")].legend(
-        handles=handles, loc="upper left", frameon=False,
-        prop={"size": 8, "weight": "bold"},
+        handles=handles, loc="upper left", frameon=False, fontsize=10,
         handlelength=1.0, handletextpad=0.4, borderpad=0.2,
     )
     fig.tight_layout(pad=0.2, w_pad=0.5)
