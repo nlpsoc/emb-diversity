@@ -20,6 +20,7 @@ def log_determinant(
         normalize: bool = True,
         eps: float = 1e-6,
         use_cholesky: bool = True,
+        use_dual: bool = True,
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
@@ -71,6 +72,15 @@ def log_determinant(
         use_cholesky:
             If True, use Cholesky decomposition for efficient logdet computation
             when the matrix is positive definite. Falls back to slogdet if Cholesky fails.
+        use_dual:
+            If True (default) and ``kernel_type=="cs"``, build the kernel
+            through the d x d dual matrix X'ᵀ X' whenever it is smaller than
+            the n x n X' X'ᵀ; the two share their nonzero eigenvalues, and
+            the kernel's remaining structural zero eigenvalues enter the
+            log-determinant in closed form (each contributes log(eps)).
+            Results agree with the full kernel up to floating point while
+            large inputs never materialize an n x n matrix. If False, always
+            build the full n x n kernel.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
@@ -101,6 +111,7 @@ def log_determinant(
         "normalize": normalize,
         "eps": eps,
         "use_cholesky": use_cholesky,
+        "use_dual": use_dual,
         "embedding_model": embedding_model,
     }
 
@@ -131,7 +142,14 @@ def log_determinant(
             X_use = X / norms
         else:
             X_use = X
-        K = (X_use @ X_use.T) / tau
+        if use_dual and X_use.shape[0] > X_use.shape[1]:
+            # The d x d dual matrix has the same nonzero eigenvalues as the
+            # n x n kernel; the kernel's remaining structural zero
+            # eigenvalues are added back in closed form below
+            # (zeros_logdet).
+            K = (X_use.T @ X_use) / tau
+        else:
+            K = (X_use @ X_use.T) / tau
     elif kernel_type == "rbf":
         K = rbf_kernel(X, X, gamma=tau)
     elif kernel_type == "lap":
@@ -143,13 +161,17 @@ def log_determinant(
     K = 0.5 * (K + K.T)
 
     n = K.shape[0]
+    # log det(K_full + eps*I) sums log(eps) once per structural zero
+    # eigenvalue of a rank-deficient kernel (len(X) - n of them; zero
+    # whenever K is the full n x n matrix).
+    zeros_logdet = (len(X) - n) * np.log(eps)
     A = K + eps * np.eye(n, dtype=K.dtype)
 
     # ---- Compute logdet ----
     if use_cholesky:
         try:
             L = np.linalg.cholesky(A)
-            return {"value": float(2.0 * np.sum(np.log(np.diag(L)))), "parameters": parameters}
+            return {"value": float(2.0 * np.sum(np.log(np.diag(L))) + zeros_logdet), "parameters": parameters}
         except np.linalg.LinAlgError:
             # fallback below
             pass
@@ -161,4 +183,4 @@ def log_determinant(
             "logdet undefined: det(A) is not positive (sign <= 0). "
             "Try larger eps or re-check kernel choice."
         )
-    return {"value": float(logdet), "parameters": parameters}
+    return {"value": float(logdet + zeros_logdet), "parameters": parameters}
