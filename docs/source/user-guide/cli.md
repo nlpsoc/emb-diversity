@@ -31,6 +31,7 @@ emb-diversity measure INPUT_FILE [OPTIONS]
 | Option | Default | Description |
 |---|---|---|
 | `-m`, `--measure` | `graph_entropy`, `vendi_score`, `mean_pw_dist` | Measure(s) to run. Repeat for multiple. Named sets: `variety`, `balance`, `disparity`; `all` for every measure |
+| `-p`, `--param` | *(measure defaults)* | Override a measure parameter as `key=value`. Repeat for multiple. Requires exactly one `-m` measure name |
 | `-a`, `--axis` | `semantic` | Diversity axis |
 | `--model` | *(none)* | Explicit embedding model (overrides `--axis`) |
 | `-c`, `--column` | `text` | Column name for CSV/TSV files |
@@ -53,6 +54,10 @@ emb-diversity measure texts.txt -m all
 
 # Specific measures
 emb-diversity measure texts.txt -m mean_pw_dist -m diameter -m vendi_score
+
+# One measure with non-default parameters (booleans: true/false)
+emb-diversity measure texts.txt -m knn -p k=5 -p metric=euclidean
+emb-diversity measure texts.txt -m renyi_entropy -p alpha=1.5 -p normalize=false
 
 # Style diversity
 emb-diversity measure texts.txt --axis style
