@@ -29,7 +29,7 @@ in mind when reading those scores:
 
 ## Measures
 > **Note**
-> We made the following assumptions to calculate the bounds. It should noted, tighter bounds can be found for some of the measure.
+> We made the following assumptions to calculate the bounds. It should noted, tighter bounds can be found for some of the measures.
 > - All bounds were computed with **cosine distance** (d_ij = 1 − cos(e_i, e_j) ∈ [0, 2]) as the distance measure, unless stated otherwise.
 > - Embeddings are **not normalized**. Cosine-based measures are unaffected by this, since cosine distance ignores vector length.
 > n stands for the number of embeddings.
