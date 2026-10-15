@@ -86,7 +86,7 @@ What a measure computes determines what it is sensitive to, and how its runtime 
 | [`hamdiv`](#measure-hamdiv) | Approximate length of the shortest Hamiltonian circuit through all data points | *[0, 2n]* |
 
 ```{note}
-Notes on the bounds in the table (tighter bounds exist for some measures):
+Notes on the bounds in the table (tighter bounds exist for some measures; `n` is the number of embeddings):
 - All bounds were computed with **cosine distance** (d_ij = 1 − cos(e_i, e_j) ∈ [0, 2]) as the distance measure, unless stated otherwise.
 - *unnormalized* marks measures that work on the raw embedding coordinates. Their values grow with the vector lengths, so they have no upper bound unless the embeddings are rescaled to unit length first. The package passes embeddings to each measure as returned by the embedding model, without rescaling them; cosine distance ignores vector length, other metrics such as Euclidean distance do not, and `vendi_score`, `dcscore`, `renyi_entropy` and `log_determinant` rescale to unit length themselves by default (`normalize=True`).
 ```
