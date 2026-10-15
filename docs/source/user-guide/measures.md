@@ -14,7 +14,7 @@ Generally it holds that:
 
 **Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
 
-We continue with general difficulties when interpreting scores, followed by recommendations for navigating them. The sections after that give bounds, intuitions, computation details and references for each measure.
+We continue with general difficulties when interpreting scores, followed by recommendations for navigating them. The sections after that give the [bounds](#interpretations) of each measure, its dependence on [dataset size](#dataset-size), and its [intuition, computation details and references](#measure-descriptions).
 
 - **Scores are sensitive to the measure.** Each measure formalizes "diverse" in its own way, so measures can disagree on the same data. For example, `mean_pw_dist` asks how far apart items are on average; `graph_entropy` asks whether each item's distances to the others are evenly spread. If a set shrinks uniformly, the first shrinks while the second stays the same. The [computational grouping](#computational-grouping) below gives a first idea of what each measure reacts to.
 
@@ -24,7 +24,7 @@ We continue with general difficulties when interpreting scores, followed by reco
   The same 40 points before and after halving every pairwise distance (Euclidean metric). `mean_pw_dist` halves; `graph_entropy` is unchanged, because it only looks at how evenly each point's distances to the others are spread.
   ```
 
-- **Scores are sensitive to the embedding model.** Each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can be diverse under one and uniform under the other. Even two models for the same aspect place items at different distances.
+- **Scores are sensitive to the embedding model.** Each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can be diverse under one and uniform under the other. Even two models for the same aspect place items at different distances. See [Diversity Axes](axes.md) for the models behind each axis.
 
   ```{figure} ../_static/interpret_embedding_sensitivity.png
   :width: 85%
@@ -32,15 +32,15 @@ We continue with general difficulties when interpreting scores, followed by reco
   The same essays (human-written and LLM-written, from the [GEDE example](https://github.com/nlpsoc/emb-diversity/blob/main/examples/gede_diversity.py)) embedded with a semantic and a style model, projected to 2D with PCA. Under the semantic model both groups are equally spread; under the style model the LLM essays collapse into a tight cluster, and `mean_pw_dist` drops to a quarter of the human value.
   ```
 
-- **Scores are not normalized.** Diversity measures have been introduced in a variety of different works that follow no standardized scales or bounds. We faithfully implement measures from literature and as a result some measures are bounded (e.g. cosine-based distances in `[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). As a result raw differences for one measure are hard to interpret and scores are not comparable across measures. Addressing this is an open research question; we recommend practical solutions below.
+- **Scores are not normalized.** Diversity measures have been introduced in a variety of different works that follow no standardized scales or bounds. We faithfully implement measures from literature and as a result some measures are bounded (e.g. cosine-based distances in `[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). The [Interpretations table](#interpretations) lists the bounds of every measure. As a result raw differences for one measure are hard to interpret and scores are not comparable across measures. Addressing this is an open research question; we recommend practical solutions below.
 
-- **Scores are sensitive to dataset size.** Some measures change with the number of items `n`. For example, `vendi_score` has a higher maximum value with increasing `n`.
+- **Scores are sensitive to dataset size.** Some measures change with the number of items `n`. For example, `vendi_score` has a higher maximum value with increasing `n`. See [Dataset size](#dataset-size) for which measures are affected.
 
 To navigate these difficulties, we make the following recommendations:
-- **Only compare datasets of the same size `n`.**
-- **Only compare values produced using the same embedding model.**
-- **Only compare scores computed by the same measure.**
-- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, while a drop of 2 in one near 3 is large. We recommend comparing the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`"). The exceptions are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)).
+- **Only compare datasets of the same size `n`.** See [Dataset size](#dataset-size).
+- **Only compare values produced using the same embedding model.** See [Diversity Axes](axes.md).
+- **Only compare scores computed by the same measure.** See the [computational grouping](#computational-grouping) for what each measure reacts to.
+- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, while a drop of 2 in one near 3 is large. We recommend comparing the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`"). The exceptions are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)). The [Interpretations table](#interpretations) shows each measure's range.
 - **Ideally, test on your domain of interest.** Before relying on a measure, run it on data from your own domain where you already know which sets should be more diverse, and check that the measure and embedding model reproduce that ordering.
 
 
@@ -93,7 +93,7 @@ Notes on the bounds in the table (tighter bounds exist for some measures; `n` is
 
 ### Dataset size
 
-For most measures, the score depends on the number of items `n`, so only compare scores between sets of the same size. The exception is measures built from **averages over items or pairs**, which estimate a property of the source the data comes from rather than of the sample. `mean_pw_dist`, `energy`, `span_medoid`, `span_centroid` and `geo_mean_std` average distances or spreads over items or pairs, and `bins_entropy` works with the fraction of items that fall into each bin. These can be compared across sizes in principle, but a smaller set gives a noisier estimate because it rests on fewer items, so comparing at the same `n` remains the safe choice.
+For most measures, the score depends on the number of items `n`, so only compare scores between sets of the same size. The exception is measures built from **averages over items or pairs**, which estimate a property of the source the data comes from rather than of the sample. `mean_pw_dist`, `energy`, `span_medoid`, `span_centroid` and `geo_mean_std` average distances or spreads over items or pairs, and `bins_entropy` works with the fraction of items that fall into each bin. These can be compared across sizes in principle, but a smaller set gives a noisier estimate because it rests on fewer items, so comparing at the same `n` remains the safe choice, as [recommended above](#interpreting-the-scores).
 
 ## Measure descriptions
 
