@@ -22,31 +22,35 @@ To navigate resulting difficulties, we make the following recommendations:
 - **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, a drop of 2 in one near 3 is large. We recommend, to compare the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`").  The exception are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)).
 
 ## Measures
+> **Note**
+> We made the following assumptions to calculate the bounds. It should noted, tighter bounds can be found for some of the measure.
+> - All bounds were computed with **cosine distance** (d_ij = 1 − cos(e_i, e_j) ∈ [0, 2]) as the distance measure, unless stated otherwise.
+> - Embeddings are **not normalized**. Cosine-based measures are unaffected by this, since cosine distance ignores vector length.
 
-| Function | Brief Description |
-|---|---|
-| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **(default)** - Average pairwise distance between all data points |
-| {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>` | Sum of all pairwise distances |
-| {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all data points |
-| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all data points |
-| {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) |
-| {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two data points |
-| {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two data points |
-| {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances |
-| {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances |
-| {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D |
-| {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations |
-| {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Span relative to the centroid |
-| {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Span relative to the medoid |
-| {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Sum of squared distances to cluster centres |
-| {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) |
-| {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | **(default)** - Effective number of distinct items |
-| {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy |
-| {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | Score based on self-similarity with softmax normalisation |
-| {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram |
-| {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree |
-| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph |
-| {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Approximate length of the shortest Hamiltonian circuit through all data points |
+| Function | Brief Description | Bounds |
+|---|---|---|
+| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **(default)** - Average pairwise distance between all data points | [0, 2] |
+| {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>` | Sum of all pairwise distances | [0, ∞] |
+| {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all data points |[0, 2] |
+| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all data points | TBD |
+| {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) | (−∞, −2^(−γ)] |
+| {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two data points | [0, 2] |
+| {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two data points | [0, 2] |
+| {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances | [0, 2n] |
+| {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances | [0, 2n] |
+| {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D | [0, ∞) |
+| {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations | [0, ∞) unnormalized |
+| {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Span relative to the centroid | [0, ∞) unnormalized |
+| {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Span relative to the medoid | [0, 2] |
+| {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Sum of squared distances to cluster centres | [0, ∞) unnormalized |
+| {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) | TBD |
+| {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | **(default)** - Effective number of distinct items | [1, n] |
+| {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy | [0, log n] |
+| {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | Score based on self-similarity with softmax normalisation | (1, n)|
+| {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram | TBD |
+| {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree | [0, 2(n−1)] | 
+| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·log(n−1)] |
+| {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Approximate length of the shortest Hamiltonian circuit through all data points | TBD |
 
 ## Measure descriptions
 
@@ -424,7 +428,7 @@ tours, i.e. higher diversity.
 shortest Hamiltonian circuit with the chosen TSP heuristic, and return the
 tour's total length.
 
-**Parameters.** `solver` (default `"christofides"`, or `"greedy"`); `metric`
+**Parameters.** `solver` (default `"greedy"`, or `"christofides"`); `metric`
 (default `"cosine"`).
 
 **Caveat.** Exact computation is NP-hard (equivalent to solving the TSP), so this

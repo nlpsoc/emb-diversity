@@ -767,12 +767,11 @@ wheels = [
 
 [[package]]
 name = "emb-diversity"
-version = "0.0.12"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "networkx" },
-    { name = "notebook" },
     { name = "numba" },
     { name = "numpy" },
     { name = "pandas" },
@@ -798,6 +797,7 @@ audio = [
 examples = [
     { name = "gdown" },
     { name = "kagglehub" },
+    { name = "notebook" },
 ]
 
 [package.dev-dependencies]
@@ -838,7 +838,7 @@ requires-dist = [
     { name = "kagglehub", marker = "extra == 'examples'", specifier = ">=0.3" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "networkx", specifier = ">=2.8.8" },
-    { name = "notebook", specifier = ">=7.5.4" },
+    { name = "notebook", marker = "extra == 'examples'", specifier = ">=7.5.4" },
     { name = "numba", specifier = ">=0.59" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.0" },
@@ -867,6 +867,7 @@ dev = [
     { name = "multiprocess", specifier = ">=0.70.17" },
     { name = "myst-parser", specifier = ">=5.0.0" },
     { name = "notebook", specifier = ">=7.0.0" },
+    { name = "notebook", specifier = ">=7.5.4" },
     { name = "numpy", specifier = "~=2.3.5" },
     { name = "pandas", specifier = "~=2.3.1" },
     { name = "plotly", specifier = ">=5.0.0" },
