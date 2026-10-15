@@ -1,65 +1,103 @@
 # Available Measures
 
-emb-diversity provides 22 diversity measures.
-All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors).
-The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
+emb-diversity provides 22 diversity measures. All measures accept either raw text (list of strings) or pre-computed embeddings (array of vectors). The three measures marked **default** below (`graph_entropy`, `vendi_score`, `mean_pw_dist`) are the ones that run when you don't name any.
+
+Each diversity measure returns a `{"value": float, "parameters": {...}, "version": str}` dict; the `value` is the diversity score, `parameters` records the configuration used to produce it, and `version` is the installed `emb-diversity` package version that computed it.
 
 ## Interpreting the scores
 
-Each diversity measure returns a `{"value": float, "parameters": {...}, "version":
-str}` dict; the `value` is the diversity score, `parameters` records the
-configuration used to produce it, and `version` is the installed
-`emb-diversity` package version that computed it. We list a few things to keep
-in mind when reading those scores:
+```{note}
+Measuring data diversity is an active area of research: it is unclear which measure fits which use case, how scores compare across measures, and how they should be normalized. We therefore implement each measure as it was introduced in the literature. With this package, we aim to facilitate research on these open questions and plan to incorporate new insights into future versions.
+```
 
-- **Higher = more diverse.** For every measure, a larger value means a
-  more diverse set and a smaller value a less diverse one. This holds even for
-  measures that return negative values: `log_determinant` and `energy` are
-  always negative, so a *less negative* value (closer to zero) means more diverse. Keep in mind that this reflects diversity as the measure defines it, not an objective property of the dataset itself.
+Generally it holds that:
 
-- **Scores are not normalized.** There is no fixed scale: some measures
-  are bounded (e.g. `vendi_score` lies in `[1, n]`; cosine-based distances in
-  `[0, 2]`), others are unbounded. A score's absolute magnitude is only
-  meaningful relative to other scores from the *same* measure.
+**Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
 
-- **Scores are sensitive to dataset size.** Some measures change with the number
-  of items `n`,  so you can't directly compare datasets of different sizes. To compare datasets, use the same measure and subsample them to the same `n`.
- 
-- **Measures are sensitive to the embedding model.** Different embedding models will yield different scores, so you should always use the same embedding model when comparing datasets.
+We continue with general difficulties when interpreting scores, followed by recommendations for navigating them. The sections after that give bounds, intuitions, computation details and references for each measure.
+
+- **Scores are sensitive to the measure.** Each measure formalizes "diverse" in its own way, so measures can disagree on the same data. For example, `mean_pw_dist` asks how far apart items are on average; `graph_entropy` asks whether each item's distances to the others are evenly spread. If a set shrinks uniformly, the first shrinks while the second stays the same. The [computational grouping](#computational-grouping) below gives a first idea of what each measure reacts to.
+
+  ```{figure} ../_static/interpret_measure_sensitivity.png
+  :width: 85%
+
+  The same 40 points before and after halving every pairwise distance (Euclidean metric). `mean_pw_dist` halves; `graph_entropy` is unchanged, because it only looks at how evenly each point's distances to the others are spread.
+  ```
+
+- **Scores are sensitive to the embedding model.** Each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can be diverse under one and uniform under the other. Even two models for the same aspect place items at different distances.
+
+  ```{figure} ../_static/interpret_embedding_sensitivity.png
+  :width: 85%
+
+  The same essays (human-written and LLM-written, from the [GEDE example](https://github.com/nlpsoc/emb-diversity/blob/main/examples/gede_diversity.py)) embedded with a semantic and a style model, projected to 2D with PCA. Under the semantic model both groups are equally spread; under the style model the LLM essays collapse into a tight cluster, and `mean_pw_dist` drops to a quarter of the human value.
+  ```
+
+- **Scores are not normalized.** Diversity measures have been introduced in a variety of different works that follow no standardized scales or bounds. We faithfully implement measures from literature and as a result some measures are bounded (e.g. cosine-based distances in `[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). As a result raw differences for one measure are hard to interpret and scores are not comparable across measures. Addressing this is an open research question; we recommend practical solutions below.
+
+- **Scores are sensitive to dataset size.** Some measures change with the number of items `n`. For example, `vendi_score` has a higher maximum value with increasing `n`.
+
+To navigate these difficulties, we make the following recommendations:
+- **Only compare datasets of the same size `n`.**
+- **Only compare values produced using the same embedding model.**
+- **Only compare scores computed by the same measure.**
+- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, while a drop of 2 in one near 3 is large. We recommend comparing the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`"). The exceptions are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)).
+- **Ideally, test on your domain of interest.** Before relying on a measure, run it on data from your own domain where you already know which sets should be more diverse, and check that the measure and embedding model reproduce that ordering.
+
 
 ## Measures
-> **Note**
-> We made the following assumptions to calculate the bounds. It should noted, tighter bounds can be found for some of the measures.
-> - All bounds were computed with **cosine distance** (d_ij = 1 − cos(e_i, e_j) ∈ [0, 2]) as the distance measure, unless stated otherwise.
-> - Embeddings are **not normalized**. Cosine-based measures are unaffected by this, since cosine distance ignores vector length.
-> n stands for the number of embeddings.
+
+### Computational grouping
+
+What a measure computes determines what it is sensitive to, and how its runtime and memory scale with the number of items `n`. The 22 measures fall into five groups:
+
+| Group | What is built | Measures |
+|---|---|---|
+| **Distance matrix** | all pairwise distances, reduced directly (means, sums, extremes, per-point minima/maxima) | [`mean_pw_dist`](#measure-mean_pw_dist)<br>[`sum_pw_dist`](#measure-sum_pw_dist)<br>[`energy`](#measure-energy)<br>[`span_medoid`](#measure-span_medoid)<br>[`knn`](#measure-knn)<br>[`chamfer_dist`](#measure-chamfer_dist)<br>[`sum_bottleneck`](#measure-sum_bottleneck)<br>[`bottleneck`](#measure-bottleneck)<br>[`sum_diameter`](#measure-sum_diameter)<br>[`diameter`](#measure-diameter) |
+| **Distance graph** | a graph over the pairwise distances (spanning tree, tour, weighted graph) | [`mst_dispersion`](#measure-mst_dispersion)<br>[`graph_entropy`](#measure-graph_entropy)<br>[`hamdiv`](#measure-hamdiv) |
+| **Kernel matrix** | the similarity (kernel) matrix, mostly summarized via its eigenvalue spectrum | [`vendi_score`](#measure-vendi_score)<br>[`renyi_entropy`](#measure-renyi_entropy)<br>[`log_determinant`](#measure-log_determinant)<br>[`dcscore`](#measure-dcscore) |
+| **UMAP projection** | a low-dimensional UMAP embedding of the vectors | [`bins_entropy`](#measure-bins_entropy)<br>[`convex_hull_volume_3d`](#measure-convex_hull_volume_3d) |
+| **Vector statistics** | statistics on the raw vectors — no pairwise computation | [`cluster_inertia`](#measure-cluster_inertia)<br>[`span_centroid`](#measure-span_centroid)<br>[`geo_mean_std`](#measure-geo_mean_std) |
+
+### Interpretations
+
 | Function | Brief Description | Bounds |
 |---|---|---|
-| {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>` | **(default)** - Average pairwise distance between all data points | [0, 2] |
-| {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>` | Sum of all pairwise distances | [0, ∞] |
-| {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>` | Average nearest-neighbour distance across all data points |[0, 2] |
-| {func}`knn <emb_diversity.measures.knn.knn>` | Average k-th-nearest-neighbour distance across all data points | TBD |
-| {func}`energy <emb_diversity.measures.energy.energy>` | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) | (−∞, −2^(−γ)] |
-| {func}`diameter <emb_diversity.measures.diameter.diameter>` | Largest distance between any two data points | [0, 2] |
-| {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>` | Smallest distance between any two data points | [0, 2] |
-| {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>` | For each point, find its farthest neighbour; sum those distances | [0, 2n] |
-| {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>` | For each point, find its nearest neighbour; sum those distances | [0, 2n] |
-| {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` | Volume of the convex hull after UMAP-projecting embeddings to 3D | [0, ∞) |
-| {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` | Geometric mean of per-dimension standard deviations | [0, ∞) unnormalized |
-| {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>` | Span relative to the centroid | [0, ∞) unnormalized |
-| {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>` | Span relative to the medoid | [0, 2] |
-| {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>` | Sum of squared distances to cluster centres | [0, ∞) unnormalized |
-| {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` | Log-determinant of the kernel matrix (LDD) | TBD |
-| {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>` | **(default)** - Effective number of distinct items | [1, n] |
-| {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>` | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy | [0, log n] |
-| {func}`dcscore <emb_diversity.measures.dcscore.dcscore>` | Score based on self-similarity with softmax normalisation | (1, n)|
-| {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` | Shannon entropy over a 2D UMAP/PCA-projected histogram | TBD |
-| {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>` | Total edge weight of the minimum spanning tree | [0, 2(n−1)] | 
-| {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>` | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·log(n−1)] |
-| {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` | Approximate length of the shortest Hamiltonian circuit through all data points | TBD |
+| [`graph_entropy`](#measure-graph_entropy) | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·log(n−1)] |
+| [`vendi_score`](#measure-vendi_score) | **(default)** - Effective number of distinct items | [1, n] |
+| [`mean_pw_dist`](#measure-mean_pw_dist) | **(default)** - Average pairwise distance between all data points | [0, 2] |
+| [`sum_pw_dist`](#measure-sum_pw_dist) | Sum of all pairwise distances | [0, ∞] |
+| [`chamfer_dist`](#measure-chamfer_dist) | Average nearest-neighbour distance across all data points |[0, 2] |
+| [`knn`](#measure-knn) | Average k-th-nearest-neighbour distance across all data points | *[0, 2]* |
+| [`energy`](#measure-energy) | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) | (−∞, −2^(−γ)] |
+| [`diameter`](#measure-diameter) | Largest distance between any two data points | [0, 2] |
+| [`bottleneck`](#measure-bottleneck) | Smallest distance between any two data points | [0, 2] |
+| [`sum_diameter`](#measure-sum_diameter) | For each point, find its farthest neighbour; sum those distances | [0, 2n] |
+| [`sum_bottleneck`](#measure-sum_bottleneck) | For each point, find its nearest neighbour; sum those distances | [0, 2n] |
+| [`convex_hull_volume_3d`](#measure-convex_hull_volume_3d) | Volume of the convex hull after UMAP-projecting embeddings to 3D | [0, ∞) |
+| [`geo_mean_std`](#measure-geo_mean_std) | Geometric mean of per-dimension standard deviations | [0, ∞) unnormalized |
+| [`span_centroid`](#measure-span_centroid) | Span relative to the centroid | [0, ∞) unnormalized |
+| [`span_medoid`](#measure-span_medoid) | Span relative to the medoid | [0, 2] |
+| [`cluster_inertia`](#measure-cluster_inertia) | Sum of squared distances to cluster centres | [0, ∞) unnormalized |
+| [`log_determinant`](#measure-log_determinant) | Log-determinant of the kernel matrix (LDD) | *[n·log(eps), 0]* |
+| [`renyi_entropy`](#measure-renyi_entropy) | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy | [0, log n] |
+| [`dcscore`](#measure-dcscore) | Score based on self-similarity with softmax normalisation | (1, n) |
+| [`bins_entropy`](#measure-bins_entropy) | Shannon entropy over a 2D UMAP/PCA-projected histogram | *[0, 1]* |
+| [`mst_dispersion`](#measure-mst_dispersion) | Total edge weight of the minimum spanning tree | [0, 2(n−1)] |
+| [`hamdiv`](#measure-hamdiv) | Approximate length of the shortest Hamiltonian circuit through all data points | *[0, 2n]* |
+
+```{note}
+Notes on the bounds in the table (tighter bounds exist for some measures; `n` is the number of embeddings):
+- All bounds were computed with **cosine distance** (d_ij = 1 − cos(e_i, e_j) ∈ [0, 2]) as the distance measure, unless stated otherwise.
+- *unnormalized* marks measures that work on the raw embedding coordinates. Their values grow with the vector lengths, so they have no upper bound unless the embeddings are rescaled to unit length first. The package passes embeddings to each measure as returned by the embedding model, without rescaling them; cosine distance ignores vector length, other metrics such as Euclidean distance do not, and `vendi_score`, `dcscore`, `renyi_entropy` and `log_determinant` rescale to unit length themselves by default (`normalize=True`).
+```
+
+### Dataset size
+
+For most measures, the score depends on the number of items `n`, so only compare scores between sets of the same size. The exception is measures built from **averages over items or pairs**, which estimate a property of the source the data comes from rather than of the sample. `mean_pw_dist`, `energy`, `span_medoid`, `span_centroid` and `geo_mean_std` average distances or spreads over items or pairs, and `bins_entropy` works with the fraction of items that fall into each bin. These can be compared across sizes in principle, but a smaller set gives a noisier estimate because it rests on fewer items, so comparing at the same `n` remains the safe choice.
 
 ## Measure descriptions
 
+(measure-mean_pw_dist)=
 ### Mean Pairwise Distance — {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`
 
 **Intuition.** Averages the distance between every pair of samples. Higher means
@@ -73,11 +111,12 @@ return their mean.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Guy Tevet and Jonathan Berant. 2021. Evaluating the Evaluation of Diversity in Natural Language Generation. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume, pages 326–346, Online. Association for Computational Linguistics.
-- Tianhui Zhang, Bei Peng, and Danushka Bollegala. 2024. Improving Diversity of Commonsense Generation by Large Language Models via In-Context Learning. In Findings of the Association for Computational Linguistics: EMNLP 2024, pages 9226–9242, Miami, Florida, USA. Association for Computational Linguistics.
-- Miranda, Brando, Alycia Lee, Sudharsan Sundar, Allison Casasola, Rylan Schaeffer, Elyas Obbad, and Sanmi Koyejo. "Beyond scale: The diversity coefficient as a data quality metric for variability in natural language data." arXiv preprint arXiv:2306.13840 (2023).
-- Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021.
+- Guy Tevet and Jonathan Berant. 2021. Evaluating the Evaluation of Diversity in Natural Language Generation. In Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume, pages 326–346, Online. Association for Computational Linguistics. <https://aclanthology.org/2021.eacl-main.25/>.
+- Tianhui Zhang, Bei Peng, and Danushka Bollegala. 2024. Improving Diversity of Commonsense Generation by Large Language Models via In-Context Learning. In Findings of the Association for Computational Linguistics: EMNLP 2024, pages 9226–9242, Miami, Florida, USA. Association for Computational Linguistics. <https://aclanthology.org/2024.findings-emnlp.540/>.
+- Miranda, Brando, Alycia Lee, Sudharsan Sundar, Allison Casasola, Rylan Schaeffer, Elyas Obbad, and Sanmi Koyejo. "Beyond scale: The diversity coefficient as a data quality metric for variability in natural language data." arXiv preprint arXiv:2306.13840 (2023). <https://arxiv.org/abs/2306.13840>.
+- Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021. <https://doi.org/10.1145/3411764.3445782>.
 
+(measure-sum_pw_dist)=
 ### Sum Pairwise Distance — {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`
 
 **Intuition.** Sums all pairwise distances to capture the overall spread of the
@@ -88,9 +127,10 @@ dataset. Also known as Max Dispersion or DistSum. Grows with `n`, so it is only 
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022.
-- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025.
+- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022. <https://aclanthology.org/2022.coling-1.437/>.
+- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025. <https://aclanthology.org/2025.acl-long.908/>.
 
+(measure-chamfer_dist)=
 ### Chamfer Distance — {func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`
 
 **Intuition.** Adapted from point-cloud comparison in computer vision to a
@@ -104,9 +144,10 @@ itself), then return the mean across all samples.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
-- Zhang, Tianhui, Bei Peng, and Danushka Bollegala. "Evaluating the Evaluation of Diversity in Commonsense Generation." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), edited by Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar. Association for Computational Linguistics, 2025. https://aclanthology.org/2025.acl-long.1181/.
+- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. <https://doi.org/10.1145/3411764.3445782>.
+- Zhang, Tianhui, Bei Peng, and Danushka Bollegala. "Evaluating the Evaluation of Diversity in Commonsense Generation." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), edited by Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar. Association for Computational Linguistics, 2025. <https://aclanthology.org/2025.acl-long.1181/>.
 
+(measure-knn)=
 ### KNN Distance — {func}`knn <emb_diversity.measures.knn.knn>`
 
 **Intuition.** Generalizes Chamfer Distance: instead of each sample's nearest
@@ -121,8 +162,9 @@ dataset.
 `metric` (default `"cosine"`).
 
 **References.**
-- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025.
+- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025. <https://aclanthology.org/2025.acl-long.908/>.
 
+(measure-energy)=
 ### Energy — {func}`energy <emb_diversity.measures.energy.energy>`
 
 **Intuition.** Borrowed from classical mechanics: treats samples as equally
@@ -139,9 +181,10 @@ take the reciprocal, then return the negative mean of those pairwise energies.
 (default `1e-12`); `metric` (default `"cosine"`).
 
 **References.**
-- Velikonivtsev, Fedor, Mikhail Mironov, and Liudmila Prokhorenkova. "Challenges of generating structurally diverse graphs." Advances in Neural Information Processing Systems 37 (2024): 57993-58022.
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
+- Velikonivtsev, Fedor, Mikhail Mironov, and Liudmila Prokhorenkova. "Challenges of generating structurally diverse graphs." Advances in Neural Information Processing Systems 37 (2024): 57993-58022. <https://arxiv.org/abs/2409.18859>.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
 
+(measure-diameter)=
 ### Diameter — {func}`diameter <emb_diversity.measures.diameter.diameter>`
 
 **Intuition.** The largest distance between any two samples — the "width" of the
@@ -152,9 +195,10 @@ point cloud.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. https://doi.org/10.48550/arXiv.2112.12542.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
+- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. <https://doi.org/10.48550/arXiv.2112.12542>.
 
+(measure-bottleneck)=
 ### Bottleneck — {func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`
 
 **Intuition.** The smallest distance between any two samples — the most
@@ -168,9 +212,10 @@ near-duplicates collapses the value regardless of the rest of the distribution.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. https://doi.org/10.48550/arXiv.2112.12542.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
+- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. <https://doi.org/10.48550/arXiv.2112.12542>.
 
+(measure-sum_diameter)=
 ### Sum Diameter — {func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`
 
 **Intuition.** For each sample, take its distance to its farthest neighbour, then
@@ -183,9 +228,10 @@ then sum these maxima (or average them if `normalize_by_n=True`).
 **Parameters.** `metric` (default `"cosine"`); `normalize_by_n` (default `False`).
 
 **References.**
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. https://doi.org/10.48550/arXiv.2112.12542.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
+- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. <https://doi.org/10.48550/arXiv.2112.12542>.
 
+(measure-sum_bottleneck)=
 ### Sum Bottleneck — {func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`
 
 **Intuition.** For each sample, take its distance to its nearest neighbour, then
@@ -199,9 +245,10 @@ then sum these minima (or average them if `normalize_by_n=True`).
 **Parameters.** `metric` (default `"cosine"`); `normalize_by_n` (default `False`).
 
 **References.**
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. https://doi.org/10.48550/arXiv.2112.12542.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
+- Xie, Yutong, Ziqiao Xu, Jiaqi Ma, and Qiaozhu Mei. "How Much Space Has Been Explored? Measuring the Chemical Space Covered by Databases and Machine-Generated Molecules." arXiv:2112.12542. Preprint, arXiv, March 6, 2023. <https://doi.org/10.48550/arXiv.2112.12542>.
 
+(measure-convex_hull_volume_3d)=
 ### Convex Hull Volume — {func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>`
 
 **Intuition.** Treats each embedding as a point and computes the volume of the
@@ -221,8 +268,9 @@ projection, values are only comparable within a single experiment using the same
 `random_state` — not across different datasets or separate UMAP fits.
 
 **References.**
-- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022.
+- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022. <https://aclanthology.org/2022.coling-1.437/>.
 
+(measure-geo_mean_std)=
 ### Geometric Mean of Standard Deviations — {func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>`
 
 **Intuition.** Treats each embedding dimension as an independent axis of
@@ -239,8 +287,9 @@ also scales with the magnitude of the input vectors, so it is not comparable
 across differently-scaled embeddings.
 
 **References.**
-- Lai, Yi-An, et al. "Diversity, density, and homogeneity: Quantitative characteristic metrics for text collections." Proceedings of the Twelfth Language Resources and Evaluation Conference. 2020.
+- Lai, Yi-An, et al. "Diversity, density, and homogeneity: Quantitative characteristic metrics for text collections." Proceedings of the Twelfth Language Resources and Evaluation Conference. 2020. <https://aclanthology.org/2020.lrec-1.215/>.
 
+(measure-span_centroid)=
 ### Span (Centroid) — {func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`
 
 **Intuition.** The centroid represents the "centre" of the dataset. Span
@@ -253,8 +302,9 @@ distance to it, then return the given percentile of those distances.
 **Parameters.** `percentile` (default `90.0`); `metric` (default `"cosine"`).
 
 **References.**
-- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. <https://doi.org/10.1145/3411764.3445782>.
 
+(measure-span_medoid)=
 ### Span (Medoid) — {func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`
 
 **Intuition.** Like Span (Centroid), but uses the medoid — the sample with the
@@ -267,8 +317,9 @@ all others), then return the mean distance from all samples to it.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
+- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. <https://doi.org/10.1145/3411764.3445782>.
 
+(measure-cluster_inertia)=
 ### Cluster Inertia — {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`
 
 **Intuition.** Borrowed from the physical "moment of inertia": partitions
@@ -283,9 +334,10 @@ within-cluster sum of squared distances to each point's assigned cluster centre.
 fewer data points than clusters are given).
 
 **References.**
-- Yang, Yuming, Yang Nan, Junjie Ye, et al. "Measuring Data Diversity for Instruction Tuning: A Systematic Analysis and A Reliable Metric." arXiv:2502.17184. Preprint, arXiv, February 28, 2025. https://doi.org/10.48550/arXiv.2502.17184.
-- Du, Wenchao, and Alan W. Black. "Boosting Dialog Response Generation." In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, edited by Anna Korhonen, David Traum, and Lluís Màrquez. Association for Computational Linguistics, 2019. https://doi.org/10.18653/v1/P19-1005.
+- Yang, Yuming, Yang Nan, Junjie Ye, et al. "Measuring Data Diversity for Instruction Tuning: A Systematic Analysis and A Reliable Metric." arXiv:2502.17184. Preprint, arXiv, February 28, 2025. <https://doi.org/10.48550/arXiv.2502.17184>.
+- Du, Wenchao, and Alan W. Black. "Boosting Dialog Response Generation." In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, edited by Anna Korhonen, David Traum, and Lluís Màrquez. Association for Computational Linguistics, 2019. <https://doi.org/10.18653/v1/P19-1005>.
 
+(measure-log_determinant)=
 ### Log-Determinant Diversity (LDD) — {func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>`
 
 **Intuition.** The determinant of a kernel matrix equals the squared volume
@@ -303,9 +355,10 @@ L2-normalized vectors; also `"rbf"`, `"lap"`, `"poly"`); `tau`; `eps` (default
 `1e-6`); `use_cholesky` (default `True`).
 
 **References.**
-- Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286.
-- Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024).
+- Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286. <https://doi.org/10.1561/2200000044>.
+- Wang, Peiqi, Yikang Shen, Zhen Guo, Matthew Stallone, Yoon Kim, Polina Golland, and Rameswar Panda. "Diversity measurement and subset selection for instruction tuning datasets." arXiv preprint arXiv:2402.02318 (2024). <https://arxiv.org/abs/2402.02318>.
 
+(measure-vendi_score)=
 ### Vendi Score — {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`
 
 **Intuition.** The "effective number of unique elements" in a dataset, derived
@@ -326,9 +379,10 @@ similarity matrix and is efficient when the embedding dimension is smaller than
 `n`).
 
 **References.**
-- Friedman, Dan, and Adji Bousso Dieng. "The Vendi Score: A Diversity Evaluation Metric for Machine Learning." Transactions on Machine Learning Research (2023).
-- Pasarkar, A. P., & Dieng, A. B. (2023). Cousins of the vendi score: A family of similarity-based diversity metrics for science and machine learning. arXiv preprint arXiv:2310.12952.
+- Friedman, Dan, and Adji Bousso Dieng. "The Vendi Score: A Diversity Evaluation Metric for Machine Learning." Transactions on Machine Learning Research (2023). <https://arxiv.org/abs/2210.02410>.
+- Pasarkar, A. P., & Dieng, A. B. (2023). Cousins of the vendi score: A family of similarity-based diversity metrics for science and machine learning. arXiv preprint arXiv:2310.12952. <https://arxiv.org/abs/2310.12952>.
 
+(measure-renyi_entropy)=
 ### Rényi Kernel Entropy (RKE) — {func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`
 
 **Intuition.** Estimates the effective number of modes or clusters in the data by
@@ -346,9 +400,10 @@ cosine-similarity-like kernel on optionally L2-normalized vectors; also
 `"rbf"`, `"lap"`, `"poly"`); `tau`; `normalize` (default `True`).
 
 **References.**
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
-- Jalali, Mohammad, Cheuk Ting Li, and Farzan Farnia. "An information-theoretic evaluation of generative models in learning multi-modal distributions." Advances in Neural Information Processing Systems 36 (2023): 9931-9943.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
+- Jalali, Mohammad, Cheuk Ting Li, and Farzan Farnia. "An information-theoretic evaluation of generative models in learning multi-modal distributions." Advances in Neural Information Processing Systems 36 (2023): 9931-9943. <https://proceedings.neurips.cc/paper_files/paper/2023/hash/1f5c5cd01b864d53cc5fa0a3472e152e-Abstract-Conference.html>.
 
+(measure-dcscore)=
 ### DCScore — {func}`dcscore <emb_diversity.measures.dcscore.dcscore>`
 
 **Intuition.** Frames diversity as an n-class self-classification problem: each
@@ -365,8 +420,9 @@ optionally L2-normalized vectors; also `"rbf"`, `"lap"`, `"poly"`); `tau`
 (default `1.0`); `normalize` (default `True`).
 
 **References.**
-- Zhu, Yuchang, Huizhe Zhang, Bingzhe Wu, Jintang Li, Zibin Zheng, Peilin Zhao, Liang Chen, and Yatao Bian. "Measuring diversity in synthetic datasets." arXiv preprint arXiv:2502.08512 (2025).
+- Zhu, Yuchang, Huizhe Zhang, Bingzhe Wu, Jintang Li, Zibin Zheng, Peilin Zhao, Liang Chen, and Yatao Bian. "Measuring diversity in synthetic datasets." arXiv preprint arXiv:2502.08512 (2025). <https://arxiv.org/abs/2502.08512>.
 
+(measure-bins_entropy)=
 ### Bins Entropy — {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>`
 
 **Intuition.** Quantifies how evenly samples are spread across a discretized 2D
@@ -386,9 +442,10 @@ is not the default.
 (default `"effective"`, or `"bins"`).
 
 **References.**
-- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. https://doi.org/10.1145/3411764.3445782.
-- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025.
+- Cox, Samuel Rhys, Yunlong Wang, Ashraf Abdul, Christian von der Weth, and Brian Y. Lim. "Directed Diversity: Leveraging Language Embedding Distances for Collective Creativity in Crowd Ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems, May 6, 2021, 1–35. <https://doi.org/10.1145/3411764.3445782>.
+- Yang, Yuming, Yang Nan, Junjie Ye, Shihan Dou, Xiao Wang, Shuo Li, Huijie Lv, Tao Gui, Qi Zhang, and Xuan-Jing Huang. "Measuring data diversity for instruction tuning: A systematic analysis and a reliable metric." In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 18530-18549. 2025. <https://aclanthology.org/2025.acl-long.908/>.
 
+(measure-mst_dispersion)=
 ### MST Dispersion — {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`
 
 **Intuition.** Builds a complete weighted graph over samples (edge weight =
@@ -403,9 +460,10 @@ samples, so it grows with `n`.
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021.
-- Atwal, Tevin, Chan Nam Tieu, Yefeng Yuan, Zhan Shi, Yuhong Liu, and Liang Cheng. "Privacy-Preserving Synthetic Review Generation with Diverse Writing Styles Using LLMs." arXiv preprint arXiv:2507.18055 (2025).
+- Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021. <https://doi.org/10.1145/3411764.3445782>.
+- Atwal, Tevin, Chan Nam Tieu, Yefeng Yuan, Zhan Shi, Yuhong Liu, and Liang Cheng. "Privacy-Preserving Synthetic Review Generation with Diverse Writing Styles Using LLMs." arXiv preprint arXiv:2507.18055 (2025). <https://arxiv.org/abs/2507.18055>.
 
+(measure-graph_entropy)=
 ### Graph Entropy — {func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`
 
 **Intuition.** Builds a complete weighted graph over samples (edge weight =
@@ -421,8 +479,9 @@ the sum of all nodes' local entropies. Requires at least 3 samples — with only
 **Parameters.** `metric` (default `"cosine"`).
 
 **References.**
-- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022.
+- Yu, Yu, Shahram Khadivi, and Jia Xu. "Can data diversity enhance learning generalization?." Proceedings of the 29th international conference on computational linguistics. 2022. <https://aclanthology.org/2022.coling-1.437/>.
 
+(measure-hamdiv)=
 ### Hamiltonian Diversity (HamDiv) — {func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>`
 
 **Intuition.** Treats dataset diversity as the length of the shortest tour that
@@ -442,17 +501,17 @@ implementation always returns an approximate solution via a heuristic solver —
 practical for small-to-medium datasets rather than very large ones.
 
 **References.**
-- Hu, Xiuyuan, et al. "Hamiltonian diversity: effectively measuring molecular diversity by shortest hamiltonian circuits." Journal of Cheminformatics 16.1 (2024): 94.
-- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. https://doi.org/10.48550/arXiv.2410.14556.
+- Hu, Xiuyuan, et al. "Hamiltonian diversity: effectively measuring molecular diversity by shortest hamiltonian circuits." Journal of Cheminformatics 16.1 (2024): 94. <https://doi.org/10.1186/s13321-024-00883-4>.
+- Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.
 
 ## Taxonomy
 
-The measures can be grouped in two complementary ways. The first taxonomy is
+The measures can be grouped in two complementary ways. The [computational
+grouping](#computational-grouping) above groups measures by *what they compute
+to arrive at their value* — that grouping determines runtime and memory behaviour
+and is the one used in the paper's benchmark figures. The taxonomy here is
 **conceptual**: it groups measures by *what aspect of the data they quantify*
-(distances, geometry, distributions, graph structure). The second grouping is
-**computational**: it groups measures by *what they compute to arrive at their
-value* — that grouping determines runtime and memory behaviour and is the one
-used in the paper's benchmark figures. The two views don't always coincide:
+(distances, geometry, distributions, graph structure). The two views don't always coincide:
 for example, `log_determinant` is geometry-based conceptually (a volume) but
 computed from the kernel matrix, and `cluster_inertia` is geometry-based
 conceptually but computationally a cheap vector statistic.
@@ -466,25 +525,15 @@ While the computational grouping is part of this demo submission, the conceptual
 
 This grouping isn't required knowledge for using `emb-diversity` — it's included
 as background. When [contributing a new built-in measure](../development.md#adding-new-measures)
-to the package, add it to both tables below.
+to the package, add it to both tables.
 
 ### Conceptual families
 
 | Family | Measures |
 |---|---|
-| **Distance-based**<br>Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`<br>{func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`<br>{func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`<br>{func}`knn <emb_diversity.measures.knn.knn>`<br>{func}`energy <emb_diversity.measures.energy.energy>` |
-| **Geometry-based**<br>Treats embeddings as a point cloud in dimension-`d` space and quantifies diversity through geometric properties — extent, volume, or spread around a representative point. | {func}`diameter <emb_diversity.measures.diameter.diameter>`<br>{func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`<br>{func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`<br>{func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`<br>{func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>`<br>{func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>`<br>{func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`<br>{func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`<br>{func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`<br>{func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>` |
-| **Distribution-based**<br>Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`<br>{func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`<br>{func}`dcscore <emb_diversity.measures.dcscore.dcscore>`<br>{func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>` |
-| **Graph-theory-based**<br>Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`<br>{func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`<br>{func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |
-
-### Computational grouping
-
-| Group | What is built | Measures |
-|---|---|---|
-| **Distance matrix** | all pairwise distances, reduced directly (means, sums, extremes, per-point minima/maxima) | {func}`mean_pw_dist <emb_diversity.measures.mean_pw_dist.mean_pw_dist>`<br>{func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`<br>{func}`energy <emb_diversity.measures.energy.energy>`<br>{func}`span_medoid <emb_diversity.measures.span_medoid.span_medoid>`<br>{func}`knn <emb_diversity.measures.knn.knn>`<br>{func}`chamfer_dist <emb_diversity.measures.chamfer_dist.chamfer_dist>`<br>{func}`sum_bottleneck <emb_diversity.measures.sum_bottleneck.sum_bottleneck>`<br>{func}`bottleneck <emb_diversity.measures.bottleneck.bottleneck>`<br>{func}`sum_diameter <emb_diversity.measures.sum_diameter.sum_diameter>`<br>{func}`diameter <emb_diversity.measures.diameter.diameter>` |
-| **Distance graph** | a graph over the pairwise distances (spanning tree, tour, weighted graph) | {func}`mst_dispersion <emb_diversity.measures.mst_dispersion.mst_dispersion>`<br>{func}`graph_entropy <emb_diversity.measures.graph_entropy.graph_entropy>`<br>{func}`hamdiv <emb_diversity.measures.hamdiv.hamdiv>` |
-| **Kernel matrix** | the similarity (kernel) matrix, mostly summarized via its eigenvalue spectrum | {func}`vendi_score <emb_diversity.measures.vendi_score.vendi_score>`<br>{func}`renyi_entropy <emb_diversity.measures.renyi_entropy.renyi_entropy>`<br>{func}`log_determinant <emb_diversity.measures.log_determinant.log_determinant>`<br>{func}`dcscore <emb_diversity.measures.dcscore.dcscore>` |
-| **UMAP projection** | a low-dimensional UMAP embedding of the vectors | {func}`bins_entropy <emb_diversity.measures.bins_entropy.bins_entropy>`<br>{func}`convex_hull_volume_3d <emb_diversity.measures.convex_hull_volume_3d.convex_hull_volume_3d>` |
-| **Vector statistics** | statistics on the raw vectors — no pairwise computation | {func}`cluster_inertia <emb_diversity.measures.cluster_inertia.cluster_inertia>`<br>{func}`span_centroid <emb_diversity.measures.span_centroid.span_centroid>`<br>{func}`geo_mean_std <emb_diversity.measures.geo_mean_std.geo_mean_std>` |
+| **Distance-based**<br>Uses raw pairwise distances/similarities directly, without building additional structures (graphs, cluster assignments, geometric constructs). | [`mean_pw_dist`](#measure-mean_pw_dist)<br>[`sum_pw_dist`](#measure-sum_pw_dist)<br>[`chamfer_dist`](#measure-chamfer_dist)<br>[`knn`](#measure-knn)<br>[`energy`](#measure-energy) |
+| **Geometry-based**<br>Treats embeddings as a point cloud in dimension-`d` space and quantifies diversity through geometric properties — extent, volume, or spread around a representative point. | [`diameter`](#measure-diameter)<br>[`bottleneck`](#measure-bottleneck)<br>[`sum_diameter`](#measure-sum_diameter)<br>[`sum_bottleneck`](#measure-sum_bottleneck)<br>[`convex_hull_volume_3d`](#measure-convex_hull_volume_3d)<br>[`geo_mean_std`](#measure-geo_mean_std)<br>[`span_centroid`](#measure-span_centroid)<br>[`span_medoid`](#measure-span_medoid)<br>[`cluster_inertia`](#measure-cluster_inertia)<br>[`log_determinant`](#measure-log_determinant) |
+| **Distribution-based**<br>Converts the dataset into a probability distribution (e.g. an eigenvalue spectrum, or a binned histogram) and quantifies diversity through entropy-based functionals of that distribution. | [`vendi_score`](#measure-vendi_score)<br>[`renyi_entropy`](#measure-renyi_entropy)<br>[`dcscore`](#measure-dcscore)<br>[`bins_entropy`](#measure-bins_entropy) |
+| **Graph-theory-based**<br>Represents the dataset as a complete weighted graph (nodes = samples, edges = pairwise distances) and quantifies diversity from the structure of that graph. | [`mst_dispersion`](#measure-mst_dispersion)<br>[`graph_entropy`](#measure-graph_entropy)<br>[`hamdiv`](#measure-hamdiv) |
 
 The taxonomy lives only on this page.
