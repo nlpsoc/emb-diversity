@@ -13,7 +13,9 @@ embedding matrix. This module wraps it with:
     SLURM job that finished yesterday leaves a cache that today's job
     can pick up.
 
-  Level 3 — compute: scipy.pdist + write through both layers.
+  Level 3 — compute + write through both layers. Cosine distances go
+    through a blocked BLAS path (scikit-learn) that is much faster than
+    scipy.pdist at the same memory footprint; other metrics use scipy.pdist.
 
 The cache key folds in the metric and any metric_kwargs, so different
 metrics on the same data do not collide.
@@ -121,10 +123,43 @@ def compute_pairwise_distances(
         return result
 
     # Level 3: compute, populate both layers
-    result = pdist(X, metric=metric, **metric_kwargs)
+    if metric == "cosine" and not metric_kwargs:
+        result = _condensed_cosine_distances(X)
+    else:
+        result = pdist(X, metric=metric, **metric_kwargs)
     _store_memory(key, result)
     save_file({"distances": result}, path)
     return result
+
+
+def _condensed_cosine_distances(X: np.ndarray) -> np.ndarray:
+    """Cosine distances in ``pdist``'s condensed format, via blocked BLAS.
+
+    Computes the same values as ``pdist(X, "cosine")`` but through
+    scikit-learn's chunked pairwise-distance path, which normalizes the rows
+    once and evaluates the distances as a blocked (multithreaded) matrix
+    product — roughly an order of magnitude faster than scipy's pairwise
+    loop. Only one row-block of the square distance matrix exists at a time,
+    so peak memory stays at the condensed output plus a small block.
+
+    Cosine is numerically safe on this path: the products involve unit
+    vectors only, so no large intermediates cancel (unlike the analogous
+    euclidean shortcut).
+    """
+    from sklearn.metrics import pairwise_distances_chunked
+
+    n = len(X)
+    out = np.empty(n * (n - 1) // 2)
+    pos = row_start = 0
+    for chunk in pairwise_distances_chunked(X, metric="cosine"):
+        # The condensed format is the upper triangle read row by row, so a
+        # block of consecutive rows fills one contiguous slice of `out`.
+        rows = np.arange(row_start, row_start + len(chunk))[:, None]
+        vals = chunk[np.arange(n)[None, :] > rows]
+        out[pos:pos + vals.size] = vals
+        pos += vals.size
+        row_start += len(chunk)
+    return out
 
 
 def clear_distance_cache(cache_dir: Path = DEFAULT_CACHE_DIR) -> None:
