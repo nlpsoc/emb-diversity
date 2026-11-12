@@ -10,13 +10,13 @@ Each diversity measure returns a `{"value": float, "parameters": {...}, "version
 Measuring data diversity is an active area of research: it is unclear which measure fits which use case, how scores compare across measures, and how they should be normalized. We therefore implement each measure as it was introduced in the literature. With this package, we aim to facilitate research on these open questions and plan to incorporate new insights into future versions.
 ```
 
-Generally it holds that:
+For all implemented measures, it holds that:
 
 **Larger values = more diverse.** For every measure, a larger value means a more diverse set and a smaller value a less diverse one. This holds even for measures that return negative values: `log_determinant` and `energy` are always negative, so a larger value (closer to zero) means more diverse.
 
-We continue with general difficulties when interpreting scores, followed by recommendations for navigating them. The sections after that give bounds, intuitions, computation details and references for each measure.
+We will now discuss general challenges when interpreting scores, followed by recommendations for navigating them. The sections after that give bounds, intuitions, computation details and references for each measure.
 
-- **Scores are sensitive to the measure.** Each measure formalizes "diverse" in its own way, so measures can disagree on the same data. For example, `mean_pw_dist` asks how far apart items are on average; `graph_entropy` asks whether each item's distances to the others are evenly spread. If a set shrinks uniformly, the first shrinks while the second stays the same. The [computational grouping](#computational-grouping) below gives a first idea of what each measure reacts to.
+- **Scores are sensitive to the measure.** Each measure formalizes "diverse" in its own way, so measures can disagree on the same data. For example, `mean_pw_dist` asks how far apart items are on average; `graph_entropy` asks whether each item's distances to the others are evenly spread. Consider the example below. Halving the distance between every pair of points halves mean_pw_dist but leaves graph entropy the same. The [computational grouping](#computational-grouping) below gives a first idea of what each measure reacts to.
 
   ```{figure} ../_static/interpret_measure_sensitivity.png
   :width: 85%
@@ -24,7 +24,7 @@ We continue with general difficulties when interpreting scores, followed by reco
   The same 40 points before and after halving every pairwise distance (Euclidean metric). `mean_pw_dist` halves; `graph_entropy` is unchanged, because it only looks at how evenly each point's distances to the others are spread.
   ```
 
-- **Scores are sensitive to the embedding model.** Each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can be diverse under one and uniform under the other. Even two models for the same aspect place items at different distances.
+- **Scores are sensitive to the embedding model.** Each embedding model captures a different aspect of the data: a semantic model places texts by what they say, a style model by how they say it, so a set can score high on diversity under one measure but low under the other. Even two models for the same aspect place items at different distances.
 
   ```{figure} ../_static/interpret_embedding_sensitivity.png
   :width: 85%
@@ -34,13 +34,16 @@ We continue with general difficulties when interpreting scores, followed by reco
 
 - **Scores are not normalized.** Diversity measures have been introduced in a variety of different works that follow no standardized scales or bounds. We faithfully implement measures from literature and as a result some measures are bounded (e.g. cosine-based distances in `[0, 2]`), some are bounded when fixing the size of the dataset (e.g., `vendi_score` lies in `[1, n]`) and others are unbounded (e.g., `cluster_inertia` is in `[0, inf)`). As a result raw differences for one measure are hard to interpret and scores are not comparable across measures. Addressing this is an open research question; we recommend practical solutions below.
 
+- **Some measures involve randomness.** convex_hull_volume_3d and bins_entropy (with its default UMAP projection) and cluster_inertia (k-means) start from a random initialization. The seed is fixed to 42 by default, so repeated runs return the same value, but a different seed returns a different value.
+
 - **Scores are sensitive to dataset size.** Some measures change with the number of items `n`. For example, `vendi_score` has a higher maximum value with increasing `n`.
 
 To navigate these difficulties, we make the following recommendations:
+- **Compare datasets, do not study diversity of one dataset in isolation.** A single score has no interpretation on its own: there is no value above which a dataset counts as "diverse". Scores become informative when you compare them, for example the same corpus before and after filtering, or human-written against LLM-written texts.
 - **Only compare datasets of the same size `n`.**
 - **Only compare values produced using the same embedding model.**
 - **Only compare scores computed by the same measure.**
-- **Compare ratios of scores, not raw differences.** A raw difference score tells you the direction of the change, but might be misleading or unclear about its magnitude. For example, a drop of 5 in a `vendi_score` near 90 is small, while a drop of 2 in one near 3 is large. We recommend comparing the *ratio* instead (e.g. "set B has 47 % of set A's `vendi_score`"). The exceptions are measures that return a logarithm (`renyi_entropy`, `graph_entropy`, `bins_entropy`, `log_determinant`), where a ratio is not meaningful because doubling the underlying quantity adds a constant to the score rather than doubling it. Report the raw *difference* instead, which equals the log of the underlying ratio (since log a − log b = log(a / b)).
+- **Look at trends across several measures.** No single measure is established as "the" diversity measure and they can be expected to each capture a different aspect of diversity. If measures agree the interpretation is clear, if they disagree we found it helps to look at the [calculations](#measure-descriptions) and [interpretations of the measures](#interpretations) and to plot the datasets with PCA (watch out for projection methods like UMAP that misrepresent distances) to decide which measures to rely on.
 - **Ideally, test on your domain of interest.** Before relying on a measure, run it on data from your own domain where you already know which sets should be more diverse, and check that the measure and embedding model reproduce that ordering.
 
 
