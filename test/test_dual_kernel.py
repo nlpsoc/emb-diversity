@@ -4,9 +4,7 @@ Pytest tests for the use_dual flag of renyi_entropy and log_determinant.
 With use_dual=True (the default) the cosine kernel is built through the
 d x d dual matrix X'^T X' whenever it is smaller than the n x n Gram
 matrix X' X'^T; the two share the nonzero eigenvalues the measures are
-computed from. use_dual=False always builds the full n x n kernel, so
-running the same measure both ways on the same data checks the dual
-route end to end.
+computed from. use_dual=False always builds the full n x n kernel.
 """
 import time
 
