@@ -3,7 +3,7 @@ Pytest tests for the use_dual flag of renyi_entropy and log_determinant.
 
 With use_dual=True (the default) the cosine kernel is built through the
 d x d dual matrix X'^T X' whenever it is smaller than the n x n Gram
-matrix X' X'^T; the two share the eigenvalue spectrum the measures are
+matrix X' X'^T; the two share the nonzero eigenvalues the measures are
 computed from. use_dual=False always builds the full n x n kernel, so
 running the same measure both ways on the same data checks the dual
 route end to end.
@@ -21,20 +21,27 @@ def _vectors(n, d, seed=0):
 
 
 class TestDualMatchesFull:
-    # log_determinant is compared at eps=1e-2: with a small eps, the full
-    # n x n kernel's structural zero eigenvalues surface as ~1e-15 noise
-    # that log(lambda + eps) amplifies by 1/eps (the dual path carries
-    # them exactly), which would dominate the comparison.
+    # All cases use more samples than dimensions (n=1000, d=30): only then
+    # does use_dual=True take a different route than use_dual=False.
+    # The tolerance is 1e-6 because the full n x n kernel computes its zero
+    # eigenvalues as tiny nonzero numbers, which shifts its value by about
+    # 1e-7.
     @pytest.mark.parametrize("measure", [
         renyi_entropy,
         log_determinant,
     ])
-    @pytest.mark.parametrize("n,d", [(100, 364), (1000, 30)])
-    def test_same_value(self, measure, n, d):
+    def test_same_value(self, measure):
         """use_dual=True and use_dual=False agree on the same data."""
-        X = _vectors(n, d)
+        X = _vectors(1000, 30)
         dual = measure(X, use_dual=True)["value"]
         full = measure(X, use_dual=False)["value"]
+        assert dual == pytest.approx(full, abs=1e-6)
+
+    def test_same_value_from_eigenvalues(self):
+        """renyi_entropy agrees at alpha=1, where it is computed from eigenvalues."""
+        X = _vectors(1000, 30)
+        dual = renyi_entropy(X, alpha=1.0, use_dual=True)["value"]
+        full = renyi_entropy(X, alpha=1.0, use_dual=False)["value"]
         assert dual == pytest.approx(full, abs=1e-6)
 
 

@@ -80,11 +80,17 @@ def renyi_entropy(
         use_dual:
             If True (default) and ``kernel_type=="cs"``, build the kernel
             through the d x d dual matrix X'ᵀ X' whenever it is smaller than
-            the n x n X' X'ᵀ. The two share the eigenvalue spectrum (and
-            trace and Frobenius norm) the entropy is computed from, so
-            results agree up to floating point while large inputs never
-            materialize an n x n matrix. If False, always build the full
-            n x n kernel.
+            the n x n X' X'ᵀ, so large inputs never materialize an n x n
+            matrix. The two share their nonzero eigenvalues, trace and
+            Frobenius norm, so at ``alpha=2`` the results agree up to
+            floating point. For other ``alpha`` the n x n kernel's n - d
+            zero eigenvalues are each raised to ``eps`` before the entropy
+            is computed, which adds a small amount that the d x d matrix
+            does not have: negligible for ``alpha >= 1`` (below 1e-7 at
+            n=1000, d=30), larger for ``alpha < 1`` (about 4e-4 at n=1000,
+            d=30, ``alpha=0.5``) and growing with n. The d x d value is the
+            more accurate one. If False, always build the full n x n
+            kernel.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
