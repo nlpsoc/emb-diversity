@@ -38,6 +38,25 @@ BUDGET_S = 3600  # wall-clock budget per (measure, size) pair
 RESULTS_FILE = Path("timing_results.json")
 PLOT_FILE = Path("runtime_scaling.pdf")
 
+# Measure families for the plot legend: each group gets a bold heading and
+# one color family (the pairwise-distance measures share a single color —
+# pdist dominates their runtime, so their curves coincide anyway). Measures
+# missing from this mapping land under an "other" heading.
+MEASURE_GROUPS = {
+    "distance matrix": [
+        "mean_pw_dist", "sum_pw_dist", "sum_pairwise_dist", "chamfer_dist",
+        "energy", "diameter", "bottleneck", "sum_diameter", "sum_bottleneck",
+        "span_medoid", "knn",
+    ],
+    "distance graph": ["mst_dispersion", "graph_entropy", "hamdiv"],
+    "kernel matrix": ["vendi_score", "renyi_entropy", "dcscore",
+                      "log_determinant"],
+    "UMAP projection": ["bins_entropy", "convex_hull_volume_3d"],
+    "vector statistics": ["cluster_inertia", "span_centroid", "geo_mean_std"],
+}
+# The legend lists the groups in this dict order; measures inside a group
+# are sorted by runtime (slowest first).
+
 
 def save_json(path: Path, payload) -> None:
     """Write via a temp file + atomic rename so a crash never corrupts it."""
@@ -180,25 +199,69 @@ def plot_results(results_path: Path, plot_path: Path,
     plt.rcParams["font.size"] = 9
     # constrained layout reserves the legend's space inside the 3.03 in
     # (ACL \columnwidth) figure, shrinking the axes to fit next to it
-    fig, ax = plt.subplots(figsize=(3.03, 3.0), layout="constrained")
-    colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
+    fig, ax = plt.subplots(figsize=(3.03, 3.2), layout="constrained")
     markers = ["o", "s", "^", "D", "v", "P", "X", "*"]
+    # one colormap per group; members get dark-to-light shades of it
+    from matplotlib.colors import LinearSegmentedColormap
+    group_cmaps = {
+        "distance matrix": None,  # single black line, curves coincide
+        "distance graph": plt.cm.Blues,
+        "kernel matrix": LinearSegmentedColormap.from_list(
+            "kernel_red", ["white", "#ff3333"]),
+        "UMAP projection": plt.cm.Greys,
+        "vector statistics": plt.cm.Purples,
+        "other": plt.cm.Greys,
+    }
 
-    smallest_mean = None
-    for idx, (measure_name, cells) in enumerate(results.items()):
+    def runtime_key(item):
+        # slowest first: largest completed size, then runtime at that size
+        _, done = item
+        return (-done[-1][0], -np.mean(done[-1][1]))
+
+    series = {}
+    for measure_name, cells in results.items():
         done = sorted((int(s), c["times"]) for s, c in cells.items()
                       if c["times"])
-        if not done:
-            continue
-        sizes = [s for s, _ in done]
-        means = np.array([np.mean(t) for _, t in done])
-        smallest_mean = min(smallest_mean or means.min(), means.min())
-        ax.plot(sizes, means, color=colors[idx], label=measure_name,
-                marker=markers[idx % len(markers)], markersize=3, linewidth=1)
-        if bands:
-            stds = np.array([np.std(t) for _, t in done])
-            ax.fill_between(sizes, means - stds, means + stds,
-                            color=colors[idx], alpha=0.2, linewidth=0)
+        if done:
+            series[measure_name] = done
+
+    # Group the measures; within a group and between groups, order follows
+    # the line order at the right edge of the plot (slowest first).
+    groups = []
+    for group_name, members in MEASURE_GROUPS.items():
+        got = sorted(((m, series[m]) for m in members if m in series),
+                     key=runtime_key)
+        if got:
+            groups.append((group_name, got))
+    grouped = {m for _, got in groups for m, _ in got}
+    leftover = sorted(((m, d) for m, d in series.items() if m not in grouped),
+                      key=runtime_key)
+    if leftover:
+        groups.append(("other", leftover))
+
+    from matplotlib.lines import Line2D
+    handles, labels, heading_rows = [], [], []
+    smallest_mean = None
+    for group_name, members in groups:
+        heading_rows.append(len(labels))
+        handles.append(Line2D([], [], linestyle="none"))
+        labels.append(group_name + ":")
+        cmap = group_cmaps.get(group_name, plt.cm.Greys)
+        shades = (["black"] * len(members) if cmap is None
+                  else cmap(np.linspace(0.9, 0.45, len(members))))
+        for i, (measure_name, done) in enumerate(members):
+            sizes = [s for s, _ in done]
+            means = np.array([np.mean(t) for _, t in done])
+            smallest_mean = min(smallest_mean or means.min(), means.min())
+            line, = ax.plot(sizes, means, color=shades[i],
+                            marker=markers[i % len(markers)],
+                            markersize=3, linewidth=1)
+            handles.append(line)
+            labels.append("  " + measure_name)
+            if bands:
+                stds = np.array([np.std(t) for _, t in done])
+                ax.fill_between(sizes, means - stds, means + stds,
+                                color=shades[i], alpha=0.2, linewidth=0)
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -211,8 +274,11 @@ def plot_results(results_path: Path, plot_path: Path,
     ax.tick_params(labelsize=8)
     ax.set_xlabel("Dataset size")
     ax.set_ylabel("Runtime (seconds)")
-    fig.legend(loc="outside center right", fontsize=6, frameon=False,
-               handlelength=1.2, labelspacing=0.3)
+    legend = fig.legend(handles, labels, loc="outside center right",
+                        fontsize=6, frameon=False, handlelength=1.2,
+                        labelspacing=0.3)
+    for row in heading_rows:
+        legend.get_texts()[row].set_fontweight("bold")
     ax.grid(True, ls="--", alpha=0.4)
     fig.savefig(plot_path)
     print(f"Plot saved to {plot_path}")
