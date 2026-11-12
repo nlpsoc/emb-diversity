@@ -23,9 +23,7 @@ def _vectors(n, d, seed=0):
 class TestDualMatchesFull:
     # All cases use more samples than dimensions (n=1000, d=30): only then
     # does use_dual=True take a different route than use_dual=False.
-    # The tolerance is 1e-6 because the full n x n kernel computes its zero
-    # eigenvalues as tiny nonzero numbers, which shifts its value by about
-    # 1e-7.
+
     @pytest.mark.parametrize("measure", [
         renyi_entropy,
         log_determinant,
