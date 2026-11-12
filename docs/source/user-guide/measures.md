@@ -61,13 +61,14 @@ What a measure computes determines what it is sensitive to, and how its runtime 
 | **UMAP projection** | a low-dimensional UMAP embedding of the vectors | [`bins_entropy`](#measure-bins_entropy)<br>[`convex_hull_volume_3d`](#measure-convex_hull_volume_3d) |
 | **Vector statistics** | statistics on the raw vectors — no pairwise computation | [`cluster_inertia`](#measure-cluster_inertia)<br>[`span_centroid`](#measure-span_centroid)<br>[`geo_mean_std`](#measure-geo_mean_std) |
 
-### Interpretations
+(interpretations)=
+### Descriptions and bounds
 
 | Function | Brief Description | Bounds |
 |---|---|---|
 | [`graph_entropy`](#measure-graph_entropy) | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·log(n−1)] |
-| [`vendi_score`](#measure-vendi_score) | **(default)** - Effective number of distinct items | [1, n] |
-| [`mean_pw_dist`](#measure-mean_pw_dist) | **(default)** - Average pairwise distance between all data points | [0, 2] |
+| [`vendi_score`](#measure-vendi_score) | **(default, commonly used)** - Effective number of distinct items | [1, n] |
+| [`mean_pw_dist`](#measure-mean_pw_dist) | **(default, commonly used)** - Average pairwise distance between all data points | [0, 2] |
 | [`sum_pw_dist`](#measure-sum_pw_dist) | Sum of all pairwise distances | [0, ∞] |
 | [`chamfer_dist`](#measure-chamfer_dist) | Average nearest-neighbour distance across all data points |[0, 2] |
 | [`knn`](#measure-knn) | Average k-th-nearest-neighbour distance across all data points | *[0, 2]* |
@@ -118,6 +119,8 @@ return their mean.
 - Tianhui Zhang, Bei Peng, and Danushka Bollegala. 2024. Improving Diversity of Commonsense Generation by Large Language Models via In-Context Learning. In Findings of the Association for Computational Linguistics: EMNLP 2024, pages 9226–9242, Miami, Florida, USA. Association for Computational Linguistics. <https://aclanthology.org/2024.findings-emnlp.540/>.
 - Miranda, Brando, Alycia Lee, Sudharsan Sundar, Allison Casasola, Rylan Schaeffer, Elyas Obbad, and Sanmi Koyejo. "Beyond scale: The diversity coefficient as a data quality metric for variability in natural language data." arXiv preprint arXiv:2306.13840 (2023). <https://arxiv.org/abs/2306.13840>.
 - Cox, Samuel Rhys, et al. "Directed diversity: Leveraging language embedding distances for collective creativity in crowd ideation." Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 2021. <https://doi.org/10.1145/3411764.3445782>.
+- Robert Kirk, Ishita Mediratta, Christoforos Nalmpantis, Jelena Luketina, Eric Hambro, Edward Grefenstette, and Roberta Raileanu. 2024. Understanding the Effects of RLHF on LLM Generalisation and Diversity. In The Twelfth International Conference on Learning Representations. <https://arxiv.org/abs/2310.06452>.
+- Yanzhu Guo, Guokan Shang, and Chloé Clavel. 2024. Benchmarking Linguistic Diversity of Large Language Models. arXiv preprint arXiv:2412.10271. <https://arxiv.org/abs/2412.10271>.
 
 (measure-sum_pw_dist)=
 ### Sum Pairwise Distance — {func}`sum_pw_dist <emb_diversity.measures.sum_pw_dist.sum_pw_dist>`
