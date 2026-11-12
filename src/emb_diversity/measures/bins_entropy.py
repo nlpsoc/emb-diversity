@@ -8,8 +8,6 @@ from sklearn.decomposition import PCA
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Distribution-Based Diversity Measure
-
 
 def bins_entropy(
     data,

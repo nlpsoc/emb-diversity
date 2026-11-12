@@ -8,8 +8,6 @@ from sklearn.cluster import KMeans
 from ..embed import resolve_embeddings
 from .types import MeasureResult
 
-### Geometry-Based Diversity Measure
-
 
 def cluster_inertia(
         data: Sequence[Sequence[float]],

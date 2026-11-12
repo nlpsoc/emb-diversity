@@ -9,8 +9,6 @@ from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
 from .utils import compute_pairwise_distances
 
-### Geometry-Based Diversity Measure
-
 
 def sum_diameter(
         data: Sequence[Sequence[float]],

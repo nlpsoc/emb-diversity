@@ -8,10 +8,8 @@ from ..embed import resolve_embeddings
 from .types import DistanceMetric, MeasureResult
 from .utils import compute_pairwise_distances
 
-### Distance-Based Diversity Measure
 
-
-def sum_pairwise_dist(
+def sum_pw_dist(
         data: Sequence[Sequence[float]],
         metric: DistanceMetric = "cosine",
         *,
@@ -52,7 +50,7 @@ def sum_pairwise_dist(
     Raises:
         ValueError: If input is invalid, empty, or has fewer than 2 datapoints.
     """
-    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="sum_pairwise_dist", chunking_kwargs=chunking_kwargs)
+    data, embedding_model = resolve_embeddings(data, diversity_axis, embedding_model, measure="sum_pw_dist", chunking_kwargs=chunking_kwargs)
     dists = compute_pairwise_distances(data, metric, **metric_kwargs)
     return {
         "value": float(np.sum(dists)),

@@ -19,7 +19,7 @@ PDIST_MEASURE_NAMES = [
     "span_medoid",
     "sum_bottleneck",
     "sum_diameter",
-    "sum_pairwise_dist",
+    "sum_pw_dist",
 ]
 
 # span_centroid computes cosine via scipy.cdist instead of pdist and runs

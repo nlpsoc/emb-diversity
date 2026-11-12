@@ -9,8 +9,6 @@ from ..embed import resolve_embeddings
 from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
-### Distribution-Based Diversity Measure
-
 
 def vendi_score(
         data: Sequence[Sequence[float]],

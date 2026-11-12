@@ -52,6 +52,11 @@ extensions = [
     'myst_parser',
 ]
 
+# Auto-generate slugified anchors for headings up to this depth, so links like
+# `page.md#some-heading` resolve across MyST pages (e.g. development.md <->
+# user-guide/*.md cross-references).
+myst_heading_anchors = 3
+
 templates_path = ['_templates']
 exclude_patterns = []
 

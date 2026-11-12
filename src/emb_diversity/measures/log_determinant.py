@@ -9,7 +9,6 @@ from ..embed import resolve_embeddings
 from .types import MeasureResult
 from ..utility.validate import warn_on_zero_norm_rows
 
-### Geometry-Based Diversity Measure
 
 _KERNEL_TYPES = ("cs", "rbf", "lap", "poly")
 
