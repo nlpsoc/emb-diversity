@@ -355,7 +355,11 @@ factorisation.
 
 **Parameters.** `kernel_type` (default `"cs"`, a cosine-similarity-like kernel on
 L2-normalized vectors; also `"rbf"`, `"lap"`, `"poly"`); `tau`; `eps` (default
-`1e-6`); `use_cholesky` (default `True`).
+`1e-6`); `use_cholesky` (default `True`); `use_dual` (default `True`: with the
+cosine kernel and more samples `n` than embedding dimensions `d`, the
+log-determinant is computed from the smaller `d × d` matrix, which has the same
+nonzero eigenvalues as the `n × n` kernel matrix, so large inputs never build
+an `n × n` matrix).
 
 **References.**
 - Kulesza, A., & Taskar, B. (2012). Determinantal Point Processes for Machine Learning. Found. Trends Mach. Learn., 5, 123-286. <https://doi.org/10.1561/2200000044>.
@@ -400,7 +404,11 @@ that avoids eigendecomposition.
 
 **Parameters.** `alpha` (default `2.0`); `kernel_type` (default `"cs"`, a
 cosine-similarity-like kernel on optionally L2-normalized vectors; also
-`"rbf"`, `"lap"`, `"poly"`); `tau`; `normalize` (default `True`).
+`"rbf"`, `"lap"`, `"poly"`); `tau`; `normalize` (default `True`); `use_dual`
+(default `True`: with the cosine kernel and more samples `n` than embedding
+dimensions `d`, the entropy is computed from the smaller `d × d` matrix, which
+has the same nonzero eigenvalues as the `n × n` kernel matrix, so large inputs
+never build an `n × n` matrix).
 
 **References.**
 - Mironov, Mikhail, and Liudmila Prokhorenkova. "Measuring Diversity: Axioms and Challenges." arXiv:2410.14556. Preprint, arXiv, June 14, 2025. <https://doi.org/10.48550/arXiv.2410.14556>.

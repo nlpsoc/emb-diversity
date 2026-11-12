@@ -21,6 +21,7 @@ def renyi_entropy(
         normalize: bool = True,
         eps: float = 1e-12,
         use_eigendecomp: bool | None = None,
+        use_dual: bool = True,
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
@@ -76,6 +77,20 @@ def renyi_entropy(
             If None, choose automatically (False for alpha in {1, 2}, True otherwise).
             If True, force eigenvalue computation even for alpha==2. If False, restrict
             alpha to {1, 2} (errors for other alpha values).
+        use_dual:
+            If True (default) and ``kernel_type=="cs"``, build the kernel
+            through the d x d dual matrix X'ᵀ X' whenever it is smaller than
+            the n x n X' X'ᵀ, so large inputs never materialize an n x n
+            matrix. The two share their nonzero eigenvalues, trace and
+            Frobenius norm, so at ``alpha=2`` the results agree up to
+            floating point. For other ``alpha`` the n x n kernel's n - d
+            zero eigenvalues are each raised to ``eps`` before the entropy
+            is computed, which adds a small amount that the d x d matrix
+            does not have: negligible for ``alpha >= 1`` (below 1e-7 at
+            n=1000, d=30), larger for ``alpha < 1`` (about 4e-4 at n=1000,
+            d=30, ``alpha=0.5``) and growing with n. The d x d value is the
+            more accurate one. If False, always build the full n x n
+            kernel.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
@@ -104,6 +119,7 @@ def renyi_entropy(
         "normalize": normalize,
         "eps": eps,
         "use_eigendecomp": use_eigendecomp,
+        "use_dual": use_dual,
         "embedding_model": embedding_model,
     }
 
@@ -134,7 +150,14 @@ def renyi_entropy(
             X_use = X / norms
         else:
             X_use = X
-        K = (X_use @ X_use.T) / tau
+        if use_dual and X_use.shape[0] > X_use.shape[1]:
+            # The d x d dual matrix has the same nonzero eigenvalues,
+            # trace, and Frobenius norm as the n x n kernel, so the
+            # computation below is unchanged while never materializing
+            # an n x n matrix.
+            K = (X_use.T @ X_use) / tau
+        else:
+            K = (X_use @ X_use.T) / tau
     elif kernel_type == "rbf":
         K = rbf_kernel(X, X, gamma=tau)
     elif kernel_type == "lap":
