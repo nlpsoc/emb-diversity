@@ -65,12 +65,12 @@ What a measure computes determines what it is sensitive to, and how its runtime 
 
 | Function | Brief Description | Bounds |
 |---|---|---|
-| [`graph_entropy`](#measure-graph_entropy) | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·log(n−1)] |
+| [`graph_entropy`](#measure-graph_entropy) | **(default)** - Sum of per-point entropy of normalized pairwise-distance distributions over a complete graph | [0, n·ln(n−1)] |
 | [`vendi_score`](#measure-vendi_score) | **(default)** - Effective number of distinct items | [1, n] |
 | [`mean_pw_dist`](#measure-mean_pw_dist) | **(default)** - Average pairwise distance between all data points | [0, 2] |
 | [`sum_pw_dist`](#measure-sum_pw_dist) | Sum of all pairwise distances | [0, ∞] |
 | [`chamfer_dist`](#measure-chamfer_dist) | Average nearest-neighbour distance across all data points |[0, 2] |
-| [`knn`](#measure-knn) | Average k-th-nearest-neighbour distance across all data points | *[0, 2]* |
+| [`knn`](#measure-knn) | Average k-th-nearest-neighbour distance across all data points | [0, 2] |
 | [`energy`](#measure-energy) | Negative mean pairwise repulsive energy between all data points (equally-charged-particle model) | (−∞, −2^(−γ)] |
 | [`diameter`](#measure-diameter) | Largest distance between any two data points | [0, 2] |
 | [`bottleneck`](#measure-bottleneck) | Smallest distance between any two data points | [0, 2] |
@@ -81,12 +81,12 @@ What a measure computes determines what it is sensitive to, and how its runtime 
 | [`span_centroid`](#measure-span_centroid) | Span relative to the centroid | [0, ∞) unnormalized |
 | [`span_medoid`](#measure-span_medoid) | Span relative to the medoid | [0, 2] |
 | [`cluster_inertia`](#measure-cluster_inertia) | Sum of squared distances to cluster centres | [0, ∞) unnormalized |
-| [`log_determinant`](#measure-log_determinant) | Log-determinant of the kernel matrix (LDD) | *[n·log(eps), 0]* |
-| [`renyi_entropy`](#measure-renyi_entropy) | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy | [0, log n] |
+| [`log_determinant`](#measure-log_determinant) | Log-determinant of the kernel matrix (LDD) | *[n·ln(eps), 0]* |
+| [`renyi_entropy`](#measure-renyi_entropy) | Renyi Kernel Entropy (RKE) / Matrix-based Renyi entropy | [0, ln n] |
 | [`dcscore`](#measure-dcscore) | Score based on self-similarity with softmax normalisation | (1, n) |
 | [`bins_entropy`](#measure-bins_entropy) | Shannon entropy over a 2D UMAP/PCA-projected histogram | *[0, 1]* |
 | [`mst_dispersion`](#measure-mst_dispersion) | Total edge weight of the minimum spanning tree | [0, 2(n−1)] |
-| [`hamdiv`](#measure-hamdiv) | Approximate length of the shortest Hamiltonian circuit through all data points | *[0, 2n]* |
+| [`hamdiv`](#measure-hamdiv) | Approximate length of the shortest Hamiltonian circuit through all data points | [0, 2n] |
 
 ```{note}
 Notes on the bounds in the table (tighter bounds exist for some measures; `n` is the number of embeddings):
