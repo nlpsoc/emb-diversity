@@ -21,6 +21,7 @@ def renyi_entropy(
         normalize: bool = True,
         eps: float = 1e-12,
         use_eigendecomp: bool | None = None,
+        use_dual: bool = True,
         *,
         diversity_axis: str = "semantic",
         embedding_model: str | None = None,
@@ -76,6 +77,13 @@ def renyi_entropy(
             If None, choose automatically (False for alpha in {1, 2}, True otherwise).
             If True, force eigenvalue computation even for alpha==2. If False, restrict
             alpha to {1, 2} (errors for other alpha values).
+        use_dual:
+            If True (default) and ``kernel_type=="cs"``, build the kernel
+            through the d x d dual matrix X'ᵀ X' whenever it is smaller than
+            the n x n X' X'ᵀ, so large inputs never materialize an n x n
+            matrix. The two share their nonzero eigenvalues, trace and
+            Frobenius norm, so results agree up to floating point. If False, 
+            always build the full n x n kernel.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
@@ -104,6 +112,7 @@ def renyi_entropy(
         "normalize": normalize,
         "eps": eps,
         "use_eigendecomp": use_eigendecomp,
+        "use_dual": use_dual,
         "embedding_model": embedding_model,
     }
 
@@ -134,7 +143,10 @@ def renyi_entropy(
             X_use = X / norms
         else:
             X_use = X
-        K = (X_use @ X_use.T) / tau
+        if use_dual and X_use.shape[0] > X_use.shape[1]:
+            K = (X_use.T @ X_use) / tau
+        else:
+            K = (X_use @ X_use.T) / tau
     elif kernel_type == "rbf":
         K = rbf_kernel(X, X, gamma=tau)
     elif kernel_type == "lap":
