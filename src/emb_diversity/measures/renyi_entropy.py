@@ -144,10 +144,6 @@ def renyi_entropy(
         else:
             X_use = X
         if use_dual and X_use.shape[0] > X_use.shape[1]:
-            # The d x d dual matrix has the same nonzero eigenvalues,
-            # trace, and Frobenius norm as the n x n kernel, so the
-            # computation below is unchanged while never materializing
-            # an n x n matrix.
             K = (X_use.T @ X_use) / tau
         else:
             K = (X_use @ X_use.T) / tau
