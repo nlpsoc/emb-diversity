@@ -78,9 +78,7 @@ def log_determinant(
             the n x n X' X'ᵀ; the two share their nonzero eigenvalues, and
             the kernel's remaining structural zero eigenvalues enter the
             log-determinant in closed form (each contributes log(eps)).
-            Results agree with the full kernel up to floating point while
-            large inputs never materialize an n x n matrix. If False, always
-            build the full n x n kernel.
+            If False, always build the full n x n kernel.
         diversity_axis: Registered axis used to embed text input (default "semantic").
         embedding_model: Explicit embedding model id; overrides *diversity_axis*.
 
