@@ -156,8 +156,7 @@ def log_determinant(
 
     n = K.shape[0]
     # log det(K_full + eps*I) sums log(eps) once per structural zero
-    # eigenvalue of a rank-deficient kernel (len(X) - n of them; zero
-    # whenever K is the full n x n matrix).
+    # eigenvalue of a rank-deficient kernel (len(X) - n of them).
     zeros_logdet = (len(X) - n) * np.log(eps)
     A = K + eps * np.eye(n, dtype=K.dtype)
 
