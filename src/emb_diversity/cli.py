@@ -12,7 +12,7 @@ import typer
 
 app = typer.Typer(
     name="emb-diversity",
-    help="Measure embedding-based diversity of text data.\n\nRun directly: emb-diversity texts.txt",
+    help="Measure embedding-based diversity of text data.",
     no_args_is_help=True,
 )
 
